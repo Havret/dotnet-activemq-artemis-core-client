@@ -126,17 +126,17 @@ public class ByteBufferTests
         CollectionAssert.AreEqual(expected, byteBuffer.GetBuffer().ToArray());
     }
 
-    [Test]
-    public void should_nullable_string()
+    [TestCase("abcdefgh", new byte[] { 1, 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 })]
+    [TestCase(null, new byte[] { 0 })]
+    public void should_nullable_string(string value, byte[] encoded)
     {
         // Arrange
         var byteBuffer = new ByteBuffer();
 
         // Act
-        byteBuffer.WriteNullableString("abcdefgh");
+        byteBuffer.WriteNullableString(value);
 
         // Assert
-        var expected = new byte[] { 1, 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 };
-        CollectionAssert.AreEqual(expected, byteBuffer.GetBuffer().ToArray());
+        CollectionAssert.AreEqual(encoded, byteBuffer.GetBuffer().ToArray());
     }
 }
