@@ -14,6 +14,20 @@ public class ByteBufferTests
         // Assert
         CollectionAssert.AreEqual(new byte[] { 125 }, byteBuffer.GetBuffer().ToArray());
     }
+
+    [Test]
+    public void should_decode_byte()
+    {
+        // Arrange
+        var buffer = new ByteBuffer([125]);
+
+        // Act
+        byte value = buffer.ReadByte();
+
+
+        // Assert
+        Assert.That(value, Is.EqualTo(125));
+    }
     
     [TestCase(true, new[] { unchecked((byte) -1) })]
     [TestCase(false, new byte[] { 0 })]
@@ -28,6 +42,20 @@ public class ByteBufferTests
         // Assert
         CollectionAssert.AreEqual(encoded, byteBuffer.GetBuffer().ToArray());
     }
+
+    [TestCase(new[] { unchecked((byte) -1) }, true)]
+    [TestCase(new byte[] { 0 }, false)]
+    public void should_decode_bool(byte[] encoded, bool expected)
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer(encoded);
+
+        // Act
+        var value = byteBuffer.ReadBool();
+
+        // Assert
+        Assert.That(expected, Is.EqualTo(value));
+    }
     
     [Test]
     public void should_encode_int()
@@ -40,6 +68,19 @@ public class ByteBufferTests
 
         // Assert
         CollectionAssert.AreEqual(new byte[] { 0, 0, 0, unchecked((byte) -86) }, byteBuffer.GetBuffer().ToArray());
+    }
+    
+    [Test]
+    public void should_decode_int()
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer([0, 0, 0, unchecked((byte) -86)]);
+
+        // Act
+        var value = byteBuffer.ReadInt();
+
+        // Assert
+        Assert.That(value, Is.EqualTo(170));
     }
     
     [Test]
@@ -64,6 +105,28 @@ public class ByteBufferTests
                 unchecked((byte) -1),
                 unchecked((byte) -1)
             }, byteBuffer.GetBuffer().ToArray());
+    }
+    
+    [Test]
+    public void should_decode_long()
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer([
+            127,
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1)
+        ]);
+
+        // Act
+        var value = byteBuffer.ReadLong();
+
+        // Assert
+        Assert.That(value, Is.EqualTo(long.MaxValue));
     }
 
     [Test]

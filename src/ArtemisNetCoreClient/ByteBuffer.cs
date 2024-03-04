@@ -6,7 +6,17 @@ namespace ActiveMQ.Artemis.Core.Client;
 
 internal class ByteBuffer
 {
-    private readonly MemoryStream _memoryStream = new();
+    private readonly MemoryStream _memoryStream;
+
+    public ByteBuffer()
+    {
+        _memoryStream = new MemoryStream();
+    }
+    
+    public ByteBuffer(byte[] payload)
+    {
+        _memoryStream = new MemoryStream(payload, writable: false);
+    }
 
     public ReadOnlyMemory<byte> GetBuffer()
     {
@@ -21,10 +31,23 @@ internal class ByteBuffer
         WriteByte(value ? minusOne : zero);
     }
 
+    public bool ReadBool()
+    {
+        var value = ReadByte();
+        return value != 0;
+    }
+
     public void WriteByte(byte value)
     {
         Span<byte> buffer = stackalloc byte[1] { value };
         _memoryStream.Write(buffer);
+    }
+    
+    public byte ReadByte()
+    {
+        Span<byte> buffer = stackalloc byte[1];
+        _ = _memoryStream.Read(buffer);
+        return buffer[0];
     }
     
     public void WriteInt(int value)
@@ -33,12 +56,26 @@ internal class ByteBuffer
         BinaryPrimitives.WriteInt32BigEndian(buffer, value);
         _memoryStream.Write(buffer);
     }
+    
+    public int ReadInt()
+    {
+        Span<byte> buffer = stackalloc byte[sizeof(int)];
+        _ = _memoryStream.Read(buffer);
+        return BinaryPrimitives.ReadInt32BigEndian(buffer);
+    }
 
     public void WriteLong(long value)
     {
         Span<byte> buffer = stackalloc byte[sizeof(long)];
         BinaryPrimitives.WriteInt64BigEndian(buffer, value);
         _memoryStream.Write(buffer);
+    }
+    
+    public long ReadLong()
+    {
+        Span<byte> buffer = stackalloc byte[sizeof(long)];
+        _ = _memoryStream.Read(buffer);
+        return BinaryPrimitives.ReadInt64BigEndian(buffer);
     }
     
     public void WriteNullableString(string? value)
