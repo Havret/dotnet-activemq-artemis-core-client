@@ -151,4 +151,65 @@ internal class ByteBuffer
         BinaryPrimitives.WriteInt16BigEndian(buffer, value);
         _memoryStream.Write(buffer);
     }
+
+    private short ReadShort()
+    {
+        Span<byte> buffer = stackalloc byte[sizeof(short)];
+        _ = _memoryStream.Read(buffer);
+        return BinaryPrimitives.ReadInt16BigEndian(buffer);
+    }
+
+    public string ReadString()
+    {
+        var length = ReadInt();
+        if (length < 9)
+        {
+            return ReadAsShorts(length);
+        }
+        else if (length < 0xFFF)
+        {
+            var actualByteCount = ReadShort();
+            if (actualByteCount < 128)
+            {
+                Span<byte> buffer = stackalloc byte[actualByteCount];
+                _ = _memoryStream.Read(buffer);
+                return Encoding.UTF8.GetString(buffer);
+            }
+            else
+            {
+     
+                var rented = ArrayPool<byte>.Shared.Rent(actualByteCount);
+                try
+                {
+                    _ = _memoryStream.Read(rented, 0, actualByteCount);
+                    return Encoding.UTF8.GetString(rented, 0, actualByteCount);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(rented);
+                }
+            }
+        }
+        else
+        {
+            return ReadAsBytes();
+        }
+    }
+    
+    private string ReadAsBytes()
+    {
+        return string.Empty;
+    }
+
+    private string ReadAsShorts(int length)
+    {
+        Span<char> chars = stackalloc char[length];
+        for (int i = 0; i < length; i++)
+        {
+            var c = (char) ReadShort();
+            chars[i] = c;
+        }
+
+        return new string(chars);
+    }
 }
