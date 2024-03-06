@@ -231,7 +231,7 @@ public class ByteBufferTests
         CollectionAssert.AreEqual(expected, byteBuffer.GetBuffer().ToArray());
     }
 
-    [Test, Ignore("TODO")]
+    [Test]
     public void should_decode_long_string()
     {
         // Arrange
@@ -247,7 +247,7 @@ public class ByteBufferTests
 
     [TestCase("abcdefgh", new byte[] { 1, 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 })]
     [TestCase(null, new byte[] { 0 })]
-    public void should_nullable_string(string value, byte[] encoded)
+    public void should_encode_nullable_string(string value, byte[] encoded)
     {
         // Arrange
         var byteBuffer = new ByteBuffer();
@@ -257,5 +257,19 @@ public class ByteBufferTests
 
         // Assert
         CollectionAssert.AreEqual(encoded, byteBuffer.GetBuffer().ToArray());
+    }
+    
+    [TestCase(new byte[] { 1, 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 }, "abcdefgh")]
+    [TestCase(new byte[] { 0 }, null)]
+    public void should_decode_nullable_string(byte[] encoded, string? expected)
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer(encoded);
+
+        // Act
+        var value = byteBuffer.ReadNullableString();
+
+        // Assert
+        Assert.That(value, Is.EqualTo(expected));
     }
 }

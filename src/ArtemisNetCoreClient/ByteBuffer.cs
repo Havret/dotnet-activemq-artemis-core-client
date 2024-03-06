@@ -198,18 +198,38 @@ internal class ByteBuffer
     
     private string ReadAsBytes()
     {
-        return string.Empty;
+        var actualByteCount = ReadInt();
+
+        var length = actualByteCount >> 1;
+
+        var chars = new char[length];
+
+        for (var i = 0; i < length; i++)
+        {
+            var low = _memoryStream.ReadByte(); // Low byte
+            var high = _memoryStream.ReadByte(); // High byte
+            var combined =  (high << 8) | low;
+            chars[i] = (char) combined;
+        }
+        
+        return new string(chars);
     }
 
     private string ReadAsShorts(int length)
     {
         Span<char> chars = stackalloc char[length];
-        for (int i = 0; i < length; i++)
+        for (var i = 0; i < length; i++)
         {
             var c = (char) ReadShort();
             chars[i] = c;
         }
 
         return new string(chars);
+    }
+    
+    public string? ReadNullableString()
+    {
+        var value = _memoryStream.ReadByte();
+        return value == DataConstants.NotNull ? ReadString() : null;
     }
 }
