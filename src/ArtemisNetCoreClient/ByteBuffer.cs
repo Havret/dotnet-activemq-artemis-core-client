@@ -39,15 +39,12 @@ internal class ByteBuffer
 
     public void WriteByte(byte value)
     {
-        Span<byte> buffer = stackalloc byte[1] { value };
-        _memoryStream.Write(buffer);
+        _memoryStream.WriteByte(value);
     }
     
     public byte ReadByte()
     {
-        Span<byte> buffer = stackalloc byte[1];
-        _ = _memoryStream.Read(buffer);
-        return buffer[0];
+        return (byte) _memoryStream.ReadByte();
     }
     
     public void WriteInt(int value)
