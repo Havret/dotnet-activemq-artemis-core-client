@@ -229,4 +229,10 @@ internal class ByteBuffer
         var value = _memoryStream.ReadByte();
         return value == DataConstants.NotNull ? ReadString() : null;
     }
+
+    public void WriteSize()
+    {
+        _memoryStream.TryGetBuffer(out var buffer);
+        BinaryPrimitives.WriteInt32BigEndian(buffer, buffer.Count - sizeof(int));
+    }
 }
