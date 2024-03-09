@@ -2,7 +2,7 @@ namespace ActiveMQ.Artemis.Core.Client.Framing;
 
 internal class CreateSessionMessageV2 : Packet
 {
-    public override byte Type => unchecked((byte) -18);
+    public const byte Type = unchecked((byte) -18);
     public required string Name { get; init; }
     public long SessionChannelId { get; init; }
     public int Version { get; init; }
@@ -16,16 +16,9 @@ internal class CreateSessionMessageV2 : Packet
     public int WindowSize { get; init; }
     public string? DefaultAddress { get; init; }
     public string? ClientId { get; init; }
-    public long ChannelId { get; init; }
 
     public override void Encode(ByteBuffer buffer)
     {
-        // header
-        buffer.WriteInt(0); // The length gets filled in at the end
-        buffer.WriteByte(Type);
-        buffer.WriteLong(ChannelId);
-        
-        // rest
         buffer.WriteString(Name);
         buffer.WriteLong(SessionChannelId);
         buffer.WriteInt(Version);
@@ -39,9 +32,6 @@ internal class CreateSessionMessageV2 : Packet
         buffer.WriteBool(PreAcknowledge);
         buffer.WriteNullableString(DefaultAddress);
         buffer.WriteNullableString(ClientId);
-        
-        // size
-        buffer.WriteSize();
     }
 
     public override void Decode(ByteBuffer buffer)
