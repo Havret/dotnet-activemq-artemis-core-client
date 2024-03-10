@@ -1,0 +1,10 @@
+version: "3"
+services:
+  activemq-artemis:
+    container_name: activemq-artemis
+    image: havret/dotnet-activemq-artemis-client-test-broker:2.30.0
+    ports:
+      - 8161:8161
+      - 5445:5445
+    volumes:
+      - ./broker.xml:/artemis/amq/etc/broker.xml
