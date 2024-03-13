@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using ActiveMQ.Artemis.Core.Client.Framing;
 
 namespace ActiveMQ.Artemis.Core.Client;
 
@@ -41,7 +42,41 @@ public class SessionFactory
         {
             throw exception ?? new SocketException((int)SocketError.AddressNotAvailable);
         }
+        
+        var createSessionMessageV2 = new CreateSessionMessageV2
+        {
+            Name = Guid.NewGuid().ToString(),
+            SessionChannelId = 1,
+            Version = 135,
+            Username = endpoint.User,
+            Password = endpoint.Password,
+            MinLargeMessageSize = 100 * 1024,
+            Xa = false,
+            AutoCommitSends = true,
+            AutoCommitAcks = true,
+            PreAcknowledge = false,
+            WindowSize = -1,
+            DefaultAddress = null,
+            ClientId = null,
+        };
+        
+        // var byteBuffer = new ByteBuffer();
+        // Codec.Encode(byteBuffer, createSessionMessageV2, 1);
+        // _ = await socket.SendAsync(byteBuffer.GetBuffer(), cancellationToken);
 
-        return new Session(socket);
+        var transport = new Transport(socket);
+
+        await transport.SendAsync(createSessionMessageV2, cancellationToken);
+
+        var receivedPacket = await transport.ReceiveAsync(cancellationToken);
+
+        if (receivedPacket is CreateSessionResponseMessage)
+        {
+            return new Session(transport);
+        }
+        else
+        {
+            throw new InvalidOperationException("Received invalid response from the broker");
+        }
     }
 }
