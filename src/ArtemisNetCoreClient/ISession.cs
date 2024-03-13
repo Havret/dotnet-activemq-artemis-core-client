@@ -1,14 +1,11 @@
-using System.Net.Sockets;
-
 namespace ActiveMQ.Artemis.Core.Client;
 
 public interface ISession : IAsyncDisposable;
 
-internal class Session(Socket socket) : ISession
+internal class Session(Transport socket) : ISession
 {
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        socket.Dispose();
-        return ValueTask.CompletedTask;
+        await socket.DisposeAsync().ConfigureAwait(false);
     }
 }
