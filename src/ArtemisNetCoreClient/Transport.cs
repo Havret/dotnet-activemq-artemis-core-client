@@ -5,19 +5,17 @@ namespace ActiveMQ.Artemis.Core.Client;
 
 internal class Transport(Socket socket) : IAsyncDisposable
 {
-    public async Task SendAsync(Packet packet, CancellationToken cancellationToken)
+    public async Task SendAsync(Packet packet, long channelId, CancellationToken cancellationToken)
     {
         var byteBuffer = new ByteBuffer();
-        Codec.Encode(byteBuffer, packet, 1);
+        Codec.Encode(byteBuffer, packet, channelId);
         await socket.SendAsync(byteBuffer.GetBuffer(), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Packet> ReceiveAsync(CancellationToken cancellationToken)
     {
         var receiveBuffer = new byte[sizeof(int)];
-        while (0 == await socket.ReceiveAsync(receiveBuffer, cancellationToken).ConfigureAwait(false))
-        {
-        }
+        await socket.ReceiveAsync(receiveBuffer, cancellationToken).ConfigureAwait(false);
         
         var size = new ByteBuffer(receiveBuffer).ReadInt();
         

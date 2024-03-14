@@ -9,6 +9,8 @@ internal static class Codec
         var type = packet switch
         {
             CreateSessionMessageV2 => CreateSessionMessageV2.Type,
+            SessionStart => SessionStart.Type,
+            SessionStop => SessionStop.Type,
             _ => throw new ArgumentOutOfRangeException(nameof(packet), packet, $"{packet.GetType()} is not supported for encoding")
         };
         buffer.WriteByte(type);
@@ -27,6 +29,7 @@ internal static class Codec
         Packet packet = type switch
         {
             CreateSessionResponseMessage.Type => new CreateSessionResponseMessage(),
+            NullResponse.Type => new NullResponse(),
             _ => throw new ArgumentOutOfRangeException($"Type {type} is not supported for decoding")
         };
         
