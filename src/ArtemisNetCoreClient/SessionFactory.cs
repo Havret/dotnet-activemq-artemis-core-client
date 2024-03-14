@@ -46,7 +46,7 @@ public class SessionFactory
         var createSessionMessageV2 = new CreateSessionMessageV2
         {
             Name = Guid.NewGuid().ToString(),
-            SessionChannelId = 1,
+            SessionChannelId = 10,
             Version = 135,
             Username = endpoint.User,
             Password = endpoint.Password,
@@ -59,20 +59,21 @@ public class SessionFactory
             DefaultAddress = null,
             ClientId = null,
         };
-        
-        // var byteBuffer = new ByteBuffer();
-        // Codec.Encode(byteBuffer, createSessionMessageV2, 1);
-        // _ = await socket.SendAsync(byteBuffer.GetBuffer(), cancellationToken);
 
         var transport = new Transport(socket);
 
-        await transport.SendAsync(createSessionMessageV2, cancellationToken);
+        await transport.SendAsync(createSessionMessageV2, 1, cancellationToken);
 
         var receivedPacket = await transport.ReceiveAsync(cancellationToken);
 
         if (receivedPacket is CreateSessionResponseMessage)
         {
-            return new Session(transport);
+            var session = new Session(transport)
+            {
+                ChannelId = createSessionMessageV2.SessionChannelId
+            };
+            await session.StartAsync(cancellationToken);
+            return session;
         }
         else
         {
