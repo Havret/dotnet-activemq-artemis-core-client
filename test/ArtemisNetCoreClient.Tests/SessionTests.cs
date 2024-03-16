@@ -19,5 +19,6 @@ public class SessionTests
 
         // Assert
         Assert.IsNotNull(session);
+        await session.DisposeAsync();
     }
 }

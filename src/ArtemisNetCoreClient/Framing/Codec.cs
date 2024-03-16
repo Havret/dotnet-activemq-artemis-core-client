@@ -11,6 +11,7 @@ internal static class Codec
             CreateSessionMessageV2 => CreateSessionMessageV2.Type,
             SessionStart => SessionStart.Type,
             SessionStop => SessionStop.Type,
+            SessionCloseMessage => SessionCloseMessage.Type,
             _ => throw new ArgumentOutOfRangeException(nameof(packet), packet, $"{packet.GetType()} is not supported for encoding")
         };
         buffer.WriteByte(type);
