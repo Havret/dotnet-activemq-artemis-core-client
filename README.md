@@ -2,7 +2,15 @@
 
 [![Build](https://github.com/Havret/dotnet-activemq-artemis-core-client/actions/workflows/build.yml/badge.svg)](https://github.com/Havret/dotnet-activemq-artemis-core-client/actions/workflows/build.yml)
 
-![ArtemisNetCoreClient](./readme/artemis.png)
+---
+
+<div align="center">
+
+  <img src="./readme/artemis.png" alt="ArtemisNetCoreClient" width="400"/>
+
+</div>
+
+---
 
 Apache ActiveMQ Artemis is an open-source project to build a multi-protocol, embeddable, very high performance, clustered, asynchronous messaging system.
 
