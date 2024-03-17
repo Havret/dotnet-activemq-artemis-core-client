@@ -2,6 +2,8 @@
 
 [![Build](https://github.com/Havret/dotnet-activemq-artemis-core-client/actions/workflows/build.yml/badge.svg)](https://github.com/Havret/dotnet-activemq-artemis-core-client/actions/workflows/build.yml)
 
+![ArtemisNetCoreClient](./readme/artemis.png)
+
 Apache ActiveMQ Artemis is an open-source project to build a multi-protocol, embeddable, very high performance, clustered, asynchronous messaging system.
 
-This project is an open-source initiative designed to provide .NET developers with a robust, efficient, and easy-to-use client library for interacting with Apache ActiveMQ Artemis message broker. By leveraging the native Core protocol of Apache ActiveMQ Artemis, this client library aims to deliver high-performance messaging capabilities while ensuring compatibility and feature parity with the broker's extensive features set.
+This .NET client library is an open-source effort to equip .NET developers with a powerful, straightforward client for Apache ActiveMQ Artemis. Utilizing the broker's Core protocol, this library focuses on high-performance messaging, ensuring compatibility and comprehensive feature support with Apache ActiveMQ Artemis.
