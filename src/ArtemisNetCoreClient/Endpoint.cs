@@ -6,9 +6,9 @@ namespace ActiveMQ.Artemis.Core.Client;
 public class Endpoint
 {
     /// <summary>
-    /// Gets or sets the protocol scheme.
+    /// Gets or sets the host of the endpoint.
     /// </summary>
-    public string Host { get; init; }
+    public required string Host { get; init; }
 
     /// <summary>
     /// Gets or sets the port number of the endpoint.
