@@ -9,7 +9,7 @@ public class SessionTests
     {
         // Arrange
         var connectionFactory = new SessionFactory();
-        
+
         // Act
         var session = await connectionFactory.CreateAsync(new Endpoint
         {
@@ -24,20 +24,42 @@ public class SessionTests
         await session.DisposeAsync();
     }
 
-    [Test, Ignore("WIP")]
-    public async Task should_create_address()
+    [TestCase(new[] { RoutingType.Anycast })]
+    [TestCase(new[] { RoutingType.Multicast })]
+    [TestCase(new[] { RoutingType.Anycast, RoutingType.Multicast })]
+    public async Task should_create_address_with_selected_routing_type(RoutingType[] routingTypes)
     {
         // Arrange
         var connectionFactory = new SessionFactory();
-        var session = await connectionFactory.CreateAsync(new Endpoint
+        await using var session = await connectionFactory.CreateAsync(new Endpoint
         {
             Host = "localhost",
             Port = 5445,
             User = "artemis",
             Password = "artemis"
         });
-        
-        // Act && Assert
-        await session.CreateAddress("myaddress", Enumerable.Empty<RoutingType>(), false, default);
+
+        // Act
+        var addressName = $"{Guid.NewGuid().ToString()}-{string.Join("-", routingTypes)}";
+        await session.CreateAddress(addressName, routingTypes, false, default);
+    }
+    
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task should_create_address_with_autoCreated_flag(bool autoCreated)
+    {
+        // Arrange
+        var connectionFactory = new SessionFactory();
+        await using var session = await connectionFactory.CreateAsync(new Endpoint
+        {
+            Host = "localhost",
+            Port = 5445,
+            User = "artemis",
+            Password = "artemis"
+        });
+
+        // Act
+        var addressName = $"{Guid.NewGuid().ToString()}";
+        await session.CreateAddress(addressName, new[] { RoutingType.Multicast }, autoCreated: autoCreated, default);
     }
 }
