@@ -12,12 +12,16 @@ internal class Transport(Socket socket) : IAsyncDisposable
         await socket.SendAsync(byteBuffer.GetBuffer(), cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<Packet> ReceiveAsync(CancellationToken cancellationToken)
+    public async Task<Packet?> ReceiveAsync(CancellationToken cancellationToken)
     {
         var receiveBuffer = new byte[sizeof(int)];
         await socket.ReceiveAsync(receiveBuffer, cancellationToken).ConfigureAwait(false);
         
         var size = new ByteBuffer(receiveBuffer).ReadInt();
+        if (size == 0)
+        {
+            return null;
+        }
         
         var buffer = new byte[size];
         _ = await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);

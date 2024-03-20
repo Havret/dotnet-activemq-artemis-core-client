@@ -33,9 +33,4 @@ internal class CreateSessionMessageV2 : Packet
         buffer.WriteNullableString(DefaultAddress);
         buffer.WriteNullableString(ClientId);
     }
-
-    public override void Decode(ByteBuffer buffer)
-    {
-        throw new NotImplementedException();
-    }
 }
