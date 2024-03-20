@@ -116,7 +116,7 @@ internal class ByteBuffer
         }
         else
         {
-            WriteAsBytes(value);
+            WriteStringAsBytes(value);
         }
     }
 
@@ -128,7 +128,7 @@ internal class ByteBuffer
         }
     }
     
-    private void WriteAsBytes(string value)
+    public void WriteStringAsBytes(string value)
     {
         var chars = value.AsSpan();
         WriteInt(chars.Length << 1);

@@ -10,7 +10,7 @@ internal class CreateAddressMessage : Packet
 
     public override void Encode(ByteBuffer buffer)
     {
-        buffer.WriteString(Address);
+        buffer.WriteStringAsBytes(Address);
         buffer.WriteInt(RoutingTypes.Length);
         foreach (var routingType in RoutingTypes)
         {

@@ -48,24 +48,24 @@ internal class Session : ISession
             AutoCreated = autoCreated,
             RequiresResponse = true
         };
-        _ = await SendBlockingAsync<CreateAddressMessage, NullResponse>(createAddressMessage, 11, cancellationToken);
+        _ = await SendBlockingAsync<CreateAddressMessage, NullResponse>(createAddressMessage, cancellationToken);
     }
     
     public async ValueTask DisposeAsync()
     {
-        _ = await SendBlockingAsync<SessionStop, NullResponse>(new SessionStop(), ChannelId, default);
-        _ = await SendBlockingAsync<SessionCloseMessage, NullResponse>(new SessionCloseMessage(),ChannelId, default);
+        _ = await SendBlockingAsync<SessionStop, NullResponse>(new SessionStop(), default);
+        _ = await SendBlockingAsync<SessionCloseMessage, NullResponse>(new SessionCloseMessage(), default);
         await _transport.DisposeAsync().ConfigureAwait(false);
     }
 
-    private async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, long channelId, CancellationToken cancellationToken) where TRequest : Packet
+    private async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken) where TRequest : Packet
     {
         var tcs = new TaskCompletionSource<Packet>();
         
         // TODO: Handle scenario when we cannot CorrelationId
         _ = _completionSources.TryAdd(request.CorrelationId, tcs);
 
-        await _transport.SendAsync(request, channelId, cancellationToken);
+        await _transport.SendAsync(request, ChannelId, cancellationToken);
         var responsePacket = await tcs.Task;
         if (responsePacket is TResponse response)
         {
