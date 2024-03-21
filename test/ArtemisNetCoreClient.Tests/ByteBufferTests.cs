@@ -57,6 +57,36 @@ public class ByteBufferTests
         Assert.That(expected, Is.EqualTo(value));
     }
     
+    [TestCase(true, new[] { unchecked((byte) -1), unchecked((byte) -1) })]
+    [TestCase(false, new[] { unchecked((byte) -1), (byte) 0 })]
+    [TestCase(null, new byte[] { 0 })]
+    public void should_encode_nullable_bool(bool? value, byte[] encoded)
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer();
+
+        // Act
+        byteBuffer.WriteNullableBool(value);
+
+        // Assert
+        CollectionAssert.AreEqual(encoded, byteBuffer.GetBuffer().ToArray());
+    }
+    
+    [TestCase(new[] { unchecked((byte) -1), unchecked((byte) -1) }, true)]
+    [TestCase(new[] { unchecked((byte) -1), (byte) 0 }, false)]
+    [TestCase(new byte[] { 0 }, null)]
+    public void should_decode_nullable_bool(byte[] encoded, bool? expected)
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer(encoded);
+
+        // Act
+        var value = byteBuffer.ReadNullableBool();
+
+        // Assert
+        Assert.That(expected, Is.EqualTo(value));
+    }
+    
     [Test]
     public void should_encode_int()
     {

@@ -37,6 +37,28 @@ internal class ByteBuffer
         return value != 0;
     }
 
+    public void WriteNullableBool(bool? value)
+    {
+        WriteBool(value.HasValue);
+        if (value.HasValue)
+        {
+            WriteBool(value.Value);
+        }
+    }
+    
+    public bool? ReadNullableBool()
+    {
+        var isNotNull = ReadBool();
+        if (isNotNull)
+        {
+            return ReadBool();
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public void WriteByte(byte value)
     {
         _memoryStream.WriteByte(value);
