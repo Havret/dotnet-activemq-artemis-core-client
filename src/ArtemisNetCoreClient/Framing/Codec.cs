@@ -33,6 +33,7 @@ internal static class Codec
         {
             CreateSessionResponseMessage.Type => new CreateSessionResponseMessage(),
             NullResponse.Type => new NullResponse(),
+            SessionBindingQueryResponseMessageV5.Type => new SessionBindingQueryResponseMessageV5(),
             _ => throw new ArgumentOutOfRangeException($"Type {type} is not supported for decoding")
         };
         

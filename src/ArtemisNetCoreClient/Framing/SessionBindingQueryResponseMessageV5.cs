@@ -2,6 +2,10 @@ namespace ActiveMQ.Artemis.Core.Client.Framing;
 
 internal class SessionBindingQueryResponseMessageV5 : Packet
 {
+    public const byte Type = unchecked((byte) -22);
+
+    public override bool IsResponse => true;
+
     public bool Exists { get; set; }
     public IReadOnlyList<string> QueueNames { get; set; }
     public bool AutoCreateQueues { get; set; }
@@ -12,8 +16,8 @@ internal class SessionBindingQueryResponseMessageV5 : Packet
     public bool? DefaultLastValue { get; set; }
     public string? DefaultLastValueKey { get; set; }
     public bool? DefaultNonDestructive { get; set; }
-    public int DefaultConsumersBeforeDispatch { get; set; }
-    public long DefaultDelayBeforeDispatch { get; set; }
+    public int? DefaultConsumersBeforeDispatch { get; set; }
+    public long? DefaultDelayBeforeDispatch { get; set; }
     public bool SupportsMulticast { get; set; }
     public bool SupportsAnycast { get; set; }
 
@@ -26,11 +30,12 @@ internal class SessionBindingQueryResponseMessageV5 : Packet
     {
         Exists = buffer.ReadBool();
         var numQueues = buffer.ReadInt();
-        var queueNames = new string [numQueues];
+        var queueNames = new string[numQueues];
         for (int i = 0; i < numQueues; i++)
         {
             queueNames[i] = buffer.ReadStringAsBytes();
         }
+
         QueueNames = queueNames;
         AutoCreateQueues = buffer.ReadBool();
         AutoCreateAddresses = buffer.ReadBool();
@@ -40,5 +45,9 @@ internal class SessionBindingQueryResponseMessageV5 : Packet
         DefaultLastValue = buffer.ReadNullableBool();
         DefaultLastValueKey = buffer.ReadNullableStringAsBytes();
         DefaultNonDestructive = buffer.ReadNullableBool();
+        DefaultConsumersBeforeDispatch = buffer.ReadNullableInt();
+        DefaultDelayBeforeDispatch = buffer.ReadNullableLong();
+        SupportsMulticast = buffer.ReadBool();
+        SupportsAnycast = buffer.ReadBool();
     }
 }

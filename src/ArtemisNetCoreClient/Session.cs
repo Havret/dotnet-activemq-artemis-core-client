@@ -39,16 +39,45 @@ internal class Session : ISession
         });
     }
     
-    public async Task CreateAddress(string address, IEnumerable<RoutingType> routingTypes, bool autoCreated, CancellationToken cancellationToken)
+    public async Task CreateAddress(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken)
     {
         var createAddressMessage = new CreateAddressMessage
         {
             Address = address,
             RoutingTypes = routingTypes.ToArray(),
-            AutoCreated = autoCreated,
+            AutoCreated = false,
             RequiresResponse = true
         };
         _ = await SendBlockingAsync<CreateAddressMessage, NullResponse>(createAddressMessage, cancellationToken);
+    }
+
+    public async Task<AddressInfo> GetAddressInfo(string address, CancellationToken cancellationToken)
+    {
+        var request = new SessionBindingQueryMessage
+        {
+            Address = address
+        };
+        var response = await SendBlockingAsync<SessionBindingQueryMessage, SessionBindingQueryResponseMessageV5>(request, cancellationToken);
+        
+        return new AddressInfo
+        {
+            Name = address,
+            QueueNames = response.QueueNames,
+            RoutingTypes = GetRoutingTypes(response).ToArray(),
+        };
+    }
+    
+    private static IEnumerable<RoutingType> GetRoutingTypes(SessionBindingQueryResponseMessageV5 sessionBindingQueryResponseMessageV5)
+    {
+        if (sessionBindingQueryResponseMessageV5.SupportsAnycast)
+        {
+            yield return RoutingType.Anycast;
+        }
+
+        if (sessionBindingQueryResponseMessageV5.SupportsMulticast)
+        {
+            yield return RoutingType.Multicast;
+        }
     }
     
     public async ValueTask DisposeAsync()
@@ -62,7 +91,7 @@ internal class Session : ISession
     {
         var tcs = new TaskCompletionSource<Packet>();
         
-        // TODO: Handle scenario when we cannot CorrelationId
+        // TODO: Handle scenario when we cannot add request for this CorrelationId, because there is already another pending request
         _ = _completionSources.TryAdd(request.CorrelationId, tcs);
 
         await _transport.SendAsync(request, ChannelId, cancellationToken);
