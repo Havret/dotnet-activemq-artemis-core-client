@@ -240,7 +240,6 @@ internal class ByteBuffer
             }
             else
             {
-     
                 var rented = ArrayPool<byte>.Shared.Rent(actualByteCount);
                 try
                 {
@@ -255,11 +254,11 @@ internal class ByteBuffer
         }
         else
         {
-            return ReadAsBytes();
+            return ReadStringAsBytes();
         }
     }
     
-    private string ReadAsBytes()
+    public string ReadStringAsBytes()
     {
         var actualByteCount = ReadInt();
 
