@@ -187,6 +187,34 @@ public class ByteBufferTests
         Assert.That(value, Is.EqualTo(long.MaxValue));
     }
 
+    [TestCase(280, new byte[] { unchecked((byte)-1), 0, 0, 0, 0, 0, 0, 1, 24 })]
+    [TestCase(null, new byte[] { 0 })]
+    public void should_encode_nullable_long(long? value, byte[] encoded)
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer();
+
+        // Act
+        byteBuffer.WriteNullableLong(value);
+
+        // Assert
+        CollectionAssert.AreEqual(encoded, byteBuffer.GetBuffer().ToArray());
+    }
+
+    [TestCase(new byte[] { unchecked((byte)-1), 0, 0, 0, 0, 0, 0, 1, 24 }, 280)]
+    [TestCase(new byte[] { 0 }, null)]
+    public void should_decode_nullable_long(byte[] encoded, long? expected)
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer(encoded);
+
+        // Act
+        var value = byteBuffer.ReadNullableLong();
+
+        // Assert
+        Assert.That(expected, Is.EqualTo(value));
+    }    
+
     [Test]
     public void should_encode_short_string()
     {

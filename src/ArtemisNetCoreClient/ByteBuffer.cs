@@ -118,6 +118,28 @@ internal class ByteBuffer
         _ = _memoryStream.Read(buffer);
         return BinaryPrimitives.ReadInt64BigEndian(buffer);
     }
+
+    public void WriteNullableLong(long? value)
+    {
+        WriteBool(value.HasValue);
+        if (value.HasValue)
+        {
+            WriteLong(value.Value);
+        }
+    }
+    
+    public long? ReadNullableLong()
+    {
+        var isNotNull = ReadBool();
+        if (isNotNull)
+        {
+            return ReadLong();
+        }
+        else
+        {
+            return null;
+        }
+    }
     
     public void WriteNullableString(string? value)
     {
