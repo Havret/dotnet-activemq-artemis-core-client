@@ -41,25 +41,11 @@ public class SessionTests
 
         // Act
         var addressName = $"{Guid.NewGuid().ToString()}-{string.Join("-", routingTypes)}";
-        await session.CreateAddress(addressName, routingTypes, false, default);
-    }
-    
-    [TestCase(false)]
-    [TestCase(true)]
-    public async Task should_create_address_with_autoCreated_flag(bool autoCreated)
-    {
-        // Arrange
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(new Endpoint
-        {
-            Host = "localhost",
-            Port = 5445,
-            User = "artemis",
-            Password = "artemis"
-        });
-
-        // Act
-        var addressName = $"{Guid.NewGuid().ToString()}";
-        await session.CreateAddress(addressName, new[] { RoutingType.Multicast }, autoCreated: autoCreated, default);
+        await session.CreateAddress(addressName, routingTypes, default);
+        
+        // Assert
+        var addressInfo = await session.GetAddressInfo(addressName, default);
+        Assert.That(addressInfo.Name, Is.EqualTo(addressName));
+        CollectionAssert.AreEqual(routingTypes, addressInfo.RoutingTypes);
     }
 }
