@@ -5,6 +5,10 @@ internal class CreateSessionResponseMessage : Packet
     public const byte Type = 31;
     public int ServerVersion { get; private set; }
 
+    public override void Encode(ByteBuffer buffer)
+    {
+    }
+
     public override void Decode(ByteBuffer buffer)
     {
         ServerVersion = buffer.ReadInt();

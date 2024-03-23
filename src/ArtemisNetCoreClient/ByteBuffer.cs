@@ -17,7 +17,7 @@ internal class ByteBuffer
     {
         _memoryStream = new MemoryStream(payload, writable: false);
     }
-
+    
     public ReadOnlyMemory<byte> GetBuffer()
     {
         _memoryStream.TryGetBuffer(out var buffer);
@@ -240,7 +240,6 @@ internal class ByteBuffer
             }
             else
             {
-     
                 var rented = ArrayPool<byte>.Shared.Rent(actualByteCount);
                 try
                 {
@@ -255,11 +254,11 @@ internal class ByteBuffer
         }
         else
         {
-            return ReadAsBytes();
+            return ReadStringAsBytes();
         }
     }
     
-    private string ReadAsBytes()
+    public string ReadStringAsBytes()
     {
         var actualByteCount = ReadInt();
 
@@ -294,6 +293,12 @@ internal class ByteBuffer
     {
         var value = _memoryStream.ReadByte();
         return value == DataConstants.NotNull ? ReadString() : null;
+    }
+
+    public string? ReadNullableStringAsBytes()
+    {
+        var value = _memoryStream.ReadByte();
+        return value == DataConstants.NotNull ? ReadStringAsBytes() : null;
     }
 
     public void WriteSize()

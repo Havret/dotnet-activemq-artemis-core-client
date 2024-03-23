@@ -19,4 +19,8 @@ internal class CreateAddressMessage : Packet
         buffer.WriteBool(RequiresResponse);
         buffer.WriteBool(AutoCreated);
     }
+
+    public override void Decode(ByteBuffer buffer)
+    {
+    }
 }
