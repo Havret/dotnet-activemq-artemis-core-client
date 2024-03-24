@@ -66,7 +66,7 @@ internal class Session : ISession
             RoutingTypes = GetRoutingTypes(response).ToArray(),
         };
     }
-    
+
     private static IEnumerable<RoutingType> GetRoutingTypes(SessionBindingQueryResponseMessageV5 sessionBindingQueryResponseMessageV5)
     {
         if (sessionBindingQueryResponseMessageV5.SupportsAnycast)
@@ -78,6 +78,18 @@ internal class Session : ISession
         {
             yield return RoutingType.Multicast;
         }
+    }
+    
+    public async Task CreateQueue(QueueConfiguration queueConfiguration, CancellationToken cancellationToken)
+    {
+        var createQueueMessage = new CreateQueueMessageV2
+        {
+            RequiresResponse = true,
+            Address = queueConfiguration.Address,
+            QueueName = queueConfiguration.Name,
+            RoutingType = queueConfiguration.RoutingType
+        };
+        _ = await SendBlockingAsync<CreateQueueMessageV2, NullResponse>(createQueueMessage, cancellationToken);
     }
     
     public async ValueTask DisposeAsync()
