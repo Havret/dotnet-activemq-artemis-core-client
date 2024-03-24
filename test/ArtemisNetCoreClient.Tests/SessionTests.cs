@@ -48,4 +48,30 @@ public class SessionTests
         Assert.That(addressInfo.Name, Is.EqualTo(addressName));
         CollectionAssert.AreEqual(routingTypes, addressInfo.RoutingTypes);
     }
+
+    [TestCase(RoutingType.Anycast)]
+    [TestCase(RoutingType.Multicast)]
+    public async Task should_create_queue_with_selected_routing_type(RoutingType routingType)
+    {
+        // Arrange
+        var connectionFactory = new SessionFactory();
+        await using var session = await connectionFactory.CreateAsync(new Endpoint
+        {
+            Host = "localhost",
+            Port = 5445,
+            User = "artemis",
+            Password = "artemis"
+        });
+        var addressName = $"{Guid.NewGuid().ToString()}";
+        await session.CreateAddress(addressName, new[] { routingType }, default);
+        
+        // Act
+        var queueName = $"{Guid.NewGuid().ToString()}";
+        await session.CreateQueue(new QueueConfiguration
+        {
+            Address = addressName,
+            Name = queueName,
+            RoutingType = routingType
+        }, default);
+    }
 }
