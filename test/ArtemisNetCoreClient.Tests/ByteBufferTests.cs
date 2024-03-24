@@ -358,4 +358,32 @@ public class ByteBufferTests
         // Assert
         Assert.That(value, Is.EqualTo(expected));
     }
+
+    [TestCase("abcdefgh", new byte[] { 1, 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 })]
+    [TestCase(null, new byte[] { 0 })]
+    public void should_encode_nullable_amq_string(string value, byte[] encoded)
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer();
+
+        // Act
+        byteBuffer.WriteNullableAmqString(value);
+
+        // Assert
+        CollectionAssert.AreEqual(encoded, byteBuffer.GetBuffer().ToArray());
+    }
+    
+    [TestCase(new byte[] { 1, 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 }, "abcdefgh")]
+    [TestCase(new byte[] { 0 }, null)]
+    public void should_decode_nullable_amq_string(byte[] encoded, string? expected)
+    {
+        // Arrange
+        var byteBuffer = new ByteBuffer(encoded);
+
+        // Act
+        var value = byteBuffer.ReadNullableAmqString();
+
+        // Assert
+        Assert.That(value, Is.EqualTo(expected));
+    }
 }
