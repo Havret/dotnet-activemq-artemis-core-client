@@ -182,7 +182,7 @@ internal class ByteBuffer
         }
         else
         {
-            WriteStringAsBytes(value);
+            WriteAmqString(value);
         }
     }
 
@@ -194,7 +194,7 @@ internal class ByteBuffer
         }
     }
     
-    public void WriteStringAsBytes(string value)
+    public void WriteAmqString(string value)
     {
         var chars = value.AsSpan();
         WriteInt(chars.Length << 1);
@@ -254,11 +254,11 @@ internal class ByteBuffer
         }
         else
         {
-            return ReadStringAsBytes();
+            return ReadAmqString();
         }
     }
     
-    public string ReadStringAsBytes()
+    public string ReadAmqString()
     {
         var actualByteCount = ReadInt();
 
@@ -294,11 +294,24 @@ internal class ByteBuffer
         var value = _memoryStream.ReadByte();
         return value == DataConstants.NotNull ? ReadString() : null;
     }
+    
+    public void WriteNullableAmqString(string? value)
+    {
+        if (value != null)
+        {
+            WriteByte(DataConstants.NotNull);
+            WriteAmqString(value);
+        }
+        else
+        {
+            WriteByte(DataConstants.Null);
+        }
+    }
 
-    public string? ReadNullableStringAsBytes()
+    public string? ReadNullableAmqString()
     {
         var value = _memoryStream.ReadByte();
-        return value == DataConstants.NotNull ? ReadStringAsBytes() : null;
+        return value == DataConstants.NotNull ? ReadAmqString() : null;
     }
 
     public void WriteSize()

@@ -8,7 +8,7 @@ internal class SessionBindingQueryMessage : Packet
 
     public override void Encode(ByteBuffer buffer)
     {
-        buffer.WriteStringAsBytes(Address);
+        buffer.WriteAmqString(Address);
     }
 
     public override void Decode(ByteBuffer buffer)
