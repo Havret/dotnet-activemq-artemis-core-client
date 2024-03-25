@@ -32,8 +32,8 @@ internal class CreateQueueMessageV2 : Packet
 
     public override void Encode(ByteBuffer buffer)
     {
-        buffer.WriteAmqString(Address);
-        buffer.WriteAmqString(QueueName);
+        buffer.WriteByteString(Address);
+        buffer.WriteByteString(QueueName);
         buffer.WriteNullableString(FilterString);
         buffer.WriteBool(Durable);
         buffer.WriteBool(Temporary);
@@ -44,7 +44,7 @@ internal class CreateQueueMessageV2 : Packet
         buffer.WriteBool(PurgeOnNoConsumers);
         buffer.WriteNullableBool(Exclusive);
         buffer.WriteNullableBool(LastValue);
-        buffer.WriteNullableAmqString(LastValueKey);
+        buffer.WriteNullableByteString(LastValueKey);
         buffer.WriteNullableBool(NonDestructive);
         buffer.WriteNullableInt(ConsumersBeforeDispatch);
         buffer.WriteNullableLong(DelayBeforeDispatch);
@@ -53,7 +53,7 @@ internal class CreateQueueMessageV2 : Packet
         buffer.WriteNullableBool(AutoDelete);
         buffer.WriteNullableLong(AutoDeleteDelay);
         buffer.WriteNullableLong(AutoDeleteMessageCount);
-        buffer.WriteNullableAmqString(GroupFirstKey);
+        buffer.WriteNullableByteString(GroupFirstKey);
         buffer.WriteNullableLong(RingSize);
         buffer.WriteNullableBool(Enabled);
         buffer.WriteNullableBool(GroupRebalancePauseDispatch);

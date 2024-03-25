@@ -91,7 +91,23 @@ internal class Session : ISession
         };
         _ = await SendBlockingAsync<CreateQueueMessageV2, NullResponse>(createQueueMessage, cancellationToken);
     }
-    
+
+    public async Task<QueueInfo> GetQueueInfo(string queueName, CancellationToken cancellationToken)
+    {
+        var request = new SessionQueueQueryMessage
+        {
+            QueueName = queueName
+        };
+        var response = await SendBlockingAsync<SessionQueueQueryMessage, SessionQueueQueryResponseMessageV3>(request, cancellationToken);
+
+        return new QueueInfo
+        {
+            QueueName = response.Name ?? queueName,
+            RoutingType = response.RoutingType,
+            AddressName = response.Address ?? string.Empty,
+        };
+    }
+
     public async ValueTask DisposeAsync()
     {
         _ = await SendBlockingAsync<SessionStop, NullResponse>(new SessionStop(), default);
