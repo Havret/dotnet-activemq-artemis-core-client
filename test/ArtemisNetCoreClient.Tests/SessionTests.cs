@@ -63,7 +63,7 @@ public class SessionTests
             Password = "artemis"
         });
         var addressName = $"{Guid.NewGuid().ToString()}";
-        await session.CreateAddress(addressName, new[] { routingType }, default);
+        await session.CreateAddress(addressName, [routingType], default);
         
         // Act
         var queueName = $"{Guid.NewGuid().ToString()}";
@@ -73,5 +73,11 @@ public class SessionTests
             Name = queueName,
             RoutingType = routingType
         }, default);
+        
+        // Assert
+        var queueInfo = await session.GetQueueInfo(queueName, default);
+        Assert.That(queueInfo.QueueName, Is.EqualTo(queueName));
+        Assert.That(queueInfo.AddressName, Is.EqualTo(addressName));
+        Assert.That(queueInfo.RoutingType, Is.EqualTo(routingType));
     }
 }

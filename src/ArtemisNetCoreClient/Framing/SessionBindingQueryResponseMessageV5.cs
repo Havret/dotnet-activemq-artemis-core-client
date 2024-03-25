@@ -33,7 +33,7 @@ internal class SessionBindingQueryResponseMessageV5 : Packet
         var queueNames = new string[numQueues];
         for (int i = 0; i < numQueues; i++)
         {
-            queueNames[i] = buffer.ReadAmqString();
+            queueNames[i] = buffer.ReadByteString();
         }
 
         QueueNames = queueNames;
@@ -43,7 +43,7 @@ internal class SessionBindingQueryResponseMessageV5 : Packet
         DefaultMaxConsumers = buffer.ReadInt();
         DefaultExclusive = buffer.ReadNullableBool();
         DefaultLastValue = buffer.ReadNullableBool();
-        DefaultLastValueKey = buffer.ReadNullableAmqString();
+        DefaultLastValueKey = buffer.ReadNullableByteString();
         DefaultNonDestructive = buffer.ReadNullableBool();
         DefaultConsumersBeforeDispatch = buffer.ReadNullableInt();
         DefaultDelayBeforeDispatch = buffer.ReadNullableLong();

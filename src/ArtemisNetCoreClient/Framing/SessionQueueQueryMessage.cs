@@ -1,14 +1,14 @@
 namespace ActiveMQ.Artemis.Core.Client.Framing;
 
-internal class SessionBindingQueryMessage : Packet
+internal class SessionQueueQueryMessage : Packet
 {
-    public const byte Type = 49;
-    
-    public required string Address { get; init; }
+    public const byte Type = 45;
 
+    public required string QueueName { get; init; }
+    
     public override void Encode(ByteBuffer buffer)
     {
-        buffer.WriteByteString(Address);
+        buffer.WriteByteString(QueueName);
     }
 
     public override void Decode(ByteBuffer buffer)
