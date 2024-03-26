@@ -51,20 +51,25 @@ internal class Session : ISession
         _ = await SendBlockingAsync<CreateAddressMessage, NullResponse>(createAddressMessage, cancellationToken);
     }
 
-    public async Task<AddressInfo> GetAddressInfo(string address, CancellationToken cancellationToken)
+    public async Task<AddressInfo?> GetAddressInfo(string address, CancellationToken cancellationToken)
     {
         var request = new SessionBindingQueryMessage
         {
             Address = address
         };
         var response = await SendBlockingAsync<SessionBindingQueryMessage, SessionBindingQueryResponseMessageV5>(request, cancellationToken);
-        
-        return new AddressInfo
+
+        if (response.Exists)
         {
-            Name = address,
-            QueueNames = response.QueueNames,
-            RoutingTypes = GetRoutingTypes(response).ToArray(),
-        };
+            return new AddressInfo
+            {
+                Name = address,
+                QueueNames = response.QueueNames,
+                RoutingTypes = GetRoutingTypes(response).ToArray(),
+            };
+        }
+
+        return null;
     }
 
     private static IEnumerable<RoutingType> GetRoutingTypes(SessionBindingQueryResponseMessageV5 sessionBindingQueryResponseMessageV5)
