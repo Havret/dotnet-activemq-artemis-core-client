@@ -97,7 +97,7 @@ internal class Session : ISession
         _ = await SendBlockingAsync<CreateQueueMessageV2, NullResponse>(createQueueMessage, cancellationToken);
     }
 
-    public async Task<QueueInfo> GetQueueInfo(string queueName, CancellationToken cancellationToken)
+    public async Task<QueueInfo?> GetQueueInfo(string queueName, CancellationToken cancellationToken)
     {
         var request = new SessionQueueQueryMessage
         {
@@ -105,12 +105,17 @@ internal class Session : ISession
         };
         var response = await SendBlockingAsync<SessionQueueQueryMessage, SessionQueueQueryResponseMessageV3>(request, cancellationToken);
 
-        return new QueueInfo
+        if (response.Exists)
         {
-            QueueName = response.Name ?? queueName,
-            RoutingType = response.RoutingType,
-            AddressName = response.Address ?? string.Empty,
-        };
+            return new QueueInfo
+            {
+                QueueName = response.Name ?? queueName,
+                RoutingType = response.RoutingType,
+                AddressName = response.Address ?? string.Empty,
+            };
+        }
+
+        return null;
     }
 
     public async ValueTask DisposeAsync()

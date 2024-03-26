@@ -101,4 +101,25 @@ public class SessionTests
         // Assert
         Assert.That(addressInfo, Is.Null);
     }
+
+    [Test]
+    public async Task should_not_return_queue_info_when_queue_does_not_exist()
+    {
+        // Arrange
+        var connectionFactory = new SessionFactory();
+        await using var session = await connectionFactory.CreateAsync(new Endpoint
+        {
+            Host = "localhost",
+            Port = 5445,
+            User = "artemis",
+            Password = "artemis"
+        });
+
+        // Act
+        var queueName = Guid.NewGuid().ToString();
+        var queueInfo = await session.GetQueueInfo(queueName, default);
+        
+        // Assert
+        Assert.That(queueInfo, Is.Null);
+    }
 }
