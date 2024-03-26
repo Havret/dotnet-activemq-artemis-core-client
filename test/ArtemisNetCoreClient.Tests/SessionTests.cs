@@ -80,4 +80,25 @@ public class SessionTests
         Assert.That(queueInfo.AddressName, Is.EqualTo(addressName));
         Assert.That(queueInfo.RoutingType, Is.EqualTo(routingType));
     }
+
+    [Test]
+    public async Task should_not_return_address_info_when_address_does_not_exist()
+    {
+        // Arrange
+        var connectionFactory = new SessionFactory();
+        await using var session = await connectionFactory.CreateAsync(new Endpoint
+        {
+            Host = "localhost",
+            Port = 5445,
+            User = "artemis",
+            Password = "artemis"
+        });
+
+        // Act
+        var addressName = Guid.NewGuid().ToString();
+        var addressInfo = await session.GetAddressInfo(addressName, default);
+        
+        // Assert
+        Assert.That(addressInfo, Is.Null);
+    }
 }
