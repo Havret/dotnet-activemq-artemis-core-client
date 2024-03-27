@@ -76,9 +76,10 @@ public class SessionTests
         
         // Assert
         var queueInfo = await session.GetQueueInfo(queueName, default);
-        Assert.That(queueInfo.QueueName, Is.EqualTo(queueName));
-        Assert.That(queueInfo.AddressName, Is.EqualTo(addressName));
-        Assert.That(queueInfo.RoutingType, Is.EqualTo(routingType));
+        Assert.That(queueInfo, Is.Not.Null);
+        Assert.That(queueInfo?.QueueName, Is.EqualTo(queueName));
+        Assert.That(queueInfo?.AddressName, Is.EqualTo(addressName));
+        Assert.That(queueInfo?.RoutingType, Is.EqualTo(routingType));
     }
 
     [Test]
