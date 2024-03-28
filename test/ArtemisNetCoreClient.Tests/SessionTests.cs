@@ -123,4 +123,36 @@ public class SessionTests
         // Assert
         Assert.That(queueInfo, Is.Null);
     }
+
+    [Test]
+    public async Task should_create_and_dispose_consumer()
+    {
+        // Arrange
+        var connectionFactory = new SessionFactory();
+        await using var session = await connectionFactory.CreateAsync(new Endpoint
+        {
+            Host = "localhost",
+            Port = 5445,
+            User = "artemis",
+            Password = "artemis"
+        });
+        var addressName = $"{Guid.NewGuid().ToString()}";
+        await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, default);
+        
+        var queueName = Guid.NewGuid().ToString();
+        await session.CreateQueue(new QueueConfiguration
+        {
+            Address = addressName,
+            Name = queueName,
+            RoutingType = RoutingType.Multicast
+        }, default);
+        
+        // Act
+        var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
+        {
+            QueueName = queueName
+        }, default);
+
+        await consumer.DisposeAsync();
+    }
 }

@@ -8,4 +8,10 @@ public interface ISession : IAsyncDisposable
     Task<AddressInfo?> GetAddressInfo(string address, CancellationToken cancellationToken);
     Task CreateQueue(QueueConfiguration queueConfiguration, CancellationToken cancellationToken);
     Task<QueueInfo?> GetQueueInfo(string queueName, CancellationToken cancellationToken);
+    Task<IConsumer> CreateConsumerAsync(ConsumerConfiguration consumerConfiguration, CancellationToken cancellationToken);
+}
+
+public class ConsumerConfiguration
+{
+    public required string QueueName { get; init; }
 }
