@@ -92,7 +92,8 @@ internal class Session : ISession
             RequiresResponse = true,
             Address = queueConfiguration.Address,
             QueueName = queueConfiguration.Name,
-            RoutingType = queueConfiguration.RoutingType
+            RoutingType = queueConfiguration.RoutingType,
+            MaxConsumers = -1
         };
         _ = await SendBlockingAsync<CreateQueueMessageV2, NullResponse>(createQueueMessage, cancellationToken);
     }
@@ -118,6 +119,23 @@ internal class Session : ISession
         return null;
     }
 
+    public async Task<IConsumer> CreateConsumerAsync(ConsumerConfiguration consumerConfiguration, CancellationToken cancellationToken)
+    {
+        var request = new SessionCreateConsumerMessage
+        {
+            Id = 0,
+            QueueName = consumerConfiguration.QueueName,
+            Priority = 0,
+            BrowseOnly = false,
+            RequiresResponse = true
+        };
+        _ = await SendBlockingAsync<SessionCreateConsumerMessage, SessionQueueQueryResponseMessageV3>(request, cancellationToken);
+        return new Consumer(this)
+        {
+            ConsumerId = request.Id
+        };
+    }
+
     public async ValueTask DisposeAsync()
     {
         _ = await SendBlockingAsync<SessionStop, NullResponse>(new SessionStop(), default);
@@ -125,7 +143,7 @@ internal class Session : ISession
         await _transport.DisposeAsync().ConfigureAwait(false);
     }
 
-    private async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken) where TRequest : Packet
+    internal async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken) where TRequest : Packet
     {
         var tcs = new TaskCompletionSource<Packet>();
         

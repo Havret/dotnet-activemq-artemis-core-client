@@ -16,6 +16,8 @@ internal static class Codec
             SessionBindingQueryMessage => SessionBindingQueryMessage.Type,
             CreateQueueMessageV2 => CreateQueueMessageV2.Type,
             SessionQueueQueryMessage => SessionQueueQueryMessage.Type,
+            SessionCreateConsumerMessage => SessionCreateConsumerMessage.Type,
+            SessionConsumerCloseMessage => SessionConsumerCloseMessage.Type,
             _ => throw new ArgumentOutOfRangeException(nameof(packet), packet, $"{packet.GetType()} is not supported for encoding")
         };
         buffer.WriteByte(type);
@@ -37,6 +39,7 @@ internal static class Codec
             NullResponse.Type => new NullResponse(),
             SessionBindingQueryResponseMessageV5.Type => new SessionBindingQueryResponseMessageV5(),
             SessionQueueQueryResponseMessageV3.Type => new SessionQueueQueryResponseMessageV3(),
+            ActiveMQExceptionMessage.Type => new ActiveMQExceptionMessage(),
             _ => throw new ArgumentOutOfRangeException($"Type {type} is not supported for decoding")
         };
         
