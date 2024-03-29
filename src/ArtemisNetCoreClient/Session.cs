@@ -136,6 +136,20 @@ internal class Session : ISession
         };
     }
 
+    public async Task<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken)
+    {
+        var request = new CreateProducerMessage
+        {
+            Id = 0,
+            Address = producerConfiguration.Address
+        };
+        await _transport.SendAsync(request, ChannelId, cancellationToken);
+        return new Producer(this)
+        {
+            ProducerId = request.Id
+        };
+    }
+
     public async ValueTask DisposeAsync()
     {
         _ = await SendBlockingAsync<SessionStop, NullResponse>(new SessionStop(), default);
@@ -161,6 +175,11 @@ internal class Session : ISession
             // TODO: Handle gracefully
             throw new ArgumentException($"Expected response {typeof(TResponse).Name} but got {responsePacket.GetType().Name}");
         }
+    }
+
+    internal async Task SendAsync<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : Packet
+    {
+        await _transport.SendAsync(request, ChannelId, cancellationToken);
     }
 
     public long ChannelId { get; init; }
