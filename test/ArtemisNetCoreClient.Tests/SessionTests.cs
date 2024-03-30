@@ -20,7 +20,7 @@ public class SessionTests
         });
 
         // Assert
-        Assert.IsNotNull(session);
+        Assert.That(session, Is.Not.Null);
         await session.DisposeAsync();
     }
 
@@ -172,7 +172,7 @@ public class SessionTests
         await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, default);
         
         // Act
-        var producer = await session.CreateProducerAsync(new ProducerConfiguration()
+        var producer = await session.CreateProducerAsync(new ProducerConfiguration
         {
             Address = addressName
         }, default);
