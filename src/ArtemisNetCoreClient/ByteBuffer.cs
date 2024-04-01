@@ -314,6 +314,11 @@ internal class ByteBuffer
         return value == DataConstants.NotNull ? ReadByteString() : null;
     }
 
+    public void WriteBytes(ReadOnlySpan<byte> value)
+    {
+        _memoryStream.Write(value);
+    }
+
     public void WriteSize()
     {
         _memoryStream.TryGetBuffer(out var buffer);
