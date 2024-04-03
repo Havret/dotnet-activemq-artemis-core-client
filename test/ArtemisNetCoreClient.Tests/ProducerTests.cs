@@ -4,7 +4,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class ProducerTests
 {
-    [Test, Ignore("Failing")]
+    [Test]
     public async Task should_send_message()
     {
         // Arrange
