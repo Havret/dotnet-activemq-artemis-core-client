@@ -21,6 +21,8 @@ public class Message
     
     internal void Encode(ByteBuffer buffer)
     {
+        // TODO: Add comment why it's 17 ;-)
+        buffer.WriteInt(Body.Length + 17);
         buffer.WriteInt(Body.Length);
         buffer.WriteBytes(Body);
         

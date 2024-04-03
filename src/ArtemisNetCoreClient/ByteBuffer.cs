@@ -324,4 +324,9 @@ internal class ByteBuffer
         _memoryStream.TryGetBuffer(out var buffer);
         BinaryPrimitives.WriteInt32BigEndian(buffer, buffer.Count - sizeof(int));
     }
+
+    public long ReadableBytes()
+    {
+        return _memoryStream.Length - _memoryStream.Position;
+    }
 }

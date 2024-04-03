@@ -27,7 +27,7 @@ internal class Producer(Session session) : IProducer
             Message = message,
             ProducerId = ProducerId,
             RequiresResponse = true,
-            CorrelationId = 1000
+            CorrelationId = -4
         }, cancellationToken);
     }
 }
