@@ -30,8 +30,5 @@ public class ProducerTests
             Durable = true,
             Body = "test_payload"u8.ToArray()
         }, default);
-
-
-        await producer.DisposeAsync();
     }
 }
