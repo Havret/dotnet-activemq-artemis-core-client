@@ -8,6 +8,7 @@ internal class Session : ISession
     private readonly Transport _transport;
 
     private readonly ConcurrentDictionary<long, TaskCompletionSource<Packet>> _completionSources = new();
+    private readonly ConcurrentDictionary<long, Consumer> _consumers = new();
 
     public Session(Transport transport)
     {
@@ -25,6 +26,13 @@ internal class Session : ISession
                     {
                         tcs.TrySetResult(packet);
                     }
+                    else if (packet is SessionReceiveMessage { } sessionReceiveMessage)
+                    {
+                        if (_consumers.TryGetValue(sessionReceiveMessage.ConsumerId, out var consumer))
+                        {
+                            consumer.OnMessage(sessionReceiveMessage.Message);
+                        }
+                    }
                     else
                     {
                         // TODO: Handle
@@ -38,7 +46,7 @@ internal class Session : ISession
             }
         });
     }
-    
+
     public async Task CreateAddress(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken)
     {
         var createAddressMessage = new CreateAddressMessage
@@ -57,7 +65,8 @@ internal class Session : ISession
         {
             Address = address
         };
-        var response = await SendBlockingAsync<SessionBindingQueryMessage, SessionBindingQueryResponseMessageV5>(request, cancellationToken);
+        var response =
+            await SendBlockingAsync<SessionBindingQueryMessage, SessionBindingQueryResponseMessageV5>(request, cancellationToken);
 
         if (response.Exists)
         {
@@ -84,7 +93,7 @@ internal class Session : ISession
             yield return RoutingType.Multicast;
         }
     }
-    
+
     public async Task CreateQueue(QueueConfiguration queueConfiguration, CancellationToken cancellationToken)
     {
         var createQueueMessage = new CreateQueueMessageV2
@@ -130,10 +139,14 @@ internal class Session : ISession
             RequiresResponse = true
         };
         _ = await SendBlockingAsync<SessionCreateConsumerMessage, SessionQueueQueryResponseMessageV3>(request, cancellationToken);
-        return new Consumer(this)
+        var consumer = new Consumer(this)
         {
             ConsumerId = request.Id
         };
+
+        // TODO: We should remove consumer from this dictionary on dispose
+        _consumers.TryAdd(request.Id, consumer);
+        return consumer;
     }
 
     public async Task<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken)
@@ -157,10 +170,11 @@ internal class Session : ISession
         await _transport.DisposeAsync().ConfigureAwait(false);
     }
 
-    internal async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken) where TRequest : Packet
+    internal async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
+        where TRequest : Packet
     {
         var tcs = new TaskCompletionSource<Packet>();
-        
+
         // TODO: Handle scenario when we cannot add request for this CorrelationId, because there is already another pending request
         _ = _completionSources.TryAdd(request.CorrelationId, tcs);
 

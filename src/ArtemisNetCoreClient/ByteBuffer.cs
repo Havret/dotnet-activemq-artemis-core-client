@@ -318,6 +318,11 @@ internal class ByteBuffer
     {
         _memoryStream.Write(value);
     }
+    
+    public void ReadBytes(Span<byte> buffer)
+    {
+        _ = _memoryStream.Read(buffer);
+    }
 
     public void WriteSize()
     {
