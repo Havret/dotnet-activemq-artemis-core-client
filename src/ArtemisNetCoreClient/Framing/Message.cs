@@ -48,4 +48,28 @@ public class Message
         // TODO: Encode Properties Metadata
         buffer.WriteByte(DataConstants.Null);
     }
+
+    internal void Decode(ByteBuffer buffer)
+    {
+        // Drop first
+        _ = buffer.ReadInt();
+        var bodyLength = buffer.ReadInt();
+        Body = new byte[bodyLength];
+        buffer.ReadBytes(Body);
+
+        MessageId = buffer.ReadLong();
+        Address = buffer.ReadNullableByteString();
+
+        if (buffer.ReadByte() == DataConstants.NotNull)
+        {
+            // TODO: Dencode UserID
+        }
+
+        Type = buffer.ReadByte();
+
+        Durable = buffer.ReadBool();
+        Expiration = buffer.ReadLong();
+        Timestamp = buffer.ReadLong();
+        Priority = buffer.ReadByte();
+    }
 }

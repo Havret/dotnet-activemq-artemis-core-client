@@ -21,6 +21,7 @@ internal static class Codec
             CreateProducerMessage => CreateProducerMessage.Type,
             RemoveProducerMessage => RemoveProducerMessage.Type,
             SessionSendMessageV3 => SessionSendMessageV3.Type,
+            SessionConsumerFlowCreditMessage => SessionConsumerFlowCreditMessage.Type,
             _ => throw new ArgumentOutOfRangeException(nameof(packet), packet, $"{packet.GetType()} is not supported for encoding")
         };
         buffer.WriteByte(type);
@@ -43,6 +44,7 @@ internal static class Codec
             SessionBindingQueryResponseMessageV5.Type => new SessionBindingQueryResponseMessageV5(),
             SessionQueueQueryResponseMessageV3.Type => new SessionQueueQueryResponseMessageV3(),
             ActiveMQExceptionMessage.Type => new ActiveMQExceptionMessage(),
+            SessionReceiveMessage.Type => new SessionReceiveMessage(),
             _ => throw new ArgumentOutOfRangeException($"Type {type} is not supported for decoding")
         };
         
