@@ -1,10 +1,11 @@
 using ActiveMQ.Artemis.Core.Client.Framing;
+using Xunit;
 
 namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class SessionTests
 {
-    [Test]
+    [Fact]
     public async Task should_establish_session()
     {
         // Arrange
@@ -20,13 +21,14 @@ public class SessionTests
         });
 
         // Assert
-        Assert.That(session, Is.Not.Null);
+        Assert.NotNull(session);
         await session.DisposeAsync();
     }
 
-    [TestCase(new[] { RoutingType.Anycast })]
-    [TestCase(new[] { RoutingType.Multicast })]
-    [TestCase(new[] { RoutingType.Anycast, RoutingType.Multicast })]
+    [Theory]
+    [InlineData(new[] { RoutingType.Anycast })]
+    [InlineData(new[] { RoutingType.Multicast })]
+    [InlineData(new[] { RoutingType.Anycast, RoutingType.Multicast })]
     public async Task should_create_address_with_selected_routing_type(RoutingType[] routingTypes)
     {
         // Arrange
@@ -45,12 +47,14 @@ public class SessionTests
         
         // Assert
         var addressInfo = await session.GetAddressInfo(addressName, default);
-        Assert.That(addressInfo.Name, Is.EqualTo(addressName));
-        CollectionAssert.AreEqual(routingTypes, addressInfo.RoutingTypes);
+        Assert.NotNull(addressInfo);
+        Assert.Equal(addressName, addressInfo.Name);
+        Assert.Equal(routingTypes, addressInfo.RoutingTypes);
     }
 
-    [TestCase(RoutingType.Anycast)]
-    [TestCase(RoutingType.Multicast)]
+    [Theory]
+    [InlineData(RoutingType.Anycast)]
+    [InlineData(RoutingType.Multicast)]
     public async Task should_create_queue_with_selected_routing_type(RoutingType routingType)
     {
         // Arrange
@@ -76,13 +80,13 @@ public class SessionTests
         
         // Assert
         var queueInfo = await session.GetQueueInfo(queueName, default);
-        Assert.That(queueInfo, Is.Not.Null);
-        Assert.That(queueInfo?.QueueName, Is.EqualTo(queueName));
-        Assert.That(queueInfo?.AddressName, Is.EqualTo(addressName));
-        Assert.That(queueInfo?.RoutingType, Is.EqualTo(routingType));
+        Assert.NotNull(queueInfo);
+        Assert.Equal(queueName, queueInfo.QueueName);
+        Assert.Equal(addressName, queueInfo.AddressName);
+        Assert.Equal(routingType, queueInfo.RoutingType);
     }
 
-    [Test]
+    [Fact]
     public async Task should_not_return_address_info_when_address_does_not_exist()
     {
         // Arrange
@@ -100,10 +104,10 @@ public class SessionTests
         var addressInfo = await session.GetAddressInfo(addressName, default);
         
         // Assert
-        Assert.That(addressInfo, Is.Null);
+        Assert.Null(addressInfo);
     }
 
-    [Test]
+    [Fact]
     public async Task should_not_return_queue_info_when_queue_does_not_exist()
     {
         // Arrange
@@ -121,10 +125,10 @@ public class SessionTests
         var queueInfo = await session.GetQueueInfo(queueName, default);
         
         // Assert
-        Assert.That(queueInfo, Is.Null);
+        Assert.Null(queueInfo);
     }
 
-    [Test]
+    [Fact]
     public async Task should_create_and_dispose_consumer()
     {
         // Arrange
@@ -156,7 +160,7 @@ public class SessionTests
         await consumer.DisposeAsync();
     }
     
-    [Test]
+    [Fact]
     public async Task should_create_and_dispose_producer()
     {
         // Arrange

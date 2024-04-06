@@ -1,10 +1,11 @@
 using ActiveMQ.Artemis.Core.Client.Framing;
+using Xunit;
 
 namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class ProducerTests
 {
-    [Test]
+    [Fact]
     public async Task should_send_message()
     {
         // Arrange

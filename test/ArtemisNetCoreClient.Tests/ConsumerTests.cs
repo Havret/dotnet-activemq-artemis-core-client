@@ -1,10 +1,11 @@
 using ActiveMQ.Artemis.Core.Client.Framing;
+using Xunit;
 
 namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class ConsumerTests
 {
-    [Test]
+    [Fact]
     public async Task should_receive_message()
     {
         // Arrange
@@ -50,6 +51,6 @@ public class ConsumerTests
         var message = await consumer.ReceiveAsync(default);
         
         // Assert
-        Assert.That(message.Body, Is.EqualTo("test_payload"u8.ToArray()));
+        Assert.Equal("test_payload"u8.ToArray(), message.Body);
     }
 }
