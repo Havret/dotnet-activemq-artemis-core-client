@@ -9,20 +9,16 @@ public class ProducerTests
     public async Task should_send_message()
     {
         // Arrange
+        await using var testFixture = await TestFixture.CreateAsync();
+        
         var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(new Endpoint
-        {
-            Host = "localhost",
-            Port = 5445,
-            User = "artemis",
-            Password = "artemis"
-        });
+        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
         var addressName = Guid.NewGuid().ToString();
-        await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, default);
+        await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
         await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
         {
             Address = addressName
-        }, default);
+        }, testFixture.CancellationToken);
         
         // Act
         await producer.SendMessage(new Message
@@ -30,6 +26,6 @@ public class ProducerTests
             Address = addressName,
             Durable = true,
             Body = "test_payload"u8.ToArray()
-        }, default);
+        }, testFixture.CancellationToken);
     }
 }
