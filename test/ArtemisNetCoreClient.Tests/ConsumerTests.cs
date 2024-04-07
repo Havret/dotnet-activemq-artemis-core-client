@@ -9,17 +9,12 @@ public class ConsumerTests
     public async Task should_receive_message()
     {
         // Arrange
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(new Endpoint
-        {
-            Host = "localhost",
-            Port = 5445,
-            User = "artemis",
-            Password = "artemis"
-        });
-        var addressName = Guid.NewGuid().ToString();
-        await session.CreateAddress(addressName, new[] { RoutingType.Anycast }, default);
+        await using var testFixture = await TestFixture.CreateAsync();
 
+        var connectionFactory = new SessionFactory();
+        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        var addressName = Guid.NewGuid().ToString();
+        await session.CreateAddress(addressName, new[] { RoutingType.Anycast }, testFixture.CancellationToken);
 
         var queueName = Guid.NewGuid().ToString();
         await session.CreateQueue(new QueueConfiguration
@@ -27,28 +22,27 @@ public class ConsumerTests
             Address = addressName,
             Name = queueName,
             RoutingType = RoutingType.Anycast,
-        }, default);
+        }, testFixture.CancellationToken);
         
         await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
         {
             Address = addressName
-        }, default);
-
-
+        }, testFixture.CancellationToken);
+        
         await using var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
         {
             QueueName = queueName,
-        }, default);
+        }, testFixture.CancellationToken);
         
         await producer.SendMessage(new Message
         {
             Address = addressName,
             Durable = true,
             Body = "test_payload"u8.ToArray()
-        }, default);
+        }, testFixture.CancellationToken);
 
         // Act
-        var message = await consumer.ReceiveAsync(default);
+        var message = await consumer.ReceiveAsync(testFixture.CancellationToken);
         
         // Assert
         Assert.Equal("test_payload"u8.ToArray(), message.Body);

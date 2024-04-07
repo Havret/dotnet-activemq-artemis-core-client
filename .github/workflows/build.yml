@@ -11,6 +11,11 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    env:
+      ARTEMIS_USERNAME: "artemis"
+      ARTEMIS_PASSWORD: "artemis"
+      ARTEMIS_HOST: "localhost"
+      ARTEMIS_PORT: 5445
     steps:
       - uses: actions/checkout@v1
       - name: Setup .NET Core
