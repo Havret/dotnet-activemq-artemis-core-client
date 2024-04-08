@@ -1,21 +1,35 @@
-namespace ActiveMQ.Artemis.Core.Client.Tests;
+using ActiveMQ.Artemis.Core.Client.Tests.Utils.Logging;
+using Xunit.Abstractions;
+
+namespace ActiveMQ.Artemis.Core.Client.Tests.Utils;
 
 public class TestFixture : IAsyncDisposable
 {
+    private readonly ITestOutputHelper _testOutputHelper;
     private readonly CancellationTokenSource _cts;
 
-    public static async Task<TestFixture> CreateAsync()
+    public static async Task<TestFixture> CreateAsync(ITestOutputHelper testOutputHelper)
     {
         await Task.Delay(0);
-        return new TestFixture();
+        return new TestFixture(testOutputHelper);
     }
 
-    private TestFixture()
+    private TestFixture(ITestOutputHelper testOutputHelper)
     {
+        _testOutputHelper = testOutputHelper;
         _cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
     }
     
-    public Endpoint GetEndpoint()
+    public async Task<ISession> CreateSessionAsync()
+    {
+        var sessionFactory = new SessionFactory
+        {
+            LoggerFactory = new XUnitLoggerFactory(_testOutputHelper)
+        };
+        return await sessionFactory.CreateAsync(GetEndpoint(), CancellationToken);
+    }
+    
+    public static Endpoint GetEndpoint()
     {
         var userName = Environment.GetEnvironmentVariable("ARTEMIS_USERNAME") ?? "artemis";
         var password = Environment.GetEnvironmentVariable("ARTEMIS_PASSWORD") ?? "artemis";

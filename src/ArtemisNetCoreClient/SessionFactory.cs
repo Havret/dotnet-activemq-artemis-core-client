@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
 using ActiveMQ.Artemis.Core.Client.Framing;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ActiveMQ.Artemis.Core.Client;
 
@@ -68,7 +70,7 @@ public class SessionFactory
 
         if (receivedPacket is CreateSessionResponseMessage)
         {
-            var session = new Session(transport)
+            var session = new Session(transport, LoggerFactory)
             {
                 ChannelId = createSessionMessageV2.SessionChannelId
             };
@@ -80,4 +82,6 @@ public class SessionFactory
             throw new InvalidOperationException("Received invalid response from the broker");
         }
     }
+    
+    public ILoggerFactory LoggerFactory { get; set; } = new NullLoggerFactory();
 }

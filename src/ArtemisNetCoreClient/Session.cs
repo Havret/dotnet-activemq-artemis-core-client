@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using ActiveMQ.Artemis.Core.Client.Framing;
+using Microsoft.Extensions.Logging;
 
 namespace ActiveMQ.Artemis.Core.Client;
 
@@ -10,9 +11,10 @@ internal class Session : ISession
     private readonly ConcurrentDictionary<long, TaskCompletionSource<Packet>> _completionSources = new();
     private readonly ConcurrentDictionary<long, Consumer> _consumers = new();
 
-    public Session(Transport transport)
+    public Session(Transport transport, ILoggerFactory loggerFactory)
     {
         _transport = transport;
+        var logger = loggerFactory.CreateLogger<Session>();
 
         // TODO: Clean up while loop on close
         _ = Task.Run(async () =>
@@ -40,12 +42,14 @@ internal class Session : ISession
                 }
                 catch (Exception e)
                 {
+                    logger.LogError(e, "Error in packet processing or network communication");
                     // TODO: Handle exception
-                    Console.WriteLine(e);
                 }
             }
         });
     }
+    
+    public long ChannelId { get; init; }
 
     public async Task CreateAddress(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken)
     {
@@ -65,8 +69,7 @@ internal class Session : ISession
         {
             Address = address
         };
-        var response =
-            await SendBlockingAsync<SessionBindingQueryMessage, SessionBindingQueryResponseMessageV5>(request, cancellationToken);
+        var response = await SendBlockingAsync<SessionBindingQueryMessage, SessionBindingQueryResponseMessageV5>(request, cancellationToken);
 
         if (response.Exists)
         {
@@ -195,8 +198,6 @@ internal class Session : ISession
     {
         await _transport.SendAsync(request, ChannelId, cancellationToken);
     }
-
-    public long ChannelId { get; init; }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {

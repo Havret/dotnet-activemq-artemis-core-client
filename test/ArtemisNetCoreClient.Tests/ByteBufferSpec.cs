@@ -2,7 +2,7 @@ using Xunit;
 
 namespace ActiveMQ.Artemis.Core.Client.Tests;
 
-public class ByteBufferTests
+public class ByteBufferSpec
 {
     [Fact]
     public void should_encode_byte()

@@ -1,19 +1,21 @@
 using ActiveMQ.Artemis.Core.Client.Framing;
+using ActiveMQ.Artemis.Core.Client.Tests.Utils;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ActiveMQ.Artemis.Core.Client.Tests;
 
-public class SessionTests
+public class SessionSpec(ITestOutputHelper testOutputHelper)
 {
     [Fact]
     public async Task should_establish_session()
     {
         // Arrange
-        await using var testFixture = await TestFixture.CreateAsync();
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
 
         // Act
         var connectionFactory = new SessionFactory();
-        var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        var session = await connectionFactory.CreateAsync(TestFixture.GetEndpoint(), testFixture.CancellationToken);
 
         // Assert
         Assert.NotNull(session);
@@ -27,10 +29,9 @@ public class SessionTests
     public async Task should_create_address_with_selected_routing_type(RoutingType[] routingTypes)
     {
         // Arrange
-        await using var testFixture = await TestFixture.CreateAsync();
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        await using var session = await testFixture.CreateSessionAsync();
 
         // Act
         var addressName = $"{Guid.NewGuid().ToString()}-{string.Join("-", routingTypes)}";
@@ -49,10 +50,9 @@ public class SessionTests
     public async Task should_create_queue_with_selected_routing_type(RoutingType routingType)
     {
         // Arrange
-        await using var testFixture = await TestFixture.CreateAsync();
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        await using var session = await testFixture.CreateSessionAsync();
         var addressName = Guid.NewGuid().ToString();
         await session.CreateAddress(addressName, [routingType], testFixture.CancellationToken);
         
@@ -77,10 +77,9 @@ public class SessionTests
     public async Task should_not_return_address_info_when_address_does_not_exist()
     {
         // Arrange
-        await using var testFixture = await TestFixture.CreateAsync();
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
 
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        await using var session = await testFixture.CreateSessionAsync();
 
         // Act
         var addressName = Guid.NewGuid().ToString();
@@ -94,10 +93,9 @@ public class SessionTests
     public async Task should_not_return_queue_info_when_queue_does_not_exist()
     {
         // Arrange
-        await using var testFixture = await TestFixture.CreateAsync();
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        await using var session = await testFixture.CreateSessionAsync();
 
         // Act
         var queueName = Guid.NewGuid().ToString();
@@ -111,10 +109,9 @@ public class SessionTests
     public async Task should_create_and_dispose_consumer()
     {
         // Arrange
-        await using var testFixture = await TestFixture.CreateAsync();
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        await using var session = await testFixture.CreateSessionAsync();
         
         var addressName = Guid.NewGuid().ToString();
         await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
@@ -140,10 +137,9 @@ public class SessionTests
     public async Task should_create_and_dispose_producer()
     {
         // Arrange
-        await using var testFixture = await TestFixture.CreateAsync();
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        await using var session = await testFixture.CreateSessionAsync();
         var addressName = Guid.NewGuid().ToString();
         await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
         
