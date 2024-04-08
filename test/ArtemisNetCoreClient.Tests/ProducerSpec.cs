@@ -1,18 +1,19 @@
 using ActiveMQ.Artemis.Core.Client.Framing;
+using ActiveMQ.Artemis.Core.Client.Tests.Utils;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ActiveMQ.Artemis.Core.Client.Tests;
 
-public class ProducerTests
+public class ProducerSpec(ITestOutputHelper testOutputHelper)
 {
     [Fact]
     public async Task should_send_message()
     {
         // Arrange
-        await using var testFixture = await TestFixture.CreateAsync();
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         
-        var connectionFactory = new SessionFactory();
-        await using var session = await connectionFactory.CreateAsync(testFixture.GetEndpoint(), testFixture.CancellationToken);
+        await using var session = await testFixture.CreateSessionAsync();
         var addressName = Guid.NewGuid().ToString();
         await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
         await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
