@@ -14,10 +14,10 @@ internal class Transport(Socket socket) : IAsyncDisposable
 
     public async Task<Packet?> ReceiveAsync(CancellationToken cancellationToken)
     {
-        var receiveBuffer = new byte[sizeof(int)];
-        await socket.ReceiveAsync(receiveBuffer, cancellationToken).ConfigureAwait(false);
+        var frameHeaderBuffer = new byte[sizeof(int)];
+        await socket.ReceiveAsync(frameHeaderBuffer, cancellationToken).ConfigureAwait(false);
         
-        var size = new ByteBuffer(receiveBuffer).ReadInt();
+        var size = new ByteBuffer(frameHeaderBuffer).ReadInt();
         if (size == 0)
         {
             return null;
@@ -38,3 +38,9 @@ internal class Transport(Socket socket) : IAsyncDisposable
         return ValueTask.CompletedTask; 
     }
 }
+
+internal readonly ref struct InboundFrame
+{
+    
+}
+
