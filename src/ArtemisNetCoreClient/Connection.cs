@@ -22,7 +22,7 @@ internal class Connection : IConnection
     {
         while (true)
         {
-            var inboundFrame = _transport.Receive();
+            var inboundFrame = _transport.ReceivePacket();
         }
         
         return Task.CompletedTask;

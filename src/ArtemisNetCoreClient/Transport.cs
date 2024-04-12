@@ -39,8 +39,5 @@ internal class Transport(Socket socket) : IAsyncDisposable
     }
 }
 
-internal readonly ref struct InboundFrame
-{
-    
-}
+
 
