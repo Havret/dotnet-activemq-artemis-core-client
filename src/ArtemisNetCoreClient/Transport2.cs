@@ -74,9 +74,7 @@ internal class Transport2 : IAsyncDisposable
         await _sendLoopTask;
         _socket.Dispose();
     }
-
-    private const int FrameHeaderBufferSize = sizeof(int)+sizeof(byte)+sizeof(long);
-
+    
     internal InboundPacket ReceivePacket()
     {
         Span<byte> frameSizeBuffer = stackalloc byte[sizeof(int)];
@@ -85,23 +83,24 @@ internal class Transport2 : IAsyncDisposable
         
         Span<byte> typeBuffer = stackalloc byte[sizeof(byte)];
         _ = _reader.Read(typeBuffer);
-        var type = (PacketType) ArtemisBitConverter.ReadByte(typeBuffer);
+        var packetType = (PacketType) ArtemisBitConverter.ReadByte(typeBuffer);
         
         Span<byte> channelIdBuffer = stackalloc byte[sizeof(long)];
         _ = _reader.Read(channelIdBuffer);
-        var channelId = (PacketType) ArtemisBitConverter.ReadInt64(typeBuffer);
+        var channelId = ArtemisBitConverter.ReadInt64(typeBuffer);
 
         var payloadBufferSize = frameSize - sizeof(byte) - sizeof(long);
 
-        var buffer = ArrayPool<byte>.Shared.Rent(frameSize - sizeof(byte) - sizeof(long));
+        var buffer = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
         
-        _ = _reader.Read(buffer.AsSpan(0, frameSize));
-        
-        // var type = buffer.ReadByte();
-        // var channelId = buffer.ReadLong();
+        _ = _reader.Read(buffer.AsSpan(0, payloadBufferSize));
 
-
-        return new InboundPacket();
+        return new InboundPacket
+        {
+            PacketType = packetType,
+            ChannelId = channelId,
+            Payload = new ArraySegment<byte>(buffer, 0, payloadBufferSize)
+        };
     }
 }
 
@@ -109,10 +108,10 @@ internal readonly ref struct InboundPacket
 {
     public long ChannelId { get; init; }
     public PacketType PacketType { get; init; }
-    public ReadOnlyMemory<byte> Payload { get; init; }
+    public ArraySegment<byte> Payload { get; init; }
 }
 
 internal enum PacketType : byte
 {
-    
+    CreateSessionResponse = 31
 }

@@ -48,7 +48,11 @@ internal class Session : ISession
             }
         });
     }
-    
+
+    public Session()
+    {
+    }
+
     public long ChannelId { get; init; }
 
     public async Task CreateAddress(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken)

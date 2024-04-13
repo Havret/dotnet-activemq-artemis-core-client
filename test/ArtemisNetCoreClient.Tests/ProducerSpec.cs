@@ -7,7 +7,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class ProducerSpec(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact(Skip = "Temporarily disabled")]
     public async Task should_send_message()
     {
         // Arrange

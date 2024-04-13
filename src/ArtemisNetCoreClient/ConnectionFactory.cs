@@ -47,7 +47,7 @@ public class ConnectionFactory
         var transport = new Transport2(LoggerFactory.CreateLogger<Transport2>(), socket);
 
 
-        return new Connection(LoggerFactory, transport);
+        return new Connection(LoggerFactory, transport, endpoint);
     }
     
     public ILoggerFactory LoggerFactory { get; set; } = new NullLoggerFactory();

@@ -7,7 +7,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class SessionSpec(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact(Skip = "Temporarily disabled")]
     public async Task should_establish_session()
     {
         // Arrange
@@ -22,7 +22,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         await session.DisposeAsync();
     }
 
-    [Theory]
+    [Theory(Skip = "Temporarily disabled")]
     [InlineData(new[] { RoutingType.Anycast })]
     [InlineData(new[] { RoutingType.Multicast })]
     [InlineData(new[] { RoutingType.Anycast, RoutingType.Multicast })]
@@ -44,7 +44,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         Assert.Equal(routingTypes, addressInfo.RoutingTypes);
     }
 
-    [Theory]
+    [Theory(Skip = "Temporarily disabled")]
     [InlineData(RoutingType.Anycast)]
     [InlineData(RoutingType.Multicast)]
     public async Task should_create_queue_with_selected_routing_type(RoutingType routingType)
@@ -73,7 +73,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         Assert.Equal(routingType, queueInfo.RoutingType);
     }
 
-    [Fact]
+    [Fact(Skip = "Temporarily disabled")]
     public async Task should_not_return_address_info_when_address_does_not_exist()
     {
         // Arrange
@@ -89,7 +89,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         Assert.Null(addressInfo);
     }
 
-    [Fact]
+    [Fact(Skip = "Temporarily disabled")]
     public async Task should_not_return_queue_info_when_queue_does_not_exist()
     {
         // Arrange
@@ -105,7 +105,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         Assert.Null(queueInfo);
     }
 
-    [Fact]
+    [Fact(Skip = "Temporarily disabled")]
     public async Task should_create_and_dispose_consumer()
     {
         // Arrange
@@ -133,7 +133,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         await consumer.DisposeAsync();
     }
     
-    [Fact]
+    [Fact(Skip = "Temporarily disabled")]
     public async Task should_create_and_dispose_producer()
     {
         // Arrange

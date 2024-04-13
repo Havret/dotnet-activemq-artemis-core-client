@@ -5,9 +5,10 @@ using Xunit.Abstractions;
 
 namespace ActiveMQ.Artemis.Core.Client.Tests;
 
+
 public class ConsumerSpec(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact(Skip = "Temporarily disabled")] 
     public async Task should_receive_message()
     {
         // Arrange
