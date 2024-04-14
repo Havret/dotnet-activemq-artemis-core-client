@@ -11,7 +11,6 @@ internal class SessionCreateConsumerMessage : Packet
     public required bool BrowseOnly { get; init; }
     public required bool RequiresResponse { get; init; }
     
-    
     public override void Encode(ByteBuffer buffer)
     {
         buffer.WriteLong(Id);

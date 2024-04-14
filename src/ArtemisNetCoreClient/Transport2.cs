@@ -113,5 +113,6 @@ internal readonly ref struct InboundPacket
 
 internal enum PacketType : byte
 {
+    CreateSessionMessage = unchecked((byte) -18),
     CreateSessionResponse = 31
 }

@@ -1,31 +1,8 @@
 using System.Buffers;
 using System.Buffers.Binary;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace ActiveMQ.Artemis.Core.Client;
-
-internal static class ArtemisBitConverter
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ReadInt32(ReadOnlySpan<byte> source)
-    {
-        return BinaryPrimitives.ReadInt32BigEndian(source);
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte ReadByte(ReadOnlySpan<byte> source)
-    {
-        return source[0];
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long ReadInt64(ReadOnlySpan<byte> source)
-    {
-        return BinaryPrimitives.ReadInt64BigEndian(source);
-    }
-}
-
 
 internal class ByteBuffer
 {

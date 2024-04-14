@@ -1,5 +1,51 @@
 namespace ActiveMQ.Artemis.Core.Client.Framing;
 
+internal readonly struct CreateSessionMessage : IOutgoingPacket
+{
+    public PacketType PacketType => PacketType.CreateSessionMessage;
+    
+    public string Name { get; init; }
+    public long SessionChannelId { get; init; }
+    public int Version { get; init; }
+    public string? Username { get; init; }
+    public string? Password { get; init; }
+    public int MinLargeMessageSize { get; init; }
+    public bool Xa { get; init; }
+    public bool AutoCommitSends { get; init; }
+    public bool AutoCommitAcks { get; init; }
+    public bool PreAcknowledge { get; init; }
+    public int WindowSize { get; init; }
+    public string? DefaultAddress { get; init; }
+    public string? ClientId { get; init; }
+
+    public int GetRequiredBufferSize()
+    {
+        int byteCount = 0;
+        
+        byteCount += ArtemisBitConverter.GetStringByteCount(Name);
+        byteCount += sizeof(long); // SessionChannelId
+        byteCount += sizeof(int); // Version
+        byteCount += ArtemisBitConverter.GetNullableStringByteCount(Username);
+        byteCount += ArtemisBitConverter.GetNullableStringByteCount(Password);
+        byteCount += sizeof(int); // MinLargeMessageSize
+        byteCount += sizeof(bool); // Xa
+        byteCount += sizeof(bool); // AutoCommitSends
+        byteCount += sizeof(bool); // AutoCommitAcks
+        byteCount += sizeof(int); // WindowSize
+        byteCount += sizeof(bool); // PreAcknowledge
+        byteCount += ArtemisBitConverter.GetNullableStringByteCount(DefaultAddress);
+        byteCount += ArtemisBitConverter.GetNullableStringByteCount(ClientId);
+
+        return byteCount;
+    }
+
+    public void Encode(Span<byte> buffer)
+    {
+        // ArtemisBitConverter.
+        throw new NotImplementedException();
+    }
+}
+
 internal class CreateSessionMessageV2 : Packet
 {
     public const byte Type = unchecked((byte) -18);
