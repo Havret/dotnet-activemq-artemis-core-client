@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Buffers.Binary;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;

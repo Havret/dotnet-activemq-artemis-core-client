@@ -39,10 +39,25 @@ internal readonly struct CreateSessionMessage : IOutgoingPacket
         return byteCount;
     }
 
-    public void Encode(Span<byte> buffer)
+    public int Encode(Span<byte> buffer)
     {
-        // ArtemisBitConverter.
-        throw new NotImplementedException();
+        var offset = 0;
+        
+        offset += ArtemisBitConverter.WriteString(ref buffer.GetOffset(offset), Name);
+        offset += ArtemisBitConverter.WriteInt64(ref buffer.GetOffset(offset), SessionChannelId);
+        offset += ArtemisBitConverter.WriteInt32(ref buffer.GetOffset(offset), Version);
+        // offset += ArtemisBitConverter.WriteNullableString(ref buffer.GetOffset(offset), Username);
+        // offset += ArtemisBitConverter.WriteNullableString(ref buffer.GetOffset(offset), Password);
+        offset += ArtemisBitConverter.WriteInt32(ref buffer.GetOffset(offset), MinLargeMessageSize);
+        // offset += ArtemisBitConverter.WriteBool(ref buffer.GetOffset(offset), Xa);
+        // offset += ArtemisBitConverter.WriteBool(ref buffer.GetOffset(offset), AutoCommitSends);
+        // offset += ArtemisBitConverter.WriteBool(ref buffer.GetOffset(offset), AutoCommitAcks);
+        offset += ArtemisBitConverter.WriteInt32(ref buffer.GetOffset(offset), WindowSize);
+        // offset += ArtemisBitConverter.WriteBool(ref buffer.GetOffset(offset), PreAcknowledge);
+        // offset += ArtemisBitConverter.WriteNullableString(ref buffer.GetOffset(offset), DefaultAddress);
+        // offset += ArtemisBitConverter.WriteNullableString(ref buffer.GetOffset(offset), ClientId);
+
+        return offset;
     }
 }
 

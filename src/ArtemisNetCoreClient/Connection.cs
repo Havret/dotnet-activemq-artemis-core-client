@@ -79,9 +79,26 @@ internal class Connection : IConnection, IChannel
             DefaultAddress = null,
             ClientId = null,
         };
-        
+
+        var requiredBufferSize = createSessionMessage.GetRequiredBufferSize();
+
 
         throw new NotImplementedException();
+    }
+    
+    public void Send<T>(ref readonly T packet) where T : IOutgoingPacket
+    {
+        const int headerSize = sizeof(int) + sizeof(byte) + sizeof(long);
+        var size = headerSize + packet.GetRequiredBufferSize();
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        
+        var offset = ArtemisBitConverter.WriteInt32(ref buffer.AsSpan().GetReference(), size);
+        offset += ArtemisBitConverter.WriteByte(ref buffer.AsSpan().GetOffset(offset), (byte) packet.PacketType);
+        offset += ArtemisBitConverter.WriteInt64(ref buffer.AsSpan().GetOffset(offset), 1);
+        
+        packet.Encode(buffer.AsSpan(offset));
+        
+        _transport.Send(buffer.AsMemory(0, size));
     }
 
     public ValueTask DisposeAsync()
@@ -99,7 +116,7 @@ internal interface IOutgoingPacket
 {
     PacketType PacketType { get; }
     int GetRequiredBufferSize();
-    void Encode(Span<byte> buffer);
+    int Encode(Span<byte> buffer);
 }
 
 internal interface IIncomingPacket
