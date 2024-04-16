@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ActiveMQ.Artemis.Core.Client;
@@ -158,6 +159,19 @@ internal static class ArtemisBinaryConverter
         }
         else if (value.Length < 0xFFF)
         {
+            int byteCount;
+            unsafe
+            {
+                ref var valDestination = ref destination.GetOffset(offset + sizeof(short));
+                fixed (char* chars = value)
+                fixed (byte* bytes = &valDestination)
+                {
+                    byteCount = Encoding.UTF8.GetBytes(chars, value.Length, bytes, byte.MaxValue);
+                }
+            }
+
+            offset += WriteInt16(ref destination.GetOffset(offset), (short) byteCount);
+            offset += byteCount;
         }
         else
         {

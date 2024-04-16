@@ -121,5 +121,23 @@ public class ArtemisBinaryConverterSpec
         // Assert
         Assert.Equal("abcdefgh", value);
         Assert.Equal(byteBuffer.Length, readBytes);
-    }    
+    }
+    
+    [Fact]
+    public void should_encode_medium_string()
+    {
+        // Arrange
+        var str = "abcdefghijkl";
+        var byteCount = ArtemisBinaryConverter.GetStringByteCount(str);
+        var byteBuffer = new byte[byteCount];
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteString(ref byteBuffer.AsSpan().GetReference(), str);
+        
+        
+        // Assert
+        var expected = new byte[] { 0, 0, 0, 12, 0, 12, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108 };
+        Assert.Equal(expected, byteBuffer);
+        Assert.Equal(byteCount, writtenBytes);
+    }
 }
