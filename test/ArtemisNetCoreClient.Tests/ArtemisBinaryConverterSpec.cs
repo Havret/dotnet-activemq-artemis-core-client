@@ -154,4 +154,21 @@ public class ArtemisBinaryConverterSpec
         Assert.Equal("abcdefghijkl", value);
         Assert.Equal(byteBuffer.Length, readBytes);
     }
+    
+    [Fact]
+    public void should_encode_long_string()
+    {
+        // Arrange
+        var str = Enumerable.Repeat(0, 513).Aggregate("", (s, _) => s + "abcdefgh");
+        var byteCount = ArtemisBinaryConverter.GetStringByteCount(str);
+        var byteBuffer = new byte[byteCount];
+        
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteString(ref byteBuffer.AsSpan().GetReference(), str);
+
+        // Assert
+        var expected = File.ReadAllText("long_encoded_string.txt").Split(",").Select(byte.Parse).ToArray();
+        Assert.Equal(expected, byteBuffer);
+        Assert.Equal(byteCount, writtenBytes);
+    }    
 }

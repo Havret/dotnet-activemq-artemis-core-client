@@ -177,6 +177,15 @@ internal static class ArtemisBinaryConverter
         }
         else
         {
+            offset += WriteInt32(ref destination.GetOffset(offset), value.Length << 1);
+            foreach (var c in value)
+            {
+                // Low byte
+                offset += WriteByte(ref destination.GetOffset(offset), (byte) (c & 0xFF)); 
+                
+                // High byte
+                offset += WriteByte(ref destination.GetOffset(offset), (byte) ((c >> 8) & 0xFF));
+            }
         }
 
         return offset;
