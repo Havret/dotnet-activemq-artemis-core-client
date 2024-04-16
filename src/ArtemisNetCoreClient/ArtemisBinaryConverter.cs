@@ -7,7 +7,7 @@ namespace ActiveMQ.Artemis.Core.Client;
 internal static class ArtemisBinaryConverter
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ReadInt32(ReadOnlySpan<byte> source)
+    public static int ReadInt32(in ReadOnlySpan<byte> source)
     {
         return BinaryPrimitives.ReadInt32BigEndian(source);
     }
@@ -20,7 +20,7 @@ internal static class ArtemisBinaryConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ReadByte(ReadOnlySpan<byte> source, out byte value)
+    public static int ReadByte(in ReadOnlySpan<byte> source, out byte value)
     {
         value = source[0];
         return sizeof(byte);
@@ -34,7 +34,7 @@ internal static class ArtemisBinaryConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long ReadInt64(ReadOnlySpan<byte> source)
+    public static long ReadInt64(in ReadOnlySpan<byte> source)
     {
         return BinaryPrimitives.ReadInt64BigEndian(source);
     }
@@ -54,9 +54,9 @@ internal static class ArtemisBinaryConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ReadBool(byte[] byteBuffer, out bool value)
+    public static int ReadBool(in ReadOnlySpan<byte> source, out bool value)
     {
-        value = byteBuffer[0] != 0;
+        value = source[0] != 0;
         return sizeof(byte);
     }
     
@@ -66,6 +66,35 @@ internal static class ArtemisBinaryConverter
         const byte minusOne = unchecked((byte) -1);
         const byte zero = 0;
         return WriteByte(ref destination, value ? minusOne : zero);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadNullableBool(in ReadOnlySpan<byte> source, out bool? value)
+    {
+        var readBytes = ReadBool(source, out var hasValue);
+        if (hasValue)
+        {
+            readBytes += ReadBool(source[readBytes..], out var boolValue);
+            value = boolValue;
+        }
+        else
+        {
+            value = null;
+        }
+
+        return readBytes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteNullableBool(ref byte destination, bool? value)
+    {
+        var offset = WriteBool(ref destination, value.HasValue);
+        if (value.HasValue)
+        {
+            offset += WriteBool(ref destination.GetOffset(offset), value.Value);
+        }
+
+        return offset;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
