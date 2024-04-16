@@ -11,10 +11,11 @@ public class ArtemisBinaryConverterSpec
         var byteBuffer = new byte[1];
 
         // Act
-        ArtemisBinaryConverter.WriteByte(ref byteBuffer.AsSpan().GetReference(), 125);
+        var writtenBytes = ArtemisBinaryConverter.WriteByte(ref byteBuffer.AsSpan().GetReference(), 125);
 
         // Assert
         Assert.Equal([125], byteBuffer);
+        Assert.Equal(1, writtenBytes);
     }
     
     [Fact]
@@ -40,10 +41,11 @@ public class ArtemisBinaryConverterSpec
         var byteBuffer = new byte[1];
 
         // Act
-        ArtemisBinaryConverter.WriteBool(ref byteBuffer.AsSpan().GetReference(), value);
+        var writtenBytes = ArtemisBinaryConverter.WriteBool(ref byteBuffer.AsSpan().GetReference(), value);
 
         // Assert
         Assert.Equal(encoded, byteBuffer);
+        Assert.Equal(1, writtenBytes);
     }
     
     [Theory]
