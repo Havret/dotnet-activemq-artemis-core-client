@@ -7,9 +7,10 @@ namespace ActiveMQ.Artemis.Core.Client;
 internal static class ArtemisBinaryConverter
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ReadInt32(in ReadOnlySpan<byte> source)
+    public static int ReadInt32(in ReadOnlySpan<byte> source, out int value)
     {
-        return BinaryPrimitives.ReadInt32BigEndian(source);
+        value = BinaryPrimitives.ReadInt32BigEndian(source);
+        return sizeof(int);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,6 +45,14 @@ internal static class ArtemisBinaryConverter
     {
         Unsafe.WriteUnaligned(ref destination, BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(value) : value);
         return sizeof(long);
+    }
+    
+        
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadInt16(in ReadOnlySpan<byte> source, out short value)
+    {
+        value = BinaryPrimitives.ReadInt16BigEndian(source);
+        return sizeof(short);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -112,6 +121,33 @@ internal static class ArtemisBinaryConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadString(in ReadOnlySpan<byte> source, out string value)
+    {
+        var readBytes = ReadInt32(source, out var length);
+        if (length < 9)
+        {
+            Span<char> chars = stackalloc char[length];
+            for (int i = 0; i < length; i++)
+            {
+                readBytes += ReadInt16(source[readBytes..], out var c);
+                chars[i] = (char) c;
+            }
+            
+            value = new string(chars);
+        }
+        else if (length < 0xFFF)
+        {
+            value = string.Empty;
+        }
+        else
+        {
+            value = string.Empty;
+        }
+
+        return readBytes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteString(ref byte destination, string value)
     {
         var length = value.Length;
@@ -135,7 +171,7 @@ internal static class ArtemisBinaryConverter
         var offset = 0;
         foreach (var c in value)
         {
-            offset += WriteInt16(ref destination, (short) c);
+            offset += WriteInt16(ref destination.GetOffset(offset), (short) c);
         }
 
         return offset;

@@ -78,7 +78,7 @@ internal class Transport2 : IAsyncDisposable
     {
         Span<byte> frameSizeBuffer = stackalloc byte[sizeof(int)];
         _ = _reader.Read(frameSizeBuffer);
-        var frameSize = ArtemisBinaryConverter.ReadInt32(frameSizeBuffer);
+        _ = ArtemisBinaryConverter.ReadInt32(frameSizeBuffer, out var frameSize);
         
         Span<byte> typeBuffer = stackalloc byte[sizeof(byte)];
         _ = _reader.Read(typeBuffer);

@@ -90,5 +90,36 @@ public class ArtemisBinaryConverterSpec
         // Assert
         Assert.Equal(expected, value);
         Assert.Equal(encoded.Length, readBytes);
+    }
+
+    [Fact]
+    public void should_encode_short_string()
+    {
+        // Arrange
+        var str = "abcdefgh";
+        var byteCount = ArtemisBinaryConverter.GetStringByteCount(str);
+        var byteBuffer = new byte[byteCount];
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteString(ref byteBuffer.AsSpan().GetReference(), str);
+
+        // Assert
+        var expected = new byte[] { 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 };
+        Assert.Equal(expected, byteBuffer);
+        Assert.Equal(byteCount, writtenBytes);
+    }
+    
+    [Fact]
+    public void should_decode_short_string()
+    {
+        // Arrange
+        var byteBuffer = new byte[] { 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 };
+
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadString(byteBuffer, out var value);
+
+        // Assert
+        Assert.Equal("abcdefgh", value);
+        Assert.Equal(byteBuffer.Length, readBytes);
     }    
 }
