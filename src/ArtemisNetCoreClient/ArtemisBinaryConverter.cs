@@ -144,7 +144,19 @@ internal static class ArtemisBinaryConverter
         }
         else
         {
-            value = string.Empty;
+            // TODO: Optimize this with string.Create
+            
+            readBytes += ReadInt32(source[readBytes..], out var byteCount);
+            
+            var chars = new char[byteCount >> 1];
+            for (var i = 0; i < byteCount; i += 2)
+            {
+                var lowByte = source[readBytes++];
+                var highByte = source[readBytes++];
+                chars[i >> 1] = (char) (lowByte | (highByte << 8));
+            }
+            
+            value = new string(chars);
         }
 
         return readBytes;
