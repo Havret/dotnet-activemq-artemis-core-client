@@ -78,15 +78,15 @@ internal class Transport2 : IAsyncDisposable
     {
         Span<byte> frameSizeBuffer = stackalloc byte[sizeof(int)];
         _ = _reader.Read(frameSizeBuffer);
-        var frameSize = ArtemisBitConverter.ReadInt32(frameSizeBuffer);
+        var frameSize = ArtemisBinaryConverter.ReadInt32(frameSizeBuffer);
         
         Span<byte> typeBuffer = stackalloc byte[sizeof(byte)];
         _ = _reader.Read(typeBuffer);
-        var packetType = (PacketType) ArtemisBitConverter.ReadByte(typeBuffer);
+        _ = ArtemisBinaryConverter.ReadByte(typeBuffer, out var packetType);
         
         Span<byte> channelIdBuffer = stackalloc byte[sizeof(long)];
         _ = _reader.Read(channelIdBuffer);
-        var channelId = ArtemisBitConverter.ReadInt64(typeBuffer);
+        var channelId = ArtemisBinaryConverter.ReadInt64(typeBuffer);
 
         var payloadBufferSize = frameSize - sizeof(byte) - sizeof(long);
 
@@ -96,7 +96,7 @@ internal class Transport2 : IAsyncDisposable
 
         return new InboundPacket
         {
-            PacketType = packetType,
+            PacketType = (PacketType) packetType,
             ChannelId = channelId,
             Payload = new ArraySegment<byte>(buffer, 0, payloadBufferSize)
         };

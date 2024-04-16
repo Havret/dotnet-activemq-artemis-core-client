@@ -92,9 +92,9 @@ internal class Connection : IConnection, IChannel
         var size = headerSize + packet.GetRequiredBufferSize();
         var buffer = ArrayPool<byte>.Shared.Rent(size);
         
-        var offset = ArtemisBitConverter.WriteInt32(ref buffer.AsSpan().GetReference(), size);
-        offset += ArtemisBitConverter.WriteByte(ref buffer.AsSpan().GetOffset(offset), (byte) packet.PacketType);
-        offset += ArtemisBitConverter.WriteInt64(ref buffer.AsSpan().GetOffset(offset), 1);
+        var offset = ArtemisBinaryConverter.WriteInt32(ref buffer.AsSpan().GetReference(), size);
+        offset += ArtemisBinaryConverter.WriteByte(ref buffer.AsSpan().GetOffset(offset), (byte) packet.PacketType);
+        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.AsSpan().GetOffset(offset), 1);
         
         packet.Encode(buffer.AsSpan(offset));
         

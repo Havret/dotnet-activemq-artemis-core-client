@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ActiveMQ.Artemis.Core.Client;
 
-internal static class ArtemisBitConverter
+internal static class ArtemisBinaryConverter
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ReadInt32(ReadOnlySpan<byte> source)
@@ -20,15 +20,16 @@ internal static class ArtemisBitConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte ReadByte(ReadOnlySpan<byte> source)
+    public static int ReadByte(ReadOnlySpan<byte> source, out byte value)
     {
-        return source[0];
+        value = source[0];
+        return sizeof(byte);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteByte(ref byte destination, byte packetPacketType)
+    public static int WriteByte(ref byte destination, byte value)
     {
-        Unsafe.WriteUnaligned(ref destination, packetPacketType);
+        Unsafe.WriteUnaligned(ref destination, value);
         return sizeof(byte);
     }
     
@@ -50,6 +51,21 @@ internal static class ArtemisBitConverter
     {
         Unsafe.WriteUnaligned(ref destination, BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(value) : value);
         return sizeof(short);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadBool(byte[] byteBuffer, out bool value)
+    {
+        value = byteBuffer[0] != 0;
+        return sizeof(byte);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBool(ref byte destination, bool value)
+    {
+        const byte minusOne = unchecked((byte) -1);
+        const byte zero = 0;
+        return WriteByte(ref destination, value ? minusOne : zero);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
