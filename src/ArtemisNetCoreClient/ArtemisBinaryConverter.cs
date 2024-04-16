@@ -138,7 +138,9 @@ internal static class ArtemisBinaryConverter
         }
         else if (length < 0xFFF)
         {
-            value = string.Empty;
+            readBytes += ReadInt16(source[readBytes..], out var byteCount);
+            value = Encoding.UTF8.GetString(source.Slice(readBytes, byteCount));
+            readBytes += byteCount;
         }
         else
         {

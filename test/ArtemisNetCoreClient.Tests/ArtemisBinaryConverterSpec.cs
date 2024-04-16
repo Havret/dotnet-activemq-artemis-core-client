@@ -140,4 +140,18 @@ public class ArtemisBinaryConverterSpec
         Assert.Equal(expected, byteBuffer);
         Assert.Equal(byteCount, writtenBytes);
     }
+    
+    [Fact]
+    public void should_decode_medium_string()
+    {
+        // Arrange
+        var byteBuffer = new byte[] {0, 0, 0, 12, 0, 12, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108};
+
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadString(byteBuffer, out var value);
+
+        // Assert
+        Assert.Equal("abcdefghijkl", value);
+        Assert.Equal(byteBuffer.Length, readBytes);
+    }
 }
