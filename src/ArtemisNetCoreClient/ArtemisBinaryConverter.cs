@@ -144,19 +144,25 @@ internal static class ArtemisBinaryConverter
         }
         else
         {
-            // TODO: Optimize this with string.Create
-            
             readBytes += ReadInt32(source[readBytes..], out var byteCount);
             
-            var chars = new char[byteCount >> 1];
-            for (var i = 0; i < byteCount; i += 2)
+            unsafe
             {
-                var lowByte = source[readBytes++];
-                var highByte = source[readBytes++];
-                chars[i >> 1] = (char) (lowByte | (highByte << 8));
+                fixed(void* ptr = &MemoryMarshal.GetReference(source.Slice(readBytes, byteCount)))
+                {
+                    value =  string.Create(byteCount >> 1, (ptr: (IntPtr) ptr, byteCount), static (span, state) =>
+                    {
+                        var source = new Span<byte>(state.ptr.ToPointer(), state.byteCount);
+                        for (var i = 0; i < state.byteCount; i += 2)
+                        {
+                            var lowByte = source[i];
+                            var highByte = source[i + 1];
+                            span[i >> 1] = (char) (lowByte | (highByte << 8));
+                        }
+                    });
+                }
             }
-            
-            value = new string(chars);
+            readBytes+= byteCount;
         }
 
         return readBytes;
