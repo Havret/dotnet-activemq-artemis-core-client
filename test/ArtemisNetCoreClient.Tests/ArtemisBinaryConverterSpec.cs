@@ -91,6 +91,34 @@ public class ArtemisBinaryConverterSpec
         Assert.Equal(expected, value);
         Assert.Equal(encoded.Length, readBytes);
     }
+    
+    [Fact]
+    public void should_encode_int()
+    {
+        // Arrange
+        var byteBuffer = new byte[4];
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteInt32(ref byteBuffer.AsSpan().GetReference(), 125);
+
+        // Assert
+        Assert.Equal([0, 0, 0, 125], byteBuffer);
+        Assert.Equal(4, writtenBytes);
+    }
+    
+    [Fact]
+    public void should_decode_int()
+    {
+        // Arrange
+        var byteBuffer = new byte[] { 0, 0, 0, 125 };
+
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadInt32(byteBuffer, out var value);
+
+        // Assert
+        Assert.Equal(125, value);
+        Assert.Equal(4, readBytes);
+    }
 
     [Fact]
     public void should_encode_short_string()
@@ -133,7 +161,6 @@ public class ArtemisBinaryConverterSpec
 
         // Act
         var writtenBytes = ArtemisBinaryConverter.WriteString(ref byteBuffer.AsSpan().GetReference(), str);
-        
         
         // Assert
         var expected = new byte[] { 0, 0, 0, 12, 0, 12, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108 };
