@@ -148,6 +148,84 @@ public class ArtemisBinaryConverterSpec
         Assert.Equal(expected, value);
         Assert.Equal(encoded.Length, readBytes);
     }
+    
+    [Fact]
+    public void should_encode_long()
+    {
+        // Arrange
+        var byteBuffer = new byte[8];
+        
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteInt64(ref byteBuffer.AsSpan().GetReference(), long.MaxValue);
+        
+        // Assert
+        Assert.Equal(
+            [
+                127,
+                unchecked((byte) -1),
+                unchecked((byte) -1),
+                unchecked((byte) -1),
+                unchecked((byte) -1),
+                unchecked((byte) -1),
+                unchecked((byte) -1),
+                unchecked((byte) -1)
+            ],
+            byteBuffer);
+        Assert.Equal(8, writtenBytes);
+    }
+
+    [Fact]
+    public void should_decode_long()
+    {
+        // Arrange
+        var byteBuffer = new byte[]
+        {
+            127,
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1),
+            unchecked((byte) -1)
+        };
+
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadInt64(byteBuffer, out var value);
+
+        // Assert
+        Assert.Equal(long.MaxValue, value);
+        Assert.Equal(8, readBytes);
+    }
+
+    [Theory]
+    [InlineData(280L, new byte[] { unchecked((byte) -1), 0, 0, 0, 0, 0, 0, 1, 24 })]
+    [InlineData(null, new byte[] { 0 })]
+    public void should_encode_nullable_long(long? value, byte[] encoded)
+    {
+        // Arrange
+        var byteBuffer = new byte[encoded.Length];
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteNullableInt64(ref byteBuffer.AsSpan().GetReference(), value);
+
+        // Assert
+        Assert.Equal(encoded, byteBuffer);
+        Assert.Equal(encoded.Length, writtenBytes);
+    }
+
+    [Theory]
+    [InlineData(new byte[] { unchecked((byte) -1), 0, 0, 0, 0, 0, 0, 1, 24 }, 280L)]
+    [InlineData(new byte[] { 0 }, null)]
+    public void should_decode_nullable_long(byte[] encoded, long? expected)
+    {
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadNullableInt64(encoded, out var value);
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.Equal(encoded.Length, readBytes);
+    }
 
     [Fact]
     public void should_encode_short_string()

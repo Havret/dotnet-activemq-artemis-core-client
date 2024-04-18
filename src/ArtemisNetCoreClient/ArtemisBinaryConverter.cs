@@ -65,9 +65,10 @@ internal static class ArtemisBinaryConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long ReadInt64(in ReadOnlySpan<byte> source)
+    public static int ReadInt64(in ReadOnlySpan<byte> source, out long value)
     {
-        return BinaryPrimitives.ReadInt64BigEndian(source);
+        value =  BinaryPrimitives.ReadInt64BigEndian(source);
+        return sizeof(long);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,6 +78,34 @@ internal static class ArtemisBinaryConverter
         return sizeof(long);
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadNullableInt64(in ReadOnlySpan<byte> source, out long? value)
+    {
+        var readBytes = ReadBool(source, out var hasValue);
+        if (hasValue)
+        {
+            readBytes += ReadInt64(source[readBytes..], out var longValue);
+            value = longValue;
+        }
+        else
+        {
+            value = null;
+        }
+
+        return readBytes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteNullableInt64(ref byte destination, long? value)
+    {
+        var offset = WriteBool(ref destination, value.HasValue);
+        if (value.HasValue)
+        {
+            offset += WriteInt64(ref destination.GetOffset(offset), value.Value);
+        }
+
+        return offset;
+    }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ReadInt16(in ReadOnlySpan<byte> source, out short value)

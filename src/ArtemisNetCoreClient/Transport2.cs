@@ -86,7 +86,7 @@ internal class Transport2 : IAsyncDisposable
         
         Span<byte> channelIdBuffer = stackalloc byte[sizeof(long)];
         _ = _reader.Read(channelIdBuffer);
-        var channelId = ArtemisBinaryConverter.ReadInt64(typeBuffer);
+        _ = ArtemisBinaryConverter.ReadInt64(typeBuffer, out var channelId);
 
         var payloadBufferSize = frameSize - sizeof(byte) - sizeof(long);
 
