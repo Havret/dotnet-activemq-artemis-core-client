@@ -22,6 +22,35 @@ internal static class ArtemisBinaryConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadNullableInt32(in ReadOnlySpan<byte> source, out int? value)
+    {
+        var readBytes = ReadBool(source, out var hasValue);
+        if (hasValue)
+        {
+            readBytes += ReadInt32(source[readBytes..], out var intValue);
+            value = intValue;
+        }
+        else
+        {
+            value = null;
+        }
+
+        return readBytes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteNullableInt32(ref byte destination, int? value)
+    {
+        var offset = WriteBool(ref destination, value.HasValue);
+        if (value.HasValue)
+        {
+            offset += WriteInt32(ref destination.GetOffset(offset), value.Value);
+        }
+
+        return offset;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ReadByte(in ReadOnlySpan<byte> source, out byte value)
     {
         value = source[0];
