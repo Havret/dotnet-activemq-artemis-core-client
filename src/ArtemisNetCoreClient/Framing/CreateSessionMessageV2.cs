@@ -46,16 +46,16 @@ internal readonly struct CreateSessionMessage : IOutgoingPacket
         offset += ArtemisBinaryConverter.WriteString(ref buffer.GetOffset(offset), Name);
         offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetOffset(offset), SessionChannelId);
         offset += ArtemisBinaryConverter.WriteInt32(ref buffer.GetOffset(offset), Version);
-        // offset += ArtemisBitConverter.WriteNullableString(ref buffer.GetOffset(offset), Username);
-        // offset += ArtemisBitConverter.WriteNullableString(ref buffer.GetOffset(offset), Password);
+        offset += ArtemisBinaryConverter.WriteNullableString(ref buffer.GetOffset(offset), Username);
+        offset += ArtemisBinaryConverter.WriteNullableString(ref buffer.GetOffset(offset), Password);
         offset += ArtemisBinaryConverter.WriteInt32(ref buffer.GetOffset(offset), MinLargeMessageSize);
-        // offset += ArtemisBitConverter.WriteBool(ref buffer.GetOffset(offset), Xa);
-        // offset += ArtemisBitConverter.WriteBool(ref buffer.GetOffset(offset), AutoCommitSends);
-        // offset += ArtemisBitConverter.WriteBool(ref buffer.GetOffset(offset), AutoCommitAcks);
+        offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), Xa);
+        offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), AutoCommitSends);
+        offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), AutoCommitAcks);
         offset += ArtemisBinaryConverter.WriteInt32(ref buffer.GetOffset(offset), WindowSize);
-        // offset += ArtemisBitConverter.WriteBool(ref buffer.GetOffset(offset), PreAcknowledge);
-        // offset += ArtemisBitConverter.WriteNullableString(ref buffer.GetOffset(offset), DefaultAddress);
-        // offset += ArtemisBitConverter.WriteNullableString(ref buffer.GetOffset(offset), ClientId);
+        offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), PreAcknowledge);
+        offset += ArtemisBinaryConverter.WriteNullableString(ref buffer.GetOffset(offset), DefaultAddress);
+        offset += ArtemisBinaryConverter.WriteNullableString(ref buffer.GetOffset(offset), ClientId);
 
         return offset;
     }

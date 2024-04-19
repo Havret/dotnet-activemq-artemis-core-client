@@ -268,6 +268,36 @@ internal static class ArtemisBinaryConverter
 
         return offset;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadNullableString(in ReadOnlySpan<byte> source, out string? value)
+    {
+        var readBytes = ReadByte(source, out var isNotNull);
+        if (isNotNull == DataConstants.NotNull)
+        {
+            readBytes += ReadString(source[readBytes..], out var stringValue);
+            value = stringValue;
+        }
+        else
+        {
+            value = null;
+        }
+
+        return readBytes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteNullableString(ref byte destination, string? value)
+    {
+        if (value is null)
+        {
+            return WriteByte(ref destination, DataConstants.Null);
+        }
+        
+        var offset = WriteByte(ref destination, DataConstants.NotNull);
+        offset += WriteString(ref destination.GetOffset(offset), value);
+        return offset;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetNullableStringByteCount(string? value)
