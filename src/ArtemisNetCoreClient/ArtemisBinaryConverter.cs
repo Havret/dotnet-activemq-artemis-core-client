@@ -232,7 +232,10 @@ internal static class ArtemisBinaryConverter
         var offset = WriteInt32(ref destination, length);
         if (value.Length < 9)
         {
-            offset += WriteAsShorts(ref destination.GetOffset(offset), value);
+            foreach (var c in value)
+            {
+                offset += WriteInt16(ref destination.GetOffset(offset), (short) c);
+            }
         }
         else if (value.Length < 0xFFF)
         {
@@ -261,17 +264,6 @@ internal static class ArtemisBinaryConverter
                 // High byte
                 offset += WriteByte(ref destination.GetOffset(offset), (byte) ((c >> 8) & 0xFF));
             }
-        }
-
-        return offset;
-    }
-    
-    private static int WriteAsShorts(ref byte destination, string value)
-    {
-        var offset = 0;
-        foreach (var c in value)
-        {
-            offset += WriteInt16(ref destination.GetOffset(offset), (short) c);
         }
 
         return offset;
