@@ -11,3 +11,12 @@ internal class SessionStart : Packet
     {
     }
 }
+
+internal readonly struct SessionStart2 : IOutgoingPacket
+{
+    public PacketType PacketType => PacketType.SessionStart;
+
+    public int GetRequiredBufferSize() => 0;
+
+    public int Encode(Span<byte> buffer) => 0;
+}

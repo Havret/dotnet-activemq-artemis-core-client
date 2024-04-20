@@ -68,11 +68,12 @@ public class SessionFactory
 
         var receivedPacket = await transport.ReceiveAsync(cancellationToken);
 
-        if (receivedPacket is CreateSessionResponseMessage)
+        if (receivedPacket is CreateSessionResponseMessage createSessionResponseMessage)
         {
             var session = new Session(transport, LoggerFactory)
             {
-                ChannelId = createSessionMessageV2.SessionChannelId
+                ChannelId = createSessionMessageV2.SessionChannelId,
+                ServerVersion = createSessionResponseMessage.ServerVersion
             };
             await session.StartAsync(cancellationToken);
             return session;

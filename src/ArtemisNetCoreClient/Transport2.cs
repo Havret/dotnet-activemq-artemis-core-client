@@ -56,9 +56,8 @@ internal class Transport2 : IAsyncDisposable
                     MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> segment);
                     ArrayPool<byte>.Shared.Return(segment.Array!);
                 }
+                await _writer.FlushAsync();
             }
-
-            await _writer.FlushAsync();
         }
         catch (Exception e)
         {
@@ -86,7 +85,7 @@ internal class Transport2 : IAsyncDisposable
         
         Span<byte> channelIdBuffer = stackalloc byte[sizeof(long)];
         _ = _reader.Read(channelIdBuffer);
-        _ = ArtemisBinaryConverter.ReadInt64(typeBuffer, out var channelId);
+        _ = ArtemisBinaryConverter.ReadInt64(channelIdBuffer, out var channelId);
 
         var payloadBufferSize = frameSize - sizeof(byte) - sizeof(long);
 
@@ -113,5 +112,7 @@ internal readonly ref struct InboundPacket
 internal enum PacketType : byte
 {
     CreateSessionMessage = unchecked((byte) -18),
-    CreateSessionResponse = 31
+    CreateSessionResponse = 31,
+    SessionStart = 67,
+    NullResponse = 21
 }

@@ -4,12 +4,16 @@ using Microsoft.Extensions.Logging;
 
 namespace ActiveMQ.Artemis.Core.Client;
 
-internal class Session : ISession
+internal class Session : ISession, IChannel
 {
+    private readonly Connection _connection;
     private readonly Transport _transport;
 
     private readonly ConcurrentDictionary<long, TaskCompletionSource<Packet>> _completionSources = new();
+    private readonly ConcurrentDictionary<long, TaskCompletionSource<IIncomingPacket>> _completionSources2 = new();
     private readonly ConcurrentDictionary<long, Consumer> _consumers = new();
+    private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly ILogger<Session> _logger;
 
     public Session(Transport transport, ILoggerFactory loggerFactory)
     {
@@ -49,11 +53,14 @@ internal class Session : ISession
         });
     }
 
-    public Session()
+    public Session(Connection connection, ILoggerFactory loggerFactory)
     {
+        _connection = connection;
+        _logger = loggerFactory.CreateLogger<Session>();
     }
 
-    public long ChannelId { get; init; }
+    public required long ChannelId { get; init; }
+    public required int ServerVersion { get; init; }
 
     public async Task CreateAddress(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken)
     {
@@ -170,11 +177,12 @@ internal class Session : ISession
         };
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        _ = await SendBlockingAsync<SessionStop, NullResponse>(new SessionStop(), default);
-        _ = await SendBlockingAsync<SessionCloseMessage, NullResponse>(new SessionCloseMessage(), default);
-        await _transport.DisposeAsync().ConfigureAwait(false);
+        return ValueTask.CompletedTask;
+        // _ = await SendBlockingAsync<SessionStop, NullResponse>(new SessionStop(), default);
+        // _ = await SendBlockingAsync<SessionCloseMessage, NullResponse>(new SessionCloseMessage(), default);
+        // await _transport.DisposeAsync().ConfigureAwait(false);
     }
 
     internal async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
@@ -183,7 +191,7 @@ internal class Session : ISession
         var tcs = new TaskCompletionSource<Packet>();
 
         // TODO: Handle scenario when we cannot add request for this CorrelationId, because there is already another pending request
-        _ = _completionSources.TryAdd(request.CorrelationId, tcs);
+        // _ = _completionSources.TryAdd(request.CorrelationId, tcs);
 
         await _transport.SendAsync(request, ChannelId, cancellationToken);
         var responsePacket = await tcs.Task;
@@ -203,8 +211,31 @@ internal class Session : ISession
         await _transport.SendAsync(request, ChannelId, cancellationToken);
     }
 
+    public void StartAsync2()
+    {
+        var sessionStart = new SessionStart2();
+        _connection.Send(ref sessionStart, ChannelId);
+    }
+    
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await _transport.SendAsync(new SessionStart(), ChannelId, cancellationToken);
+    }
+
+    public void OnPacket(ref readonly InboundPacket packet)
+    {
+        switch (packet.PacketType)
+        {
+            case PacketType.NullResponse:
+                var nullResponse = new NullResponse2(packet.Payload);
+                if (_completionSources2.TryRemove(nullResponse.CorrelationId, out var tcs))
+                {
+                    tcs.TrySetResult(nullResponse);
+                }
+                break;
+            default:
+                _logger.LogWarning("Received unexpected packet type {PacketType}", packet.PacketType);
+                break;
+        }
     }
 }

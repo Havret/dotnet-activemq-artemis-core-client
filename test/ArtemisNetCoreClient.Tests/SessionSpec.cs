@@ -1,5 +1,6 @@
 using ActiveMQ.Artemis.Core.Client.Framing;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
+using ActiveMQ.Artemis.Core.Client.Tests.Utils.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -7,15 +8,20 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class SessionSpec(ITestOutputHelper testOutputHelper)
 {
-    [Fact(Skip = "Temporarily disabled")]
-    public async Task should_establish_session()
+    [Fact]
+    public async Task should_create_session()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        
+        var connectionFactory = new ConnectionFactory
+        {
+            LoggerFactory = new XUnitLoggerFactory(testOutputHelper),
+        };
+        await using var connection = await connectionFactory.CreateAsync(TestFixture.GetEndpoint(), testFixture.CancellationToken);
 
         // Act
-        var connectionFactory = new SessionFactory();
-        var session = await connectionFactory.CreateAsync(TestFixture.GetEndpoint(), testFixture.CancellationToken);
+        var session = await connection.CreateSessionAsync();
 
         // Assert
         Assert.NotNull(session);
