@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using ActiveMQ.Artemis.Core.Client.Framing;
 using Microsoft.Extensions.Logging;
 
@@ -13,9 +12,10 @@ internal class Connection : IConnection, IChannel
     private readonly Transport2 _transport;
     private readonly Endpoint _endpoint;
     private readonly Task _receiveLoopTask;
-    private readonly Dictionary<long, IChannel> _channels = new();
+    private readonly ConcurrentDictionary<long, IChannel> _channels = new();
     private readonly ConcurrentDictionary<long, TaskCompletionSource<IIncomingPacket>> _completionSources = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private volatile bool _disposed;
 
     public Connection(ILoggerFactory loggerFactory, Transport2 transport, Endpoint endpoint)
     {
@@ -23,31 +23,40 @@ internal class Connection : IConnection, IChannel
         _loggerFactory = loggerFactory;
         _transport = transport;
         _endpoint = endpoint;
-        _channels.Add(1, this);
+        _channels.TryAdd(1, this);
 
-        _receiveLoopTask = Task.Run(ReceiveLoop);
+        _receiveLoopTask = Task.Factory.StartNew(ReceiveLoop, TaskCreationOptions.LongRunning);
     }
     
     private void ReceiveLoop()
     {
-        // TODO: Handle loop exit
-        while (true)
+        while (_disposed == false)
         {
-            var inboundPacket = _transport.ReceivePacket();
             try
             {
-                if (_channels.TryGetValue(inboundPacket.ChannelId, out var channel))
+                var inboundPacket = _transport.ReceivePacket();
+                try
                 {
-                    channel.OnPacket(ref inboundPacket);
+                    if (_channels.TryGetValue(inboundPacket.ChannelId, out var channel))
+                    {
+                        channel.OnPacket(ref inboundPacket);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Received packet for unknown channel {ChannelId}", inboundPacket.ChannelId);
+                    }
                 }
-                else
+                finally
                 {
-                    _logger.LogWarning("Received packet for unknown channel {ChannelId}", inboundPacket.ChannelId);
+                    ArrayPool<byte>.Shared.Return(inboundPacket.Payload.Array!);
                 }
             }
-            finally
+            catch (IOException e)
             {
-                ArrayPool<byte>.Shared.Return(inboundPacket.Payload.Array!);
+                if (!_disposed)
+                {
+                    _logger.LogError(e, "Error in network communication");       
+                }
             }
         }
     }
@@ -91,7 +100,7 @@ internal class Connection : IConnection, IChannel
         try
         {
             await _lock.WaitAsync(cancellationToken);
-            var tcs = new TaskCompletionSource<IIncomingPacket>();
+            var tcs = new TaskCompletionSource<IIncomingPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             Send(ref createSessionMessage, 1);
             var incomingPacket = (CreateSessionResponseMessage2) await tcs.Task;
@@ -102,7 +111,7 @@ internal class Connection : IConnection, IChannel
                 ChannelId = createSessionMessage.SessionChannelId
             };
             
-            _channels.Add(session.ChannelId, session);
+            _channels.TryAdd(session.ChannelId, session);
             
             session.StartAsync2();
 
@@ -129,10 +138,17 @@ internal class Connection : IConnection, IChannel
         
         _transport.Send(buffer.AsMemory(0, size));
     }
-
-    public ValueTask DisposeAsync()
+    
+    internal void RemoveChannel(long channelId)
     {
-        return ValueTask.CompletedTask;
+        _channels.TryRemove(channelId, out _);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        await _transport.DisposeAsync();
+        await _receiveLoopTask;
     }
 }
 

@@ -53,7 +53,7 @@ internal class Transport2 : IAsyncDisposable
                 while (_channelReader.TryRead(out var memory))
                 {
                     await _writer.WriteAsync(memory);
-                    MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> segment);
+                    MemoryMarshal.TryGetArray(memory, out var segment);
                     ArrayPool<byte>.Shared.Return(segment.Array!);
                 }
                 await _writer.FlushAsync();
@@ -75,30 +75,36 @@ internal class Transport2 : IAsyncDisposable
     
     internal InboundPacket ReceivePacket()
     {
-        Span<byte> frameSizeBuffer = stackalloc byte[sizeof(int)];
-        _ = _reader.Read(frameSizeBuffer);
-        _ = ArtemisBinaryConverter.ReadInt32(frameSizeBuffer, out var frameSize);
+        var (frameSize, packetType, channelId) = ReadHeader();
+        var payloadSize = frameSize - sizeof(byte) - sizeof(long);
         
-        Span<byte> typeBuffer = stackalloc byte[sizeof(byte)];
-        _ = _reader.Read(typeBuffer);
-        _ = ArtemisBinaryConverter.ReadByte(typeBuffer, out var packetType);
-        
-        Span<byte> channelIdBuffer = stackalloc byte[sizeof(long)];
-        _ = _reader.Read(channelIdBuffer);
-        _ = ArtemisBinaryConverter.ReadInt64(channelIdBuffer, out var channelId);
+        var buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
 
-        var payloadBufferSize = frameSize - sizeof(byte) - sizeof(long);
-
-        var buffer = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
-        
-        _ = _reader.Read(buffer.AsSpan(0, payloadBufferSize));
+        // TODO: Handle incomplete reads
+        _ = _reader.Read(buffer.AsSpan(0, payloadSize));
 
         return new InboundPacket
         {
-            PacketType = (PacketType) packetType,
+            PacketType = packetType,
             ChannelId = channelId,
-            Payload = new ArraySegment<byte>(buffer, 0, payloadBufferSize)
+            Payload = new ArraySegment<byte>(buffer, 0, payloadSize)
         };
+        
+    }
+    
+    private (int frameSize, PacketType packetType, long channelId) ReadHeader()
+    {
+        Span<byte> headerBuffer = stackalloc byte[sizeof(int) + sizeof(byte) + sizeof(long)];
+        var read = _reader.Read(headerBuffer);
+        if (read == 0)
+        {
+            throw new EndOfStreamException("End of stream reached");
+        }
+        var readBytes = ArtemisBinaryConverter.ReadInt32(headerBuffer, out var frameSize);
+        readBytes += ArtemisBinaryConverter.ReadByte(headerBuffer[readBytes..], out var packetType);
+        readBytes += ArtemisBinaryConverter.ReadInt64(headerBuffer[readBytes..], out var channelId);
+
+        return (frameSize, (PacketType) packetType, channelId);
     }
 }
 
@@ -114,5 +120,7 @@ internal enum PacketType : byte
     CreateSessionMessage = unchecked((byte) -18),
     CreateSessionResponse = 31,
     SessionStart = 67,
-    NullResponse = 21
+    NullResponse = 21,
+    SessionStop = 68,
+    SessionCloseMessage = 69,
 }

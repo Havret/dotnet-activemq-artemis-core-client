@@ -177,12 +177,45 @@ internal class Session : ISession, IChannel
         };
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        return ValueTask.CompletedTask;
-        // _ = await SendBlockingAsync<SessionStop, NullResponse>(new SessionStop(), default);
-        // _ = await SendBlockingAsync<SessionCloseMessage, NullResponse>(new SessionCloseMessage(), default);
-        // await _transport.DisposeAsync().ConfigureAwait(false);
+        await StopAsync();
+        await CloseAsync();
+        _connection.RemoveChannel(ChannelId);
+    }
+
+    private async ValueTask StopAsync()
+    {
+        var sessionStop = new SessionStop2();
+        try
+        {
+            await _lock.WaitAsync();
+            var tcs = new TaskCompletionSource<IIncomingPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources2.TryAdd(-1, tcs);
+            _connection.Send(ref sessionStop, ChannelId);
+            await tcs.Task;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private async ValueTask CloseAsync()
+    {
+        var sessionCloseMessage2 = new SessionCloseMessage2();
+        try
+        {
+            await _lock.WaitAsync();
+            var tcs = new TaskCompletionSource<IIncomingPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources2.TryAdd(-1, tcs);
+            _connection.Send(ref sessionCloseMessage2, ChannelId);
+            await tcs.Task;
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     internal async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
