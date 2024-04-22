@@ -15,6 +15,7 @@ internal class Connection : IConnection, IChannel
     private readonly ConcurrentDictionary<long, IChannel> _channels = new();
     private readonly ConcurrentDictionary<long, TaskCompletionSource<IIncomingPacket>> _completionSources = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly IdGenerator _sessionChannelIdGenerator = new(10);
     private volatile bool _disposed;
 
     public Connection(ILoggerFactory loggerFactory, Transport2 transport, Endpoint endpoint)
@@ -83,7 +84,7 @@ internal class Connection : IConnection, IChannel
         var createSessionMessage = new CreateSessionMessage
         {
             Name = Guid.NewGuid().ToString(),
-            SessionChannelId = 10,
+            SessionChannelId = _sessionChannelIdGenerator.GenerateId(),
             Version = 135,
             Username = _endpoint.User,
             Password = _endpoint.Password,
