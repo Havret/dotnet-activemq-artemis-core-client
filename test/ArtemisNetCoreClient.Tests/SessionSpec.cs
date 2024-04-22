@@ -8,25 +8,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class SessionSpec(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
-    public async Task should_create_session()
-    {
-        // Arrange
-        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
-        
-        var connectionFactory = new ConnectionFactory
-        {
-            LoggerFactory = new XUnitLoggerFactory(testOutputHelper),
-        };
-        await using var connection = await connectionFactory.CreateAsync(TestFixture.GetEndpoint(), testFixture.CancellationToken);
 
-        // Act
-        var session = await connection.CreateSessionAsync();
-
-        // Assert
-        Assert.NotNull(session);
-        await session.DisposeAsync();
-    }
 
     [Theory(Skip = "Temporarily disabled")]
     [InlineData(new[] { RoutingType.Anycast })]

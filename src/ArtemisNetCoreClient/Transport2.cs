@@ -1,5 +1,7 @@
 using System.Buffers;
+using System.Diagnostics;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
@@ -77,32 +79,35 @@ internal class Transport2 : IAsyncDisposable
     {
         var (frameSize, packetType, channelId) = ReadHeader();
         var payloadSize = frameSize - sizeof(byte) - sizeof(long);
-        
+
         var buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
-
-        // TODO: Handle incomplete reads
-        _ = _reader.Read(buffer.AsSpan(0, payloadSize));
-
-        return new InboundPacket
+        try
         {
-            PacketType = packetType,
-            ChannelId = channelId,
-            Payload = new ArraySegment<byte>(buffer, 0, payloadSize)
-        };
-        
+            _reader.ReadExactly(buffer.AsSpan(0, payloadSize));
+            return new InboundPacket
+            {
+                PacketType = packetType,
+                ChannelId = channelId,
+                Payload = new ArraySegment<byte>(buffer, 0, payloadSize)
+            };
+        }
+        catch (Exception)
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+            throw;
+        }
     }
     
     private (int frameSize, PacketType packetType, long channelId) ReadHeader()
     {
         Span<byte> headerBuffer = stackalloc byte[sizeof(int) + sizeof(byte) + sizeof(long)];
-        var read = _reader.Read(headerBuffer);
-        if (read == 0)
-        {
-            throw new EndOfStreamException("End of stream reached");
-        }
+        _reader.ReadExactly(headerBuffer);
+        
         var readBytes = ArtemisBinaryConverter.ReadInt32(headerBuffer, out var frameSize);
         readBytes += ArtemisBinaryConverter.ReadByte(headerBuffer[readBytes..], out var packetType);
         readBytes += ArtemisBinaryConverter.ReadInt64(headerBuffer[readBytes..], out var channelId);
+        
+        Debug.Assert(readBytes == headerBuffer.Length, $"Expected to read {headerBuffer.Length} bytes but got {readBytes}");
 
         return (frameSize, (PacketType) packetType, channelId);
     }

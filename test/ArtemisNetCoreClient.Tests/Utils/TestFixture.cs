@@ -29,6 +29,15 @@ public class TestFixture : IAsyncDisposable
         return await sessionFactory.CreateAsync(GetEndpoint(), CancellationToken);
     }
     
+    public async Task<IConnection> CreateConnectionAsync()
+    {
+        var connectionFactory = new ConnectionFactory
+        {
+            LoggerFactory = new XUnitLoggerFactory(_testOutputHelper)
+        };
+        return await connectionFactory.CreateAsync(GetEndpoint(), CancellationToken);
+    }
+    
     public static Endpoint GetEndpoint()
     {
         var userName = Environment.GetEnvironmentVariable("ARTEMIS_USERNAME") ?? "artemis";
