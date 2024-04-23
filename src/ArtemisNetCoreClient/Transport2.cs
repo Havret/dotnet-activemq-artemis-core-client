@@ -75,19 +75,19 @@ internal class Transport2 : IAsyncDisposable
         _socket.Dispose();
     }
     
-    internal InboundPacket ReceivePacket()
+    internal async ValueTask<InboundPacket> ReceivePacketAsync(CancellationToken cancellationToken)
     {
-        var (frameSize, packetType, channelId) = ReadHeader();
-        var payloadSize = frameSize - sizeof(byte) - sizeof(long);
+        var header = await ReadHeaderAsync(cancellationToken);
+        var payloadSize = header.FrameSize - sizeof(byte) - sizeof(long);
 
         var buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
         try
         {
-            _reader.ReadExactly(buffer.AsSpan(0, payloadSize));
+            await _reader.ReadExactlyAsync(buffer, 0, payloadSize, cancellationToken);
             return new InboundPacket
             {
-                PacketType = packetType,
-                ChannelId = channelId,
+                PacketType = header.PacketType,
+                ChannelId = header.ChannelId,
                 Payload = new ArraySegment<byte>(buffer, 0, payloadSize)
             };
         }
@@ -97,23 +97,43 @@ internal class Transport2 : IAsyncDisposable
             throw;
         }
     }
-    
-    private (int frameSize, PacketType packetType, long channelId) ReadHeader()
-    {
-        Span<byte> headerBuffer = stackalloc byte[sizeof(int) + sizeof(byte) + sizeof(long)];
-        _reader.ReadExactly(headerBuffer);
-        
-        var readBytes = ArtemisBinaryConverter.ReadInt32(headerBuffer, out var frameSize);
-        readBytes += ArtemisBinaryConverter.ReadByte(headerBuffer[readBytes..], out var packetType);
-        readBytes += ArtemisBinaryConverter.ReadInt64(headerBuffer[readBytes..], out var channelId);
-        
-        Debug.Assert(readBytes == headerBuffer.Length, $"Expected to read {headerBuffer.Length} bytes but got {readBytes}");
 
-        return (frameSize, (PacketType) packetType, channelId);
+    private const int HeaderSize = sizeof(int) + sizeof(byte) + sizeof(long);
+    private async ValueTask<Header> ReadHeaderAsync(CancellationToken cancellationToken)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(Header.HeaderSize);
+        try
+        {
+            await _reader.ReadExactlyAsync(buffer, 0, HeaderSize, cancellationToken);
+            return new Header(buffer);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 }
 
-internal readonly ref struct InboundPacket
+internal readonly struct Header
+{
+    public const int HeaderSize = sizeof(int) + sizeof(byte) + sizeof(long);
+
+    public Header(ReadOnlySpan<byte> buffer)
+    {
+        var readBytes = ArtemisBinaryConverter.ReadInt32(buffer, out FrameSize);
+        readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var packetType);
+        PacketType = (PacketType) packetType;
+        readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out ChannelId);
+        
+        Debug.Assert(readBytes == HeaderSize, $"Expected to read {HeaderSize} bytes but got {readBytes}");
+    }
+
+    public readonly int FrameSize;
+    public readonly long ChannelId;
+    public readonly PacketType PacketType;
+}
+
+internal readonly struct InboundPacket
 {
     public long ChannelId { get; init; }
     public PacketType PacketType { get; init; }

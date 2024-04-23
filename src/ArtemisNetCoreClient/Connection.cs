@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using ActiveMQ.Artemis.Core.Client.Framing;
 using Microsoft.Extensions.Logging;
 
@@ -16,7 +17,7 @@ internal class Connection : IConnection, IChannel
     private readonly ConcurrentDictionary<long, TaskCompletionSource<IIncomingPacket>> _completionSources = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly IdGenerator _sessionChannelIdGenerator = new(10);
-    private volatile bool _disposed;
+    private readonly CancellationTokenSource _receiveLoopCancellationToken;
 
     public Connection(ILoggerFactory loggerFactory, Transport2 transport, Endpoint endpoint)
     {
@@ -26,16 +27,17 @@ internal class Connection : IConnection, IChannel
         _endpoint = endpoint;
         _channels.TryAdd(1, this);
 
-        _receiveLoopTask = Task.Factory.StartNew(ReceiveLoop, TaskCreationOptions.LongRunning);
+        _receiveLoopCancellationToken = new CancellationTokenSource();
+        _receiveLoopTask = Task.Run(ReceiveLoop);
     }
     
-    private void ReceiveLoop()
+    private async Task ReceiveLoop()
     {
-        while (_disposed == false)
+        while (_receiveLoopCancellationToken.IsCancellationRequested == false)
         {
             try
             {
-                var inboundPacket = _transport.ReceivePacket();
+                var inboundPacket = await _transport.ReceivePacketAsync(_receiveLoopCancellationToken.Token);
                 try
                 {
                     if (_channels.TryGetValue(inboundPacket.ChannelId, out var channel))
@@ -49,15 +51,19 @@ internal class Connection : IConnection, IChannel
                 }
                 finally
                 {
-                    ArrayPool<byte>.Shared.Return(inboundPacket.Payload.Array!);
+                    if (inboundPacket.Payload.Array is { } array)
+                    {
+                        ArrayPool<byte>.Shared.Return(array);
+                    }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore
             }
             catch (IOException e)
             {
-                if (!_disposed)
-                {
-                    _logger.LogError(e, "Error in network communication");       
-                }
+                _logger.LogError(e, "Error in network communication");
             }
         }
     }
@@ -147,7 +153,8 @@ internal class Connection : IConnection, IChannel
 
     public async ValueTask DisposeAsync()
     {
-        _disposed = true;
+        await _receiveLoopCancellationToken.CancelAsync();
+        _receiveLoopCancellationToken.Dispose();
         await _transport.DisposeAsync();
         await _receiveLoopTask;
     }
