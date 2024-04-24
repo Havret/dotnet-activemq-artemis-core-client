@@ -173,7 +173,7 @@ internal static class ArtemisBinaryConverter
         {
             < 9 => value.Length * sizeof(short),
             < 0xFFF => sizeof(short) + Encoding.UTF8.GetByteCount(value),
-            _ => sizeof(int) + value.Length * 2
+            _ => GetSimpleStringByteCount(value)
         };
 
         return byteCount;
@@ -202,24 +202,7 @@ internal static class ArtemisBinaryConverter
         }
         else
         {
-            readBytes += ReadInt32(source[readBytes..], out var byteCount);
-            unsafe
-            {
-                ref var reference = ref MemoryMarshal.GetReference(source.Slice(readBytes, byteCount));
-                var ptr = Unsafe.AsPointer(ref reference);
-                value = string.Create(byteCount >> 1, (ptr: (IntPtr) ptr, byteCount), static (span, state) =>
-                {
-                    var source = new Span<byte>(state.ptr.ToPointer(), state.byteCount);
-                    for (var i = 0; i < state.byteCount; i += 2)
-                    {
-                        var lowByte = source[i];
-                        var highByte = source[i + 1];
-                        span[i >> 1] = (char) (lowByte | (highByte << 8));
-                    }
-                });
-            }
-
-            readBytes += byteCount;
+            readBytes += ReadSimpleString(source[readBytes..], out value);
         }
 
         return readBytes;
@@ -255,15 +238,7 @@ internal static class ArtemisBinaryConverter
         }
         else
         {
-            offset += WriteInt32(ref destination.GetOffset(offset), value.Length << 1);
-            foreach (var c in value)
-            {
-                // Low byte
-                offset += WriteByte(ref destination.GetOffset(offset), (byte) (c & 0xFF)); 
-                
-                // High byte
-                offset += WriteByte(ref destination.GetOffset(offset), (byte) ((c >> 8) & 0xFF));
-            }
+            offset += WriteSimpleString(ref destination.GetOffset(offset), value);
         }
 
         return offset;
@@ -309,5 +284,69 @@ internal static class ArtemisBinaryConverter
         }
 
         return byteCount;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetSimpleStringByteCount(string value)
+    {
+        return sizeof(int) + value.Length * 2;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteSimpleString(ref byte destination, string value)
+    {
+        var offset = WriteInt32(ref destination, value.Length << 1);
+        foreach (var c in value)
+        {
+            // Low byte
+            offset += WriteByte(ref destination.GetOffset(offset), (byte) (c & 0xFF));
+
+            // High byte
+            offset += WriteByte(ref destination.GetOffset(offset), (byte) ((c >> 8) & 0xFF));
+        }
+
+        return offset;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadSimpleString(in ReadOnlySpan<byte> source, out string value)
+    {
+        var readBytes = ReadInt32(source, out var byteCount);
+        unsafe
+        {
+            ref var reference = ref MemoryMarshal.GetReference(source.Slice(readBytes, byteCount));
+            var ptr = Unsafe.AsPointer(ref reference);
+            value = string.Create(byteCount >> 1, (ptr: (IntPtr) ptr, byteCount), static (span, state) =>
+            {
+                var source = new Span<byte>(state.ptr.ToPointer(), state.byteCount);
+                for (var i = 0; i < state.byteCount; i += 2)
+                {
+                    var lowByte = source[i];
+                    var highByte = source[i + 1];
+                    span[i >> 1] = (char) (lowByte | (highByte << 8));
+                }
+            });
+        }
+
+        readBytes += byteCount;
+
+        return readBytes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadNullableSimpleString(in ReadOnlySpan<byte> source, out string? value)
+    {
+        var readBytes = ReadByte(source, out var isNotNull);
+        if (isNotNull == DataConstants.NotNull)
+        {
+            readBytes += ReadSimpleString(source[readBytes..], out var stringValue);
+            value = stringValue;
+        }
+        else
+        {
+            value = null;
+        }
+
+        return readBytes;
     }
 }

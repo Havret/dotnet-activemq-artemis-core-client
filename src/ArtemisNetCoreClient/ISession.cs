@@ -10,7 +10,7 @@ public interface ISession : IAsyncDisposable
     /// <summary>
     /// Create an address with the given routing types if it does not already exist.
     /// </summary>
-    Task CreateAddress(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken);
+    Task CreateAddressAsync(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken);
     
     /// <summary>
     /// Get information about an address.

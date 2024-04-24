@@ -4,7 +4,6 @@ namespace ActiveMQ.Artemis.Core.Client;
 
 public class AddressInfo
 {
-    public string Name { get; init; }
-    public IReadOnlyList<string> QueueNames { get; init; }
-    public IReadOnlyList<RoutingType> RoutingTypes { get; init; }
+    public required IReadOnlyList<string> QueueNames { get; init; }
+    public required IReadOnlyList<RoutingType> RoutingTypes { get; init; }
 }

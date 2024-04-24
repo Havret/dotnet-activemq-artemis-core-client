@@ -8,7 +8,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 public class ConnectionFactorySpec(ITestOutputHelper testOutputHelper)
 {
     [Fact]
-    public async Task should_create_connection()
+    public async Task Should_create_connection()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);

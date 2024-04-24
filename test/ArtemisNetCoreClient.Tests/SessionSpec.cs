@@ -1,6 +1,5 @@
 using ActiveMQ.Artemis.Core.Client.Framing;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
-using ActiveMQ.Artemis.Core.Client.Tests.Utils.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -8,28 +7,26 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class SessionSpec(ITestOutputHelper testOutputHelper)
 {
-
-
-    [Theory(Skip = "Temporarily disabled")]
+    [Theory]
     [InlineData(new[] { RoutingType.Anycast })]
     [InlineData(new[] { RoutingType.Multicast })]
     [InlineData(new[] { RoutingType.Anycast, RoutingType.Multicast })]
-    public async Task should_create_address_with_selected_routing_type(RoutingType[] routingTypes)
+    public async Task Should_create_address_with_selected_routing_type(RoutingType[] routingTypes)
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
-        
-        await using var session = await testFixture.CreateSessionAsync();
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync();
 
         // Act
         var addressName = $"{Guid.NewGuid().ToString()}-{string.Join("-", routingTypes)}";
-        await session.CreateAddress(addressName, routingTypes, testFixture.CancellationToken);
+        await session.CreateAddressAsync(addressName, routingTypes, testFixture.CancellationToken);
         
         // Assert
         var addressInfo = await session.GetAddressInfo(addressName, testFixture.CancellationToken);
         Assert.NotNull(addressInfo);
-        Assert.Equal(addressName, addressInfo.Name);
         Assert.Equal(routingTypes, addressInfo.RoutingTypes);
+        Assert.Empty(addressInfo.QueueNames);
     }
 
     [Theory(Skip = "Temporarily disabled")]
@@ -42,7 +39,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         
         await using var session = await testFixture.CreateSessionAsync();
         var addressName = Guid.NewGuid().ToString();
-        await session.CreateAddress(addressName, [routingType], testFixture.CancellationToken);
+        await session.CreateAddressAsync(addressName, [routingType], testFixture.CancellationToken);
         
         // Act
         var queueName = Guid.NewGuid().ToString();
@@ -102,7 +99,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         await using var session = await testFixture.CreateSessionAsync();
         
         var addressName = Guid.NewGuid().ToString();
-        await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
+        await session.CreateAddressAsync(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
         
         var queueName = Guid.NewGuid().ToString();
         await session.CreateQueue(new QueueConfiguration
@@ -129,7 +126,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         
         await using var session = await testFixture.CreateSessionAsync();
         var addressName = Guid.NewGuid().ToString();
-        await session.CreateAddress(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
+        await session.CreateAddressAsync(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
         
         // Act
         var producer = await session.CreateProducerAsync(new ProducerConfiguration

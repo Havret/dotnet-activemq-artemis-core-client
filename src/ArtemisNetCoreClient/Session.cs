@@ -9,8 +9,10 @@ internal class Session : ISession, IChannel
     private readonly Connection _connection;
     private readonly Transport _transport;
 
+    private readonly object _emptyResult = new();
+
     private readonly ConcurrentDictionary<long, TaskCompletionSource<Packet>> _completionSources = new();
-    private readonly ConcurrentDictionary<long, TaskCompletionSource<IIncomingPacket>> _completionSources2 = new();
+    private readonly ConcurrentDictionary<long, TaskCompletionSource<object>> _completionSources2 = new();
     private readonly ConcurrentDictionary<long, Consumer> _consumers = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly ILogger<Session> _logger;
@@ -62,7 +64,7 @@ internal class Session : ISession, IChannel
     public required long ChannelId { get; init; }
     public required int ServerVersion { get; init; }
 
-    public async Task CreateAddress(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken)
+    public async Task CreateAddressAsync(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken)
     {
         var createAddressMessage = new CreateAddressMessage
         {
@@ -71,7 +73,23 @@ internal class Session : ISession, IChannel
             AutoCreated = false,
             RequiresResponse = true
         };
-        _ = await SendBlockingAsync<CreateAddressMessage, NullResponse>(createAddressMessage, cancellationToken);
+        try
+        {
+            await _lock.WaitAsync(cancellationToken);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources2.TryAdd(-1, tcs);
+            _connection.Send(ref createAddressMessage, ChannelId);
+            await tcs.Task;
+        }
+        catch (Exception)
+        {
+            _completionSources2.TryRemove(-1, out _);
+            throw;
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public async Task<AddressInfo?> GetAddressInfo(string address, CancellationToken cancellationToken)
@@ -80,32 +98,47 @@ internal class Session : ISession, IChannel
         {
             Address = address
         };
-        var response = await SendBlockingAsync<SessionBindingQueryMessage, SessionBindingQueryResponseMessageV5>(request, cancellationToken);
 
-        if (response.Exists)
+        try
         {
-            return new AddressInfo
+            await _lock.WaitAsync(cancellationToken);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources2.TryAdd(-1, tcs);
+            _connection.Send(ref request, ChannelId);
+            var result = await tcs.Task;
+            if (result is AddressInfo addressInfo)
             {
-                Name = address,
-                QueueNames = response.QueueNames,
-                RoutingTypes = GetRoutingTypes(response).ToArray(),
-            };
+                return addressInfo;
+            }
+            else
+            {
+                return null;
+            }
         }
-
-        return null;
+        catch (Exception)
+        {
+            _completionSources2.TryRemove(-1, out _);
+            throw;
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
-    private static IEnumerable<RoutingType> GetRoutingTypes(SessionBindingQueryResponseMessageV5 sessionBindingQueryResponseMessageV5)
-    {
-        if (sessionBindingQueryResponseMessageV5.SupportsAnycast)
-        {
-            yield return RoutingType.Anycast;
-        }
+    private static readonly RoutingType[] BothRoutingTypes = [RoutingType.Anycast, RoutingType.Multicast];
+    private static readonly RoutingType[] AnycastRoutingType = [RoutingType.Anycast];
+    private static readonly RoutingType[] MulticastRoutingType = [RoutingType.Multicast];
 
-        if (sessionBindingQueryResponseMessageV5.SupportsMulticast)
+    private static RoutingType[] GetRoutingTypes(ref SessionBindingQueryResponseMessage sessionBindingQueryResponseMessage)
+    {
+        return sessionBindingQueryResponseMessage switch
         {
-            yield return RoutingType.Multicast;
-        }
+            { SupportsAnycast: true, SupportsMulticast: true } => BothRoutingTypes,
+            { SupportsAnycast: true } => AnycastRoutingType,
+            { SupportsMulticast: true } => MulticastRoutingType,
+            _ => []
+        };
     }
 
     public async Task CreateQueue(QueueConfiguration queueConfiguration, CancellationToken cancellationToken)
@@ -190,10 +223,15 @@ internal class Session : ISession, IChannel
         try
         {
             await _lock.WaitAsync();
-            var tcs = new TaskCompletionSource<IIncomingPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources2.TryAdd(-1, tcs);
             _connection.Send(ref sessionStop, ChannelId);
             await tcs.Task;
+        }
+        catch (Exception)
+        {
+            _completionSources2.TryRemove(-1, out _);
+            throw;
         }
         finally
         {
@@ -207,10 +245,15 @@ internal class Session : ISession, IChannel
         try
         {
             await _lock.WaitAsync();
-            var tcs = new TaskCompletionSource<IIncomingPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources2.TryAdd(-1, tcs);
             _connection.Send(ref sessionCloseMessage2, ChannelId);
             await tcs.Task;
+        }
+        catch (Exception)
+        {
+            _completionSources2.TryRemove(-1, out _);
+            throw;
         }
         finally
         {
@@ -249,7 +292,7 @@ internal class Session : ISession, IChannel
         var sessionStart = new SessionStart2();
         _connection.Send(ref sessionStart, ChannelId);
     }
-    
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await _transport.SendAsync(new SessionStart(), ChannelId, cancellationToken);
@@ -260,15 +303,35 @@ internal class Session : ISession, IChannel
         switch (packet.PacketType)
         {
             case PacketType.NullResponse:
+            {
                 var nullResponse = new NullResponse2(packet.Payload);
                 if (_completionSources2.TryRemove(nullResponse.CorrelationId, out var tcs))
                 {
-                    tcs.TrySetResult(nullResponse);
+                    tcs.TrySetResult(_emptyResult);
                 }
+
                 break;
+            }
+            case PacketType.SessionBindingQueryResponseMessage:
+            {
+                var response = new SessionBindingQueryResponseMessage(packet.Payload);
+                if (_completionSources2.TryRemove(-1, out var tcs))
+                {
+                    var addressInfo = new AddressInfo
+                    {
+                        QueueNames = response.QueueNames,
+                        RoutingTypes = GetRoutingTypes(ref response),
+                    };
+                    tcs.TrySetResult(addressInfo);
+                }
+
+                break;
+            }
             default:
+            {
                 _logger.LogWarning("Received unexpected packet type {PacketType}", packet.PacketType);
                 break;
+            }
         }
     }
 }

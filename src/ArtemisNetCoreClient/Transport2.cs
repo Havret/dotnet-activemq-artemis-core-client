@@ -148,4 +148,7 @@ internal enum PacketType : byte
     NullResponse = 21,
     SessionStop = 68,
     SessionCloseMessage = 69,
+    CreateAddressMessage = unchecked((byte) -11),
+    SessionBindingQueryMessage = 49,
+    SessionBindingQueryResponseMessage = unchecked((byte) -22)
 }

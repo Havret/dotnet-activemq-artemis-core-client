@@ -349,4 +349,48 @@ public class ArtemisBinaryConverterSpec
         Assert.Equal(expected, value);
         Assert.Equal(encoded.Length, readBytes);
     }
+    
+    [Fact]
+    public void Should_encode_simple_string()
+    {
+        // Arrange
+        var str = "abcdefgh";
+        var byteCount = ArtemisBinaryConverter.GetSimpleStringByteCount(str);
+        var byteBuffer = new byte[byteCount];
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteSimpleString(ref byteBuffer.AsSpan().GetReference(), str);
+        
+        // Assert
+        var expected = new byte[] { 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 };
+        Assert.Equal(expected, byteBuffer);
+        Assert.Equal(byteCount, writtenBytes);
+    }
+    
+    [Fact]
+    public void Should_decode_simple_string()
+    {
+        // Arrange
+        var byteBuffer = new byte[] { 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 };
+
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadSimpleString(byteBuffer, out var value);
+
+        // Assert
+        Assert.Equal("abcdefgh", value);
+        Assert.Equal(byteBuffer.Length, readBytes);
+    }
+    
+    [Theory]
+    [InlineData(new byte[] { 1, 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 }, "abcdefgh")]
+    [InlineData(new byte[] { 0 }, null)]
+    public void should_decode_nullable_simple_string(byte[] encoded, string? expected)
+    {
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadNullableSimpleString(encoded, out var value);
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.Equal(encoded.Length, readBytes);
+    }    
 }
