@@ -20,6 +20,18 @@ internal static class ArtemisBinaryConverter
         Unsafe.WriteUnaligned(ref destination, BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(value) : value);
         return sizeof(int);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNullableInt32ByteCount(int? value)
+    {
+        var byteCount = sizeof(byte);
+        if (value.HasValue)
+        {
+            byteCount += sizeof(int);
+        }
+
+        return byteCount;
+    }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ReadNullableInt32(in ReadOnlySpan<byte> source, out int? value)
@@ -76,6 +88,18 @@ internal static class ArtemisBinaryConverter
     {
         Unsafe.WriteUnaligned(ref destination, BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(value) : value);
         return sizeof(long);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNullableInt64ByteCount(long? value)
+    {
+        var byteCount = sizeof(byte);
+        if (value.HasValue)
+        {
+            byteCount += sizeof(long);
+        }
+
+        return byteCount;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,6 +158,18 @@ internal static class ArtemisBinaryConverter
         const byte minusOne = unchecked((byte) -1);
         const byte zero = 0;
         return WriteByte(ref destination, value ? minusOne : zero);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNullableBoolByteCount(bool? value)
+    {
+        var byteCount = sizeof(byte);
+        if (value.HasValue)
+        {
+            byteCount += sizeof(byte);
+        }
+
+        return byteCount;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

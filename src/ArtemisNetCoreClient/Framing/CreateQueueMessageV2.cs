@@ -108,21 +108,21 @@ internal readonly struct CreateQueueMessage : IOutgoingPacket
         byteCount += sizeof(byte); // RoutingType
         byteCount += sizeof(int); // MaxConsumers
         byteCount += sizeof(bool); // PurgeOnNoConsumers
-        byteCount += sizeof(bool); // Exclusive
-        byteCount += sizeof(bool); // LastValue
+        byteCount += ArtemisBinaryConverter.GetNullableBoolByteCount(Exclusive);
+        byteCount += ArtemisBinaryConverter.GetNullableBoolByteCount(LastValue);
         byteCount += ArtemisBinaryConverter.GetNullableSimpleStringByteCount(LastValueKey);
-        byteCount += sizeof(bool); // NonDestructive
-        byteCount += sizeof(int); // ConsumersBeforeDispatch
-        byteCount += sizeof(long); // DelayBeforeDispatch
-        byteCount += sizeof(bool); // GroupRebalance
-        byteCount += sizeof(int); // GroupBuckets
-        byteCount += sizeof(bool); // AutoDelete
-        byteCount += sizeof(long); // AutoDeleteDelay
-        byteCount += sizeof(long); // AutoDeleteMessageCount
+        byteCount += ArtemisBinaryConverter.GetNullableBoolByteCount(NonDestructive);
+        byteCount += ArtemisBinaryConverter.GetNullableInt32ByteCount(ConsumersBeforeDispatch);
+        byteCount += ArtemisBinaryConverter.GetNullableInt64ByteCount(DelayBeforeDispatch);
+        byteCount += ArtemisBinaryConverter.GetNullableBoolByteCount(GroupRebalance);
+        byteCount += ArtemisBinaryConverter.GetNullableInt32ByteCount(GroupBuckets);
+        byteCount += ArtemisBinaryConverter.GetNullableBoolByteCount(AutoDelete);
+        byteCount += ArtemisBinaryConverter.GetNullableInt64ByteCount(AutoDeleteDelay);
+        byteCount += ArtemisBinaryConverter.GetNullableInt64ByteCount(AutoDeleteMessageCount);
         byteCount += ArtemisBinaryConverter.GetNullableSimpleStringByteCount(GroupFirstKey);
-        byteCount += sizeof(long); // RingSize
-        byteCount += sizeof(bool); // Enabled
-        byteCount += sizeof(bool); // GroupRebalancePauseDispatch
+        byteCount += ArtemisBinaryConverter.GetNullableInt64ByteCount(RingSize);
+        byteCount += ArtemisBinaryConverter.GetNullableBoolByteCount(Enabled);
+        byteCount += ArtemisBinaryConverter.GetNullableBoolByteCount(GroupRebalancePauseDispatch);
         
         return byteCount;
 

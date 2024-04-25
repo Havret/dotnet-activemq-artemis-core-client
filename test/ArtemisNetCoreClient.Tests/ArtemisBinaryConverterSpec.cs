@@ -62,12 +62,13 @@ public class ArtemisBinaryConverterSpec
     }
 
     [Theory]
-    [InlineData(true, new[] { unchecked((byte) -1), unchecked((byte) -1) }, 2)]
-    [InlineData(false, new[] { unchecked((byte) -1), (byte) 0 }, 2)]
-    [InlineData(null, new byte[] { 0 }, 1)]
-    public void should_encode_nullable_bool(bool? value, byte[] encoded, int bufferSize)
+    [InlineData(true, new[] { unchecked((byte) -1), unchecked((byte) -1) })]
+    [InlineData(false, new[] { unchecked((byte) -1), (byte) 0 })]
+    [InlineData(null, new byte[] { 0 })]
+    public void should_encode_nullable_bool(bool? value, byte[] encoded)
     {
         // Arrange
+        var bufferSize = ArtemisBinaryConverter.GetNullableBoolByteCount(value);
         var byteBuffer = new byte[bufferSize];
 
         // Act
@@ -126,7 +127,8 @@ public class ArtemisBinaryConverterSpec
     public void should_encode_nullable_int(int? value, byte[] encoded)
     {
         // Arrange
-        var byteBuffer = new byte[encoded.Length];
+        var bufferSize = ArtemisBinaryConverter.GetNullableInt32ByteCount(value);
+        var byteBuffer = new byte[bufferSize];
 
         // Act
         var writtenBytes = ArtemisBinaryConverter.WriteNullableInt32(ref byteBuffer.AsSpan().GetReference(), value);
@@ -204,7 +206,8 @@ public class ArtemisBinaryConverterSpec
     public void should_encode_nullable_long(long? value, byte[] encoded)
     {
         // Arrange
-        var byteBuffer = new byte[encoded.Length];
+        var bufferSize = ArtemisBinaryConverter.GetNullableInt64ByteCount(value);
+        var byteBuffer = new byte[bufferSize];
 
         // Act
         var writtenBytes = ArtemisBinaryConverter.WriteNullableInt64(ref byteBuffer.AsSpan().GetReference(), value);
