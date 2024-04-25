@@ -92,7 +92,7 @@ internal class Session : ISession, IChannel
         }
     }
 
-    public async Task<AddressInfo?> GetAddressInfo(string address, CancellationToken cancellationToken)
+    public async Task<AddressInfo?> GetAddressInfoAsync(string address, CancellationToken cancellationToken)
     {
         var request = new SessionBindingQueryMessage
         {
@@ -141,38 +141,98 @@ internal class Session : ISession, IChannel
         };
     }
 
-    public async Task CreateQueue(QueueConfiguration queueConfiguration, CancellationToken cancellationToken)
+    public async Task CreateQueueAsync(QueueConfiguration queueConfiguration, CancellationToken cancellationToken)
     {
-        var createQueueMessage = new CreateQueueMessageV2
+        var request = new CreateQueueMessage
         {
-            RequiresResponse = true,
             Address = queueConfiguration.Address,
             QueueName = queueConfiguration.Name,
+            FilterString = null,
+            Durable = false,
+            Temporary = false,
+            RequiresResponse = true,
+            AutoCreated = false,
             RoutingType = queueConfiguration.RoutingType,
-            MaxConsumers = -1
+            MaxConsumers = -1,
+            PurgeOnNoConsumers = false,
+            Exclusive = null,
+            LastValue = null,
+            LastValueKey = null,
+            NonDestructive = null,
+            ConsumersBeforeDispatch = null,
+            DelayBeforeDispatch = null,
+            GroupRebalance = null,
+            GroupBuckets = null,
+            AutoDelete = null,
+            AutoDeleteDelay = null,
+            AutoDeleteMessageCount = null,
+            GroupFirstKey = null,
+            RingSize = null,
+            Enabled = null,
+            GroupRebalancePauseDispatch = null
         };
-        _ = await SendBlockingAsync<CreateQueueMessageV2, NullResponse>(createQueueMessage, cancellationToken);
+
+        try
+        {
+            await _lock.WaitAsync(cancellationToken);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources2.TryAdd(-1, tcs);
+            _connection.Send(ref request, ChannelId);
+             await tcs.Task;
+        }
+        catch (Exception e)
+        {
+            _completionSources2.TryRemove(-1, out _);
+            throw;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+
+        // var createQueueMessage = new CreateQueueMessageV2
+        // {
+        //     RequiresResponse = true,
+        //     Address = queueConfiguration.Address,
+        //     QueueName = queueConfiguration.Name,
+        //     RoutingType = queueConfiguration.RoutingType,
+        //     MaxConsumers = -1
+        // };
+        // _ = await SendBlockingAsync<CreateQueueMessageV2, NullResponse>(createQueueMessage, cancellationToken);
     }
 
-    public async Task<QueueInfo?> GetQueueInfo(string queueName, CancellationToken cancellationToken)
+    public async Task<QueueInfo?> GetQueueInfoAsync(string queueName, CancellationToken cancellationToken)
     {
         var request = new SessionQueueQueryMessage
         {
             QueueName = queueName
         };
-        var response = await SendBlockingAsync<SessionQueueQueryMessage, SessionQueueQueryResponseMessageV3>(request, cancellationToken);
-
-        if (response.Exists)
+        
+        try
         {
-            return new QueueInfo
+            await _lock.WaitAsync(cancellationToken);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources2.TryAdd(-1, tcs);
+            _connection.Send(ref request, ChannelId);
+            var result = await tcs.Task;
+            if (result is QueueInfo queueInfo)
             {
-                QueueName = response.Name ?? queueName,
-                RoutingType = response.RoutingType,
-                AddressName = response.Address ?? string.Empty,
-            };
+                return queueInfo;
+            }
+            else
+            {
+                return null;
+            }
         }
-
-        return null;
+        catch (Exception)
+        {
+            _completionSources2.TryRemove(-1, out _);
+            throw;
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public async Task<IConsumer> CreateConsumerAsync(ConsumerConfiguration consumerConfiguration, CancellationToken cancellationToken)
@@ -326,6 +386,23 @@ internal class Session : ISession, IChannel
                 }
 
                 break;
+            }
+            case PacketType.SessionQueueQueryResponseMessage:
+            {
+                var response = new SessionQueueQueryResponseMessage(packet.Payload);
+                if (_completionSources2.TryRemove(-1, out var tcs))
+                {
+                    var queueInfo = new QueueInfo
+                    {
+                        AddressName = response.Address!,
+                        QueueName = response.Name!,
+                        RoutingType = response.RoutingType,
+                    };
+                    tcs.TrySetResult(queueInfo);
+                }
+
+                break;
+            
             }
             default:
             {

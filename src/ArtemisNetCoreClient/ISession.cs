@@ -15,17 +15,17 @@ public interface ISession : IAsyncDisposable
     /// <summary>
     /// Get information about an address.
     /// </summary>
-    Task<AddressInfo?> GetAddressInfo(string address, CancellationToken cancellationToken);
+    Task<AddressInfo?> GetAddressInfoAsync(string address, CancellationToken cancellationToken);
     
     /// <summary>
     /// Create a queue with the given configuration if it does not already exist.
     /// </summary>
-    Task CreateQueue(QueueConfiguration queueConfiguration, CancellationToken cancellationToken);
+    Task CreateQueueAsync(QueueConfiguration queueConfiguration, CancellationToken cancellationToken);
     
     /// <summary>
     /// Get information about a queue.
     /// </summary>
-    Task<QueueInfo?> GetQueueInfo(string queueName, CancellationToken cancellationToken);
+    Task<QueueInfo?> GetQueueInfoAsync(string queueName, CancellationToken cancellationToken);
     
     /// <summary>
     /// Create a consumer with the given configuration.

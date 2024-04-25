@@ -23,13 +23,13 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         await session.CreateAddressAsync(addressName, routingTypes, testFixture.CancellationToken);
         
         // Assert
-        var addressInfo = await session.GetAddressInfo(addressName, testFixture.CancellationToken);
+        var addressInfo = await session.GetAddressInfoAsync(addressName, testFixture.CancellationToken);
         Assert.NotNull(addressInfo);
         Assert.Equal(routingTypes, addressInfo.RoutingTypes);
         Assert.Empty(addressInfo.QueueNames);
     }
 
-    [Theory(Skip = "Temporarily disabled")]
+    [Theory]
     [InlineData(RoutingType.Anycast)]
     [InlineData(RoutingType.Multicast)]
     public async Task should_create_queue_with_selected_routing_type(RoutingType routingType)
@@ -37,13 +37,15 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         
-        await using var session = await testFixture.CreateSessionAsync();
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
+
         var addressName = Guid.NewGuid().ToString();
         await session.CreateAddressAsync(addressName, [routingType], testFixture.CancellationToken);
         
         // Act
         var queueName = Guid.NewGuid().ToString();
-        await session.CreateQueue(new QueueConfiguration
+        await session.CreateQueueAsync(new QueueConfiguration
         {
             Address = addressName,
             Name = queueName,
@@ -51,7 +53,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         }, testFixture.CancellationToken);
         
         // Assert
-        var queueInfo = await session.GetQueueInfo(queueName, testFixture.CancellationToken);
+        var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         Assert.NotNull(queueInfo);
         Assert.Equal(queueName, queueInfo.QueueName);
         Assert.Equal(addressName, queueInfo.AddressName);
@@ -68,7 +70,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
 
         // Act
         var addressName = Guid.NewGuid().ToString();
-        var addressInfo = await session.GetAddressInfo(addressName, testFixture.CancellationToken);
+        var addressInfo = await session.GetAddressInfoAsync(addressName, testFixture.CancellationToken);
         
         // Assert
         Assert.Null(addressInfo);
@@ -84,7 +86,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
 
         // Act
         var queueName = Guid.NewGuid().ToString();
-        var queueInfo = await session.GetQueueInfo(queueName, testFixture.CancellationToken);
+        var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         
         // Assert
         Assert.Null(queueInfo);
@@ -102,7 +104,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         await session.CreateAddressAsync(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
         
         var queueName = Guid.NewGuid().ToString();
-        await session.CreateQueue(new QueueConfiguration
+        await session.CreateQueueAsync(new QueueConfiguration
         {
             Address = addressName,
             Name = queueName,

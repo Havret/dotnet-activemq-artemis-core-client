@@ -19,7 +19,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         await session.CreateAddressAsync(addressName, new[] { RoutingType.Anycast }, testFixture.CancellationToken);
 
         var queueName = Guid.NewGuid().ToString();
-        await session.CreateQueue(new QueueConfiguration
+        await session.CreateQueueAsync(new QueueConfiguration
         {
             Address = addressName,
             Name = queueName,

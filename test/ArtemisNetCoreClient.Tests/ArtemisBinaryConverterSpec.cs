@@ -392,5 +392,22 @@ public class ArtemisBinaryConverterSpec
         // Assert
         Assert.Equal(expected, value);
         Assert.Equal(encoded.Length, readBytes);
-    }    
+    }
+    
+    [Theory]
+    [InlineData(new byte[] { 1, 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 }, "abcdefgh")]
+    [InlineData(new byte[] { 0 }, null)]
+    public void should_encode_nullable_simple_string(byte[] encoded, string? expected)
+    {
+        // Arrange
+        var byteCount = ArtemisBinaryConverter.GetNullableSimpleStringByteCount(expected);
+        var byteBuffer = new byte[byteCount];
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteNullableSimpleString(ref byteBuffer.AsSpan().GetReference(), expected);
+
+        // Assert
+        Assert.Equal(encoded, byteBuffer);
+        Assert.Equal(encoded.Length, writtenBytes);
+    }
 }

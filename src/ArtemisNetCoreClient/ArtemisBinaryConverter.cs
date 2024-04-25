@@ -334,6 +334,18 @@ internal static class ArtemisBinaryConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNullableSimpleStringByteCount(string? value)
+    {
+        var byteCount = sizeof(byte);
+        if (value != null)
+        {
+            byteCount += GetSimpleStringByteCount(value);
+        }
+
+        return byteCount;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ReadNullableSimpleString(in ReadOnlySpan<byte> source, out string? value)
     {
         var readBytes = ReadByte(source, out var isNotNull);
@@ -348,5 +360,18 @@ internal static class ArtemisBinaryConverter
         }
 
         return readBytes;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteNullableSimpleString(ref byte destination, string? value)
+    {
+        if (value is null)
+        {
+            return WriteByte(ref destination, DataConstants.Null);
+        }
+        
+        var offset = WriteByte(ref destination, DataConstants.NotNull);
+        offset += WriteSimpleString(ref destination.GetOffset(offset), value);
+        return offset;
     }
 }

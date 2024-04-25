@@ -15,7 +15,7 @@ internal static class Codec
             CreateAddressMessage2 => CreateAddressMessage2.Type,
             SessionBindingQueryMessage2 => SessionBindingQueryMessage2.Type,
             CreateQueueMessageV2 => CreateQueueMessageV2.Type,
-            SessionQueueQueryMessage => SessionQueueQueryMessage.Type,
+            SessionQueueQueryMessage2 => SessionQueueQueryMessage2.Type,
             SessionCreateConsumerMessage => SessionCreateConsumerMessage.Type,
             SessionConsumerCloseMessage => SessionConsumerCloseMessage.Type,
             CreateProducerMessage => CreateProducerMessage.Type,

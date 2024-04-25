@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
@@ -150,5 +149,8 @@ internal enum PacketType : byte
     SessionCloseMessage = 69,
     CreateAddressMessage = unchecked((byte) -11),
     SessionBindingQueryMessage = 49,
-    SessionBindingQueryResponseMessage = unchecked((byte) -22)
+    SessionBindingQueryResponseMessage = unchecked((byte) -22),
+    CreateQueueMessage = unchecked((byte) -12),
+    SessionQueueQueryMessage = 45,
+    SessionQueueQueryResponseMessage = unchecked((byte) -14)
 }
