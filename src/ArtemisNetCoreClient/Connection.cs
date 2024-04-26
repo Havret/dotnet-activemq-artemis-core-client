@@ -139,9 +139,9 @@ internal class Connection : IConnection, IChannel
         var offset = ArtemisBinaryConverter.WriteInt32(ref buffer.AsSpan().GetReference(), size - sizeof(int));
         offset += ArtemisBinaryConverter.WriteByte(ref buffer.AsSpan().GetOffset(offset), (byte) packet.PacketType);
         offset += ArtemisBinaryConverter.WriteInt64(ref buffer.AsSpan().GetOffset(offset), channelId);
-        offset = packet.Encode(buffer.AsSpan(offset));
+        offset += packet.Encode(buffer.AsSpan(offset));
         
-        // Debug.Assert(size == offset, $"Size mismatch, expected {size} but got {offset}");
+        Debug.Assert(size == offset, $"Size mismatch, expected {size} but got {offset}");
         
         _transport.Send(buffer.AsMemory(0, size));
     }

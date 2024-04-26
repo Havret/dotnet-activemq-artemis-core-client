@@ -13,8 +13,8 @@ internal readonly struct CreateSessionMessage : IOutgoingPacket
     public bool Xa { get; init; }
     public bool AutoCommitSends { get; init; }
     public bool AutoCommitAcks { get; init; }
-    public bool PreAcknowledge { get; init; }
     public int WindowSize { get; init; }
+    public bool PreAcknowledge { get; init; }
     public string? DefaultAddress { get; init; }
     public string? ClientId { get; init; }
 
