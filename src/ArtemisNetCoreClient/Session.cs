@@ -438,12 +438,10 @@ internal class Session : ISession, IChannel
                 var response = new SessionBindingQueryResponseMessage(packet.Payload);
                 if (_completionSources2.TryRemove(-1, out var tcs))
                 {
-                    var addressInfo = new AddressInfo
-                    {
-                        QueueNames = response.QueueNames,
-                        RoutingTypes = GetRoutingTypes(ref response),
-                    };
-                    tcs.TrySetResult(addressInfo);
+                    var result = response.Exists
+                        ? new AddressInfo { QueueNames = response.QueueNames, RoutingTypes = GetRoutingTypes(ref response) }
+                        : _emptyResult;
+                    tcs.TrySetResult(result);
                 }
 
                 break;

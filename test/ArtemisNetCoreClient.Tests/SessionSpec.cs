@@ -60,13 +60,13 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         Assert.Equal(routingType, queueInfo.RoutingType);
     }
 
-    [Fact(Skip = "Temporarily disabled")]
-    public async Task should_not_return_address_info_when_address_does_not_exist()
+    [Fact]
+    public async Task Should_not_return_address_info_when_address_does_not_exist()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
-
-        await using var session = await testFixture.CreateSessionAsync();
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
 
         // Act
         var addressName = Guid.NewGuid().ToString();
