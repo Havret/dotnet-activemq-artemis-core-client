@@ -1,43 +1,114 @@
+using System.Buffers;
 using System.Net.Sockets;
-using ActiveMQ.Artemis.Core.Client.Framing;
+using System.Runtime.InteropServices;
+using System.Threading.Channels;
+using Microsoft.Extensions.Logging;
 
 namespace ActiveMQ.Artemis.Core.Client;
 
-internal class Transport(Socket socket) : IAsyncDisposable
+internal class Transport : IAsyncDisposable
 {
-    public async Task SendAsync(Packet packet, long channelId, CancellationToken cancellationToken)
-    {
-        var byteBuffer = new ByteBuffer();
-        Codec.Encode(byteBuffer, packet, channelId);
-        await socket.SendAsync(byteBuffer.GetBuffer(), cancellationToken).ConfigureAwait(false);
-    }
+    private readonly ILogger<Transport> _logger;
+    private readonly Socket _socket;
+    private readonly ChannelReader<ReadOnlyMemory<byte>> _channelReader;
+    private readonly ChannelWriter<ReadOnlyMemory<byte>> _channelWriter;
+    private readonly Task _sendLoopTask;
+    private readonly BufferedStream _reader;
+    private readonly BufferedStream _writer;
 
-    public async Task<Packet?> ReceiveAsync(CancellationToken cancellationToken)
+    public Transport(ILogger<Transport> logger, Socket socket)
     {
-        var frameHeaderBuffer = new byte[sizeof(int)];
-        await socket.ReceiveAsync(frameHeaderBuffer, cancellationToken).ConfigureAwait(false);
-        
-        var size = new ByteBuffer(frameHeaderBuffer).ReadInt();
-        if (size == 0)
+        _logger = logger;
+        _socket = socket;
+
+        var channel = Channel.CreateUnbounded<ReadOnlyMemory<byte>>(new UnboundedChannelOptions
         {
-            return null;
-        }
-        
-        var buffer = new byte[size];
-        _ = await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+            AllowSynchronousContinuations = false,
+            SingleReader = true,
+            SingleWriter = false
+        });
 
-        var payloadBuffer = new ByteBuffer(buffer);
+        _channelReader = channel.Reader;
+        _channelWriter = channel.Writer;
 
-        var (packet, _) = Codec.Decode(payloadBuffer);
-        return packet;
+        var networkStream = new NetworkStream(socket);
+
+        _reader = new BufferedStream(networkStream, _socket.ReceiveBufferSize);
+        _writer = new BufferedStream(networkStream, _socket.SendBufferSize);
+
+        _sendLoopTask = Task.Run(SendLoop);
     }
 
-    public ValueTask DisposeAsync()
+    public void Send(ReadOnlyMemory<byte> memory)
     {
-        socket.Dispose();
-        return ValueTask.CompletedTask; 
+        _channelWriter.TryWrite(memory);
+    }
+
+    private async Task SendLoop()
+    {
+        try
+        {
+            while (await _channelReader.WaitToReadAsync())
+            {
+                while (_channelReader.TryRead(out var memory))
+                {
+                    await _writer.WriteAsync(memory);
+                    MemoryMarshal.TryGetArray(memory, out var segment);
+                    ArrayPool<byte>.Shared.Return(segment.Array!);
+                }
+                await _writer.FlushAsync();
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Background socket write loop has crashed");
+            throw;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _channelWriter.Complete();
+        await _sendLoopTask;
+        _socket.Dispose();
+    }
+
+    internal async ValueTask<InboundPacket> ReceivePacketAsync(CancellationToken cancellationToken)
+    {
+        var header = await ReadHeaderAsync(cancellationToken);
+        var payloadSize = header.FrameSize - sizeof(byte) - sizeof(long);
+
+        var buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
+        try
+        {
+            await _reader.ReadExactlyAsync(buffer, 0, payloadSize, cancellationToken);
+            return new InboundPacket
+            {
+                PacketType = header.PacketType,
+                ChannelId = header.ChannelId,
+                Payload = new ArraySegment<byte>(buffer, 0, payloadSize)
+            };
+        }
+        catch (Exception)
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+            throw;
+        }
+    }
+
+    private const int HeaderSize = sizeof(int) + sizeof(byte) + sizeof(long);
+
+    private async ValueTask<Header> ReadHeaderAsync(CancellationToken cancellationToken)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(Header.HeaderSize);
+        try
+        {
+            await _reader.ReadExactlyAsync(buffer, 0, HeaderSize, cancellationToken);
+            return new Header(buffer);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 }
-
-
-

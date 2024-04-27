@@ -12,8 +12,9 @@ public class ProducerSpec(ITestOutputHelper testOutputHelper)
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
         
-        await using var session = await testFixture.CreateSessionAsync();
         var addressName = Guid.NewGuid().ToString();
         await session.CreateAddressAsync(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
         await using var producer = await session.CreateProducerAsync(new ProducerConfiguration

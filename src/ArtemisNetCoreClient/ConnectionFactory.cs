@@ -44,7 +44,7 @@ public class ConnectionFactory
             throw exception ?? new SocketException((int)SocketError.AddressNotAvailable);
         }
 
-        var transport = new Transport2(LoggerFactory.CreateLogger<Transport2>(), socket);
+        var transport = new Transport(LoggerFactory.CreateLogger<Transport>(), socket);
 
 
         return new Connection(LoggerFactory, transport, endpoint);

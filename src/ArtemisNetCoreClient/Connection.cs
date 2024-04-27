@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using ActiveMQ.Artemis.Core.Client.Framing;
+using ActiveMQ.Artemis.Core.Client.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace ActiveMQ.Artemis.Core.Client;
@@ -10,7 +11,7 @@ internal class Connection : IConnection, IChannel
 {
     private readonly ILogger<Connection> _logger;
     private readonly ILoggerFactory _loggerFactory;
-    private readonly Transport2 _transport;
+    private readonly Transport _transport;
     private readonly Endpoint _endpoint;
     private readonly Task _receiveLoopTask;
     private readonly ConcurrentDictionary<long, IChannel> _channels = new();
@@ -19,7 +20,7 @@ internal class Connection : IConnection, IChannel
     private readonly IdGenerator _sessionChannelIdGenerator = new(10);
     private readonly CancellationTokenSource _receiveLoopCancellationToken;
 
-    public Connection(ILoggerFactory loggerFactory, Transport2 transport, Endpoint endpoint)
+    public Connection(ILoggerFactory loggerFactory, Transport transport, Endpoint endpoint)
     {
         _logger = loggerFactory.CreateLogger<Connection>();
         _loggerFactory = loggerFactory;
@@ -73,7 +74,7 @@ internal class Connection : IConnection, IChannel
         switch (packet.PacketType)
         {
             case PacketType.CreateSessionResponse:
-                var createSessionResponseMessage = new CreateSessionResponseMessage2(packet.Payload);
+                var createSessionResponseMessage = new CreateSessionResponseMessage(packet.Payload);
                 if (_completionSources.TryRemove(-1, out var tcs))
                 {
                     tcs.TrySetResult(createSessionResponseMessage);
@@ -110,7 +111,7 @@ internal class Connection : IConnection, IChannel
             var tcs = new TaskCompletionSource<IIncomingPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             Send(ref createSessionMessage, 1);
-            var incomingPacket = (CreateSessionResponseMessage2) await tcs.Task;
+            var incomingPacket = (CreateSessionResponseMessage) await tcs.Task;
 
             var session = new Session(this, _loggerFactory)
             {
@@ -120,7 +121,7 @@ internal class Connection : IConnection, IChannel
             
             _channels.TryAdd(session.ChannelId, session);
             
-            session.StartAsync2();
+            session.Start();
 
             return session;
         }
@@ -159,18 +160,3 @@ internal class Connection : IConnection, IChannel
         await _receiveLoopTask;
     }
 }
-
-internal interface IChannel
-{
-    void OnPacket(ref readonly InboundPacket packet);
-}
-
-internal interface IOutgoingPacket
-{
-    PacketType PacketType { get; }
-    int GetRequiredBufferSize();
-    int Encode(Span<byte> buffer);
-}
-
-internal interface IIncomingPacket;
-

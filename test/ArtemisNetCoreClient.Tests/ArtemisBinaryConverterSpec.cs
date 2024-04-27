@@ -1,3 +1,4 @@
+using ActiveMQ.Artemis.Core.Client.Utils;
 using Xunit;
 
 namespace ActiveMQ.Artemis.Core.Client.Tests;

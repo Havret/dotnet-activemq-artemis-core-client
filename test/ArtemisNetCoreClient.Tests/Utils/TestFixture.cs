@@ -20,15 +20,6 @@ public class TestFixture : IAsyncDisposable
         _cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
     }
     
-    public async Task<ISession> CreateSessionAsync()
-    {
-        var sessionFactory = new SessionFactory
-        {
-            LoggerFactory = new XUnitLoggerFactory(_testOutputHelper)
-        };
-        return await sessionFactory.CreateAsync(GetEndpoint(), CancellationToken);
-    }
-    
     public async Task<IConnection> CreateConnectionAsync()
     {
         var connectionFactory = new ConnectionFactory

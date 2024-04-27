@@ -13,8 +13,9 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
-
-        await using var session = await testFixture.CreateSessionAsync();
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
+        
         var addressName = Guid.NewGuid().ToString();
         await session.CreateAddressAsync(addressName, new[] { RoutingType.Anycast }, testFixture.CancellationToken);
 

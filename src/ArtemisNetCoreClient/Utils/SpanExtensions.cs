@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ActiveMQ.Artemis.Core.Client;
+namespace ActiveMQ.Artemis.Core.Client.Utils;
 
 internal static class SpanExtensions
 {

@@ -81,8 +81,8 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
-        
-        await using var session = await testFixture.CreateSessionAsync();
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
 
         // Act
         var queueName = Guid.NewGuid().ToString();

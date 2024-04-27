@@ -4,62 +4,14 @@ using Microsoft.Extensions.Logging;
 
 namespace ActiveMQ.Artemis.Core.Client;
 
-internal class Session : ISession, IChannel
+internal class Session(Connection connection, ILoggerFactory loggerFactory) : ISession, IChannel
 {
-    private readonly Connection _connection;
-    private readonly Transport _transport;
-
     private readonly object _emptyResult = new();
 
-    private readonly ConcurrentDictionary<long, TaskCompletionSource<Packet>> _completionSources = new();
-    private readonly ConcurrentDictionary<long, TaskCompletionSource<object>> _completionSources2 = new();
+    private readonly ConcurrentDictionary<long, TaskCompletionSource<object>> _completionSources = new();
     private readonly ConcurrentDictionary<long, Consumer> _consumers = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
-    private readonly ILogger<Session> _logger;
-
-    public Session(Transport transport, ILoggerFactory loggerFactory)
-    {
-        _transport = transport;
-        var logger = loggerFactory.CreateLogger<Session>();
-
-        // TODO: Clean up while loop on close
-        _ = Task.Run(async () =>
-        {
-            while (true)
-            {
-                try
-                {
-                    var packet = await _transport.ReceiveAsync(default);
-                    if (packet is { IsResponse: true } && _completionSources.TryRemove(packet.CorrelationId, out var tcs))
-                    {
-                        tcs.TrySetResult(packet);
-                    }
-                    else if (packet is SessionReceiveMessage { } sessionReceiveMessage)
-                    {
-                        if (_consumers.TryGetValue(sessionReceiveMessage.ConsumerId, out var consumer))
-                        {
-                            consumer.OnMessage(sessionReceiveMessage.Message);
-                        }
-                    }
-                    else
-                    {
-                        // TODO: Handle
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, "Error in packet processing or network communication");
-                    // TODO: Handle exception
-                }
-            }
-        });
-    }
-
-    public Session(Connection connection, ILoggerFactory loggerFactory)
-    {
-        _connection = connection;
-        _logger = loggerFactory.CreateLogger<Session>();
-    }
+    private readonly ILogger<Session> _logger = loggerFactory.CreateLogger<Session>();
 
     public required long ChannelId { get; init; }
     public required int ServerVersion { get; init; }
@@ -77,13 +29,13 @@ internal class Session : ISession, IChannel
         {
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _ = _completionSources2.TryAdd(-1, tcs);
-            _connection.Send(ref createAddressMessage, ChannelId);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(ref createAddressMessage, ChannelId);
             await tcs.Task;
         }
         catch (Exception)
         {
-            _completionSources2.TryRemove(-1, out _);
+            _completionSources.TryRemove(-1, out _);
             throw;
         }
         finally
@@ -103,8 +55,8 @@ internal class Session : ISession, IChannel
         {
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _ = _completionSources2.TryAdd(-1, tcs);
-            _connection.Send(ref request, ChannelId);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(ref request, ChannelId);
             var result = await tcs.Task;
             if (result is AddressInfo addressInfo)
             {
@@ -117,7 +69,7 @@ internal class Session : ISession, IChannel
         }
         catch (Exception)
         {
-            _completionSources2.TryRemove(-1, out _);
+            _completionSources.TryRemove(-1, out _);
             throw;
         }
         finally
@@ -176,29 +128,19 @@ internal class Session : ISession, IChannel
         {
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _ = _completionSources2.TryAdd(-1, tcs);
-            _connection.Send(ref request, ChannelId);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(ref request, ChannelId);
              await tcs.Task;
         }
         catch (Exception)
         {
-            _completionSources2.TryRemove(-1, out _);
+            _completionSources.TryRemove(-1, out _);
             throw;
         }
         finally
         {
             _lock.Release();
         }
-
-        // var createQueueMessage = new CreateQueueMessageV2
-        // {
-        //     RequiresResponse = true,
-        //     Address = queueConfiguration.Address,
-        //     QueueName = queueConfiguration.Name,
-        //     RoutingType = queueConfiguration.RoutingType,
-        //     MaxConsumers = -1
-        // };
-        // _ = await SendBlockingAsync<CreateQueueMessageV2, NullResponse>(createQueueMessage, cancellationToken);
     }
 
     public async Task<QueueInfo?> GetQueueInfoAsync(string queueName, CancellationToken cancellationToken)
@@ -212,8 +154,8 @@ internal class Session : ISession, IChannel
         {
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _ = _completionSources2.TryAdd(-1, tcs);
-            _connection.Send(ref request, ChannelId);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(ref request, ChannelId);
             var result = await tcs.Task;
             if (result is QueueInfo queueInfo)
             {
@@ -226,7 +168,7 @@ internal class Session : ISession, IChannel
         }
         catch (Exception)
         {
-            _completionSources2.TryRemove(-1, out _);
+            _completionSources.TryRemove(-1, out _);
             throw;
         }
         finally
@@ -250,8 +192,8 @@ internal class Session : ISession, IChannel
         {
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _ = _completionSources2.TryAdd(-1, tcs);
-            _connection.Send(ref request, ChannelId);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(ref request, ChannelId);
             var result = await tcs.Task;
             if (result is QueueInfo)
             {
@@ -272,7 +214,7 @@ internal class Session : ISession, IChannel
         }
         catch (Exception)
         {
-            _completionSources2.TryRemove(-1, out _);
+            _completionSources.TryRemove(-1, out _);
             throw;
         }
         finally
@@ -291,14 +233,14 @@ internal class Session : ISession, IChannel
         {
             await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _ = _completionSources2.TryAdd(-1, tcs);
-            _connection.Send(ref request, ChannelId);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(ref request, ChannelId);
             await tcs.Task;
             _consumers.TryRemove(consumerId, out _);
         }
         catch (Exception)
         {
-            _completionSources2.TryRemove(-1, out _);
+            _completionSources.TryRemove(-1, out _);
             throw;
         }
         finally
@@ -314,7 +256,7 @@ internal class Session : ISession, IChannel
             Id = 0,
             Address = producerConfiguration.Address
         };
-        _connection.Send(ref request, ChannelId);
+        connection.Send(ref request, ChannelId);
         return ValueTask.FromResult<IProducer>(new Producer(this)
         {
             ProducerId = request.Id
@@ -327,7 +269,7 @@ internal class Session : ISession, IChannel
         {
             Id = producerId,
         };
-        _connection.Send(ref request, ChannelId);
+        connection.Send(ref request, ChannelId);
         return ValueTask.CompletedTask;
     }
 
@@ -335,23 +277,23 @@ internal class Session : ISession, IChannel
     {
         await StopAsync();
         await CloseAsync();
-        _connection.RemoveChannel(ChannelId);
+        connection.RemoveChannel(ChannelId);
     }
 
     private async ValueTask StopAsync()
     {
-        var sessionStop = new SessionStop2();
+        var sessionStop = new SessionStop();
         try
         {
             await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _ = _completionSources2.TryAdd(-1, tcs);
-            _connection.Send(ref sessionStop, ChannelId);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(ref sessionStop, ChannelId);
             await tcs.Task;
         }
         catch (Exception)
         {
-            _completionSources2.TryRemove(-1, out _);
+            _completionSources.TryRemove(-1, out _);
             throw;
         }
         finally
@@ -362,18 +304,18 @@ internal class Session : ISession, IChannel
 
     private async ValueTask CloseAsync()
     {
-        var sessionCloseMessage2 = new SessionCloseMessage2();
+        var sessionCloseMessage2 = new SessionCloseMessage();
         try
         {
             await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _ = _completionSources2.TryAdd(-1, tcs);
-            _connection.Send(ref sessionCloseMessage2, ChannelId);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(ref sessionCloseMessage2, ChannelId);
             await tcs.Task;
         }
         catch (Exception)
         {
-            _completionSources2.TryRemove(-1, out _);
+            _completionSources.TryRemove(-1, out _);
             throw;
         }
         finally
@@ -382,41 +324,10 @@ internal class Session : ISession, IChannel
         }
     }
 
-    internal async Task<TResponse> SendBlockingAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
-        where TRequest : Packet
+    public void Start()
     {
-        var tcs = new TaskCompletionSource<Packet>();
-
-        // TODO: Handle scenario when we cannot add request for this CorrelationId, because there is already another pending request
-        // _ = _completionSources.TryAdd(request.CorrelationId, tcs);
-
-        await _transport.SendAsync(request, ChannelId, cancellationToken);
-        var responsePacket = await tcs.Task;
-        if (responsePacket is TResponse response)
-        {
-            return response;
-        }
-        else
-        {
-            // TODO: Handle gracefully
-            throw new ArgumentException($"Expected response {typeof(TResponse).Name} but got {responsePacket.GetType().Name}");
-        }
-    }
-
-    internal async Task SendAsync<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : Packet
-    {
-        await _transport.SendAsync(request, ChannelId, cancellationToken);
-    }
-
-    public void StartAsync2()
-    {
-        var sessionStart = new SessionStart2();
-        _connection.Send(ref sessionStart, ChannelId);
-    }
-
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-        await _transport.SendAsync(new SessionStart(), ChannelId, cancellationToken);
+        var sessionStart = new SessionStart();
+        connection.Send(ref sessionStart, ChannelId);
     }
 
     public void OnPacket(ref readonly InboundPacket packet)
@@ -425,8 +336,8 @@ internal class Session : ISession, IChannel
         {
             case PacketType.NullResponse:
             {
-                var nullResponse = new NullResponse2(packet.Payload);
-                if (_completionSources2.TryRemove(nullResponse.CorrelationId, out var tcs))
+                var nullResponse = new NullResponse(packet.Payload);
+                if (_completionSources.TryRemove(nullResponse.CorrelationId, out var tcs))
                 {
                     tcs.TrySetResult(_emptyResult);
                 }
@@ -436,7 +347,7 @@ internal class Session : ISession, IChannel
             case PacketType.SessionBindingQueryResponseMessage:
             {
                 var response = new SessionBindingQueryResponseMessage(packet.Payload);
-                if (_completionSources2.TryRemove(-1, out var tcs))
+                if (_completionSources.TryRemove(-1, out var tcs))
                 {
                     var result = response.Exists
                         ? new AddressInfo { QueueNames = response.QueueNames, RoutingTypes = GetRoutingTypes(ref response) }
@@ -449,7 +360,7 @@ internal class Session : ISession, IChannel
             case PacketType.SessionQueueQueryResponseMessage:
             {
                 var response = new SessionQueueQueryResponseMessage(packet.Payload);
-                if (_completionSources2.TryRemove(-1, out var tcs))
+                if (_completionSources.TryRemove(-1, out var tcs))
                 {
                     var queueInfo = new QueueInfo
                     {

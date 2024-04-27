@@ -13,12 +13,12 @@ internal class Producer(Session session) : IProducer
 
     public async ValueTask SendMessage(Message message, CancellationToken cancellationToken)
     {
-        await session.SendBlockingAsync<SessionSendMessageV3, NullResponse>(new SessionSendMessageV3
-        {
-            Message = message,
-            ProducerId = ProducerId,
-            RequiresResponse = true,
-            CorrelationId = -4
-        }, cancellationToken);
+        // await session.SendBlockingAsync<SessionSendMessageV3, NullResponse>(new SessionSendMessageV3
+        // {
+        //     Message = message,
+        //     ProducerId = ProducerId,
+        //     RequiresResponse = true,
+        //     CorrelationId = -4
+        // }, cancellationToken);
     }
 }
