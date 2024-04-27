@@ -23,22 +23,18 @@ internal class Consumer : IConsumer
         _writer = channel.Writer;
 
         // TODO: should this really be fire and forget?
-        _ = session.SendAsync(new SessionConsumerFlowCreditMessage
-        {
-            ConsumerId = ConsumerId,
-            Credits = 100
-        }, default);
+        // _ = session.SendAsync(new SessionConsumerFlowCreditMessage
+        // {
+        //     ConsumerId = ConsumerId,
+        //     Credits = 100
+        // }, default);
     }
 
     public required long ConsumerId { get; init; }
-    
+
     public async ValueTask DisposeAsync()
     {
-        var request = new SessionConsumerCloseMessage
-        {
-            ConsumerId = ConsumerId
-        };
-        _ = await _session.SendBlockingAsync<SessionConsumerCloseMessage, NullResponse>(request, default);
+        await _session.CloseConsumer(ConsumerId);
     }
 
     public async ValueTask<Message> ReceiveAsync(CancellationToken cancellationToken)

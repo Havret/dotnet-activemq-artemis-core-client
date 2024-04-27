@@ -180,7 +180,7 @@ internal class Session : ISession, IChannel
             _connection.Send(ref request, ChannelId);
              await tcs.Task;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             _completionSources2.TryRemove(-1, out _);
             throw;
@@ -243,17 +243,68 @@ internal class Session : ISession, IChannel
             QueueName = consumerConfiguration.QueueName,
             Priority = 0,
             BrowseOnly = false,
-            RequiresResponse = true
+            RequiresResponse = true,
+            FilterString = null
         };
-        _ = await SendBlockingAsync<SessionCreateConsumerMessage, SessionQueueQueryResponseMessageV3>(request, cancellationToken);
-        var consumer = new Consumer(this)
+        try
         {
-            ConsumerId = request.Id
+            await _lock.WaitAsync(cancellationToken);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources2.TryAdd(-1, tcs);
+            _connection.Send(ref request, ChannelId);
+            var result = await tcs.Task;
+            if (result is QueueInfo)
+            {
+                var consumer = new Consumer(this)
+                {
+                    ConsumerId = request.Id
+                };
+                // TODO: We should remove consumer from this dictionary on dispose
+                _consumers.TryAdd(request.Id, consumer);
+                
+                return consumer;
+            }
+            else
+            {
+                // TODO: Handle scneario when we cannot create consumer
+                return null!;
+            }
+        }
+        catch (Exception)
+        {
+            _completionSources2.TryRemove(-1, out _);
+            throw;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+    
+    internal async Task CloseConsumer(long consumerId)
+    {
+        var request = new SessionConsumerCloseMessage
+        {
+            ConsumerId = consumerId
         };
-
-        // TODO: We should remove consumer from this dictionary on dispose
-        _consumers.TryAdd(request.Id, consumer);
-        return consumer;
+        try
+        {
+            await _lock.WaitAsync();
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources2.TryAdd(-1, tcs);
+            _connection.Send(ref request, ChannelId);
+            await tcs.Task;
+            _consumers.TryRemove(consumerId, out _);
+        }
+        catch (Exception)
+        {
+            _completionSources2.TryRemove(-1, out _);
+            throw;
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public async Task<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken)
@@ -402,7 +453,6 @@ internal class Session : ISession, IChannel
                 }
 
                 break;
-            
             }
             default:
             {

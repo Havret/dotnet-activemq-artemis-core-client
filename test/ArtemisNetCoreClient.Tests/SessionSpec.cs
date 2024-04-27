@@ -32,7 +32,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
     [Theory]
     [InlineData(RoutingType.Anycast)]
     [InlineData(RoutingType.Multicast)]
-    public async Task should_create_queue_with_selected_routing_type(RoutingType routingType)
+    public async Task Should_create_queue_with_selected_routing_type(RoutingType routingType)
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
@@ -92,16 +92,17 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         Assert.Null(queueInfo);
     }
 
-    [Fact(Skip = "Temporarily disabled")]
+    [Fact]
     public async Task should_create_and_dispose_consumer()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         
-        await using var session = await testFixture.CreateSessionAsync();
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
         
         var addressName = Guid.NewGuid().ToString();
-        await session.CreateAddressAsync(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
+        await session.CreateAddressAsync(addressName, [RoutingType.Multicast], testFixture.CancellationToken);
         
         var queueName = Guid.NewGuid().ToString();
         await session.CreateQueueAsync(new QueueConfiguration

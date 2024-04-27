@@ -152,5 +152,7 @@ internal enum PacketType : byte
     SessionBindingQueryResponseMessage = unchecked((byte) -22),
     CreateQueueMessage = unchecked((byte) -12),
     SessionQueueQueryMessage = 45,
-    SessionQueueQueryResponseMessage = unchecked((byte) -14)
+    SessionQueueQueryResponseMessage = unchecked((byte) -14),
+    SessionCreateConsumerMessage = 40,
+    SessionConsumerCloseMessage = 74,
 }
