@@ -35,5 +35,5 @@ public interface ISession : IAsyncDisposable
     /// <summary>
     /// Create a producer with the given configuration.
     /// </summary>
-    Task<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken);
+    ValueTask<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken);
 }

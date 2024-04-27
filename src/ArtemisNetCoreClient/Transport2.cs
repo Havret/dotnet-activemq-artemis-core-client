@@ -21,25 +21,25 @@ internal class Transport2 : IAsyncDisposable
     {
         _logger = logger;
         _socket = socket;
-        
+
         var channel = Channel.CreateUnbounded<ReadOnlyMemory<byte>>(new UnboundedChannelOptions
         {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = false
         });
-        
+
         _channelReader = channel.Reader;
         _channelWriter = channel.Writer;
 
         var networkStream = new NetworkStream(socket);
-        
+
         _reader = new BufferedStream(networkStream, _socket.ReceiveBufferSize);
         _writer = new BufferedStream(networkStream, _socket.SendBufferSize);
-        
+
         _sendLoopTask = Task.Run(SendLoop);
     }
-    
+
     public void Send(ReadOnlyMemory<byte> memory)
     {
         _channelWriter.TryWrite(memory);
@@ -73,7 +73,7 @@ internal class Transport2 : IAsyncDisposable
         await _sendLoopTask;
         _socket.Dispose();
     }
-    
+
     internal async ValueTask<InboundPacket> ReceivePacketAsync(CancellationToken cancellationToken)
     {
         var header = await ReadHeaderAsync(cancellationToken);
@@ -98,6 +98,7 @@ internal class Transport2 : IAsyncDisposable
     }
 
     private const int HeaderSize = sizeof(int) + sizeof(byte) + sizeof(long);
+
     private async ValueTask<Header> ReadHeaderAsync(CancellationToken cancellationToken)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(Header.HeaderSize);
@@ -123,7 +124,7 @@ internal readonly struct Header
         readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var packetType);
         PacketType = (PacketType) packetType;
         readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out ChannelId);
-        
+
         Debug.Assert(readBytes == HeaderSize, $"Expected to read {HeaderSize} bytes but got {readBytes}");
     }
 
@@ -155,4 +156,6 @@ internal enum PacketType : byte
     SessionQueueQueryResponseMessage = unchecked((byte) -14),
     SessionCreateConsumerMessage = 40,
     SessionConsumerCloseMessage = 74,
+    CreateProducerMessage = unchecked((byte) -20),
+    RemoveProducerMessage = unchecked((byte) -21)
 }

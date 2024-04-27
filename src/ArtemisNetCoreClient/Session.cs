@@ -307,18 +307,28 @@ internal class Session : ISession, IChannel
         }
     }
 
-    public async Task<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken)
+    public ValueTask<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken)
     {
         var request = new CreateProducerMessage
         {
             Id = 0,
             Address = producerConfiguration.Address
         };
-        await _transport.SendAsync(request, ChannelId, cancellationToken);
-        return new Producer(this)
+        _connection.Send(ref request, ChannelId);
+        return ValueTask.FromResult<IProducer>(new Producer(this)
         {
             ProducerId = request.Id
+        });
+    }
+    
+    internal ValueTask RemoveProducerAsync(int producerId)
+    {
+        var request = new RemoveProducerMessage
+        {
+            Id = producerId,
         };
+        _connection.Send(ref request, ChannelId);
+        return ValueTask.CompletedTask;
     }
 
     public async ValueTask DisposeAsync()

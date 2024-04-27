@@ -18,8 +18,8 @@ internal static class Codec
             SessionQueueQueryMessage2 => SessionQueueQueryMessage2.Type,
             SessionCreateConsumerMessage2 => SessionCreateConsumerMessage2.Type,
             SessionConsumerCloseMessage2 => SessionConsumerCloseMessage2.Type,
-            CreateProducerMessage => CreateProducerMessage.Type,
-            RemoveProducerMessage => RemoveProducerMessage.Type,
+            CreateProducerMessage2 => CreateProducerMessage2.Type,
+            RemoveProducerMessage2 => RemoveProducerMessage2.Type,
             SessionSendMessageV3 => SessionSendMessageV3.Type,
             SessionConsumerFlowCreditMessage => SessionConsumerFlowCreditMessage.Type,
             _ => throw new ArgumentOutOfRangeException(nameof(packet), packet, $"{packet.GetType()} is not supported for encoding")

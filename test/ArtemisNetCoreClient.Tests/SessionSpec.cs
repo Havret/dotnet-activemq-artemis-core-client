@@ -93,11 +93,10 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task should_create_and_dispose_consumer()
+    public async Task Should_create_and_dispose_consumer()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
-        
         await using var connection = await testFixture.CreateConnectionAsync();
         await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
         
@@ -121,13 +120,14 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         await consumer.DisposeAsync();
     }
     
-    [Fact(Skip = "Temporarily disabled")]
-    public async Task should_create_and_dispose_producer()
+    [Fact]
+    public async Task Should_create_and_dispose_producer()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
         
-        await using var session = await testFixture.CreateSessionAsync();
         var addressName = Guid.NewGuid().ToString();
         await session.CreateAddressAsync(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
         
