@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ActiveMQ.Artemis.Core.Client.Framing;
 using ActiveMQ.Artemis.Core.Client.Utils;
 using Microsoft.Extensions.Logging;
@@ -131,16 +132,20 @@ internal class Connection : IConnection, IChannel
         }
     }
     
-    internal void Send<T>(ref readonly T packet, long channelId) where T : IOutgoingPacket
+    internal void Send<T>(ref readonly T packet, long channelId) where T : struct, IOutgoingPacket
     {
+        // This is a workaround for the lack readonly members on interfaces
+        // https://github.com/dotnet/csharplang/issues/3055#issuecomment-1175881121
+        ref var packetRef = ref Unsafe.AsRef(in packet);
+        
         const int headerSize = sizeof(int) + sizeof(byte) + sizeof(long);
-        var size = headerSize + packet.GetRequiredBufferSize();
+        var size = headerSize + packetRef.GetRequiredBufferSize();
         var buffer = ArrayPool<byte>.Shared.Rent(size);
         
         var offset = ArtemisBinaryConverter.WriteInt32(ref buffer.AsSpan().GetReference(), size - sizeof(int));
         offset += ArtemisBinaryConverter.WriteByte(ref buffer.AsSpan().GetOffset(offset), (byte) packet.PacketType);
         offset += ArtemisBinaryConverter.WriteInt64(ref buffer.AsSpan().GetOffset(offset), channelId);
-        offset += packet.Encode(buffer.AsSpan(offset));
+        offset += packetRef.Encode(buffer.AsSpan(offset));
         
         Debug.Assert(size == offset, $"Size mismatch, expected {size} but got {offset}");
         
