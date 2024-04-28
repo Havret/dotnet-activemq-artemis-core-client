@@ -414,4 +414,71 @@ public class ArtemisBinaryConverterSpec
         Assert.Equal(encoded, byteBuffer);
         Assert.Equal(encoded.Length, writtenBytes);
     }
+    
+    [Fact]
+    public void Should_encode_guid()
+    {
+        // Arrange
+        var byteBuffer = new byte[ArtemisBinaryConverter.GuidByteCount];
+        var guid = Guid.Parse("c69fdd4e-afa3-46bb-a6ef-f2d5fa4172fa");
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteGuid(ref byteBuffer.AsSpan().GetReference(), guid);
+
+        // Assert
+        var expected = new byte[]
+        {
+            unchecked((byte) -58),
+            unchecked((byte) -97),
+            unchecked((byte) -35),
+            78,
+            unchecked((byte) -81),
+            unchecked((byte) -93),
+            70,
+            unchecked((byte) -69),
+            unchecked((byte) -90),
+            unchecked((byte) -17),
+            unchecked((byte) -14),
+            unchecked((byte) -43),
+            unchecked((byte) -6),
+            65,
+            114,
+            unchecked((byte) -6)
+        };
+        Assert.Equal(expected, byteBuffer);
+        Assert.Equal(ArtemisBinaryConverter.GuidByteCount, writtenBytes);
+    }
+
+    [Fact]
+    public void Should_decode_guid()
+    {
+        // Arrange
+        var byteBuffer = new byte[]
+        {
+            unchecked((byte) -58),
+            unchecked((byte) -97),
+            unchecked((byte) -35),
+            78,
+            unchecked((byte) -81),
+            unchecked((byte) -93),
+            70,
+            unchecked((byte) -69),
+            unchecked((byte) -90),
+            unchecked((byte) -17),
+            unchecked((byte) -14),
+            unchecked((byte) -43),
+            unchecked((byte) -6),
+            65,
+            114,
+            unchecked((byte) -6)
+        };
+
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadGuid(byteBuffer, out var value);
+
+        // Assert
+        Assert.Equal(Guid.Parse("c69fdd4e-afa3-46bb-a6ef-f2d5fa4172fa"), value);
+        Assert.Equal(ArtemisBinaryConverter.GuidByteCount, readBytes);
+    }
+
 }

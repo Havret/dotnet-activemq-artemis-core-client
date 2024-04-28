@@ -411,4 +411,34 @@ internal static class ArtemisBinaryConverter
         offset += WriteSimpleString(ref destination.GetOffset(offset), value);
         return offset;
     }
+
+    public const int GuidByteCount = 16;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteGuid(ref byte destination, Guid value)
+    {
+        var span = MemoryMarshal.CreateSpan(ref destination, GuidByteCount);
+        _ = value.TryWriteBytes(span, bigEndian: true, out var bytesWritten);
+        return bytesWritten;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadGuid(in ReadOnlySpan<byte> source, out Guid value)
+    {
+        value = new Guid(source, bigEndian: true);
+        return GuidByteCount;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNullableGuidByteCount(Guid? value)
+    {
+        var byteCount = sizeof(byte);
+        if (value.HasValue)
+        {
+            byteCount += GuidByteCount;
+        }
+
+        return byteCount;
+    }
+
 }
