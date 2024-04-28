@@ -481,4 +481,71 @@ public class ArtemisBinaryConverterSpec
         Assert.Equal(ArtemisBinaryConverter.GuidByteCount, readBytes);
     }
 
+    [Theory]
+    [InlineData(new byte[]
+    {
+        1,
+        unchecked((byte) -58),
+        unchecked((byte) -97),
+        unchecked((byte) -35),
+        78,
+        unchecked((byte) -81),
+        unchecked((byte) -93),
+        70,
+        unchecked((byte) -69),
+        unchecked((byte) -90),
+        unchecked((byte) -17),
+        unchecked((byte) -14),
+        unchecked((byte) -43),
+        unchecked((byte) -6),
+        65,
+        114,
+        unchecked((byte) -6)
+    }, "c69fdd4e-afa3-46bb-a6ef-f2d5fa4172fa")]
+    [InlineData(new byte[] { 0 }, null)]
+    public void Should_encode_nullable_guid(byte[] encoded, string? stringGuid)
+    {
+        // Arrange
+        Guid? guid = stringGuid != null ? Guid.Parse(stringGuid) : null;
+        var byteBuffer = new byte[ArtemisBinaryConverter.GetNullableGuidByteCount(guid)];
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteNullableGuid(ref byteBuffer.AsSpan().GetReference(), guid);
+
+        // Assert
+        Assert.Equal(encoded, byteBuffer);
+        Assert.Equal(encoded.Length, writtenBytes);
+    }
+
+    [Theory]
+    [InlineData(new byte[]
+    {
+        1,
+        unchecked((byte) -58),
+        unchecked((byte) -97),
+        unchecked((byte) -35),
+        78,
+        unchecked((byte) -81),
+        unchecked((byte) -93),
+        70,
+        unchecked((byte) -69),
+        unchecked((byte) -90),
+        unchecked((byte) -17),
+        unchecked((byte) -14),
+        unchecked((byte) -43),
+        unchecked((byte) -6),
+        65,
+        114,
+        unchecked((byte) -6)
+    }, "c69fdd4e-afa3-46bb-a6ef-f2d5fa4172fa")]
+    [InlineData(new byte[] { 0 }, null)]
+    public void Should_decode_nullable_guid(byte[] encoded, string? expected)
+    {
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadNullableGuid(encoded, out var value);
+
+        // Assert
+        Assert.Equal(expected, value?.ToString());
+        Assert.Equal(encoded.Length, readBytes);
+    }
 }

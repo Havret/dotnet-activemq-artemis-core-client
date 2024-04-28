@@ -441,4 +441,33 @@ internal static class ArtemisBinaryConverter
         return byteCount;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteNullableGuid(ref byte destination, Guid? value)
+    {
+        if (value.HasValue)
+        {
+            var offset = WriteByte(ref destination, DataConstants.NotNull);
+            offset += WriteGuid(ref destination.GetOffset(offset), value.Value);
+            return offset;
+        }
+
+        return WriteByte(ref destination, DataConstants.Null);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadNullableGuid(in ReadOnlySpan<byte> source, out Guid? value)
+    {
+        var readBytes = ReadByte(source, out var isNotNull);
+        if (isNotNull == DataConstants.NotNull)
+        {
+            readBytes += ReadGuid(source[readBytes..], out var guidValue);
+            value = guidValue;
+        }
+        else
+        {
+            value = null;
+        }
+
+        return readBytes;
+    }
 }
