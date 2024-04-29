@@ -14,8 +14,8 @@ internal class SessionReceiveMessage : Packet
 
     public override void Decode(ByteBuffer buffer)
     {
-        Message = new Message();
-        Message.Decode(buffer);
+        // Message = new Message();
+        // Message.Decode(buffer);
         ConsumerId = buffer.ReadLong();
         DeliveryCount = buffer.ReadInt();
     }

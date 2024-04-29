@@ -11,14 +11,8 @@ internal class Producer(Session session) : IProducer
         return session.RemoveProducerAsync(ProducerId);
     }
 
-    public async ValueTask SendMessage(Message message, CancellationToken cancellationToken)
+    public async ValueTask SendMessageAsync(Message message, CancellationToken cancellationToken)
     {
-        // await session.SendBlockingAsync<SessionSendMessageV3, NullResponse>(new SessionSendMessageV3
-        // {
-        //     Message = message,
-        //     ProducerId = ProducerId,
-        //     RequiresResponse = true,
-        //     CorrelationId = -4
-        // }, cancellationToken);
+        await session.SendMessageAsync(message, ProducerId, cancellationToken);
     }
 }

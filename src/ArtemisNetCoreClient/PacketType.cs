@@ -17,5 +17,6 @@ internal enum PacketType : byte
     SessionCreateConsumerMessage = 40,
     SessionConsumerCloseMessage = 74,
     CreateProducerMessage = unchecked((byte) -20),
-    RemoveProducerMessage = unchecked((byte) -21)
+    RemoveProducerMessage = unchecked((byte) -21),
+    SessionSendMessage = 71,
 }

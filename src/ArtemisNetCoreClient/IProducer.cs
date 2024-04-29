@@ -4,5 +4,5 @@ namespace ActiveMQ.Artemis.Core.Client;
 
 public interface IProducer : IAsyncDisposable
 {
-    ValueTask SendMessage(Message message, CancellationToken cancellationToken);
+    ValueTask SendMessageAsync(Message message, CancellationToken cancellationToken);
 }
