@@ -272,6 +272,29 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         connection.Send(request, ChannelId);
         return ValueTask.CompletedTask;
     }
+    
+    internal async ValueTask SendMessageAsync(Message message, int producerId, CancellationToken cancellationToken)
+    {
+        var request = new SessionSendMessage
+        {
+            Message = message,
+            ProducerId = producerId,
+            RequiresResponse = true,
+            CorrelationId = -4
+        };
+        try
+        {
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources.TryAdd(request.CorrelationId, tcs);
+            connection.Send(request, ChannelId);
+            await tcs.Task.WaitAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            _completionSources.TryRemove(request.CorrelationId, out _);
+            throw;
+        }
+    }
 
     public async ValueTask DisposeAsync()
     {

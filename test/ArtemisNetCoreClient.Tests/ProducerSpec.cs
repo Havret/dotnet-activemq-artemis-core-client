@@ -7,7 +7,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class ProducerSpec(ITestOutputHelper testOutputHelper)
 {
-    [Fact(Skip = "Temporarily disabled")]
+    [Fact]
     public async Task should_send_message()
     {
         // Arrange
@@ -23,11 +23,14 @@ public class ProducerSpec(ITestOutputHelper testOutputHelper)
         }, testFixture.CancellationToken);
         
         // Act
-        await producer.SendMessage(new Message
+        var message = new Message
         {
-            Address = addressName,
-            Durable = true,
-            Body = "test_payload"u8.ToArray()
-        }, testFixture.CancellationToken);
+            Body = "test_payload"u8.ToArray(),
+            Headers = new Headers
+            {
+                Address = addressName
+            }
+        };
+        await producer.SendMessageAsync(message, testFixture.CancellationToken);
     }
 }
