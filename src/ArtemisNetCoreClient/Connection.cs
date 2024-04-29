@@ -111,7 +111,7 @@ internal class Connection : IConnection, IChannel
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<IIncomingPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            Send(ref createSessionMessage, 1);
+            Send(createSessionMessage, 1);
             var incomingPacket = (CreateSessionResponseMessage) await tcs.Task;
 
             var session = new Session(this, _loggerFactory)
@@ -132,7 +132,7 @@ internal class Connection : IConnection, IChannel
         }
     }
     
-    internal void Send<T>(ref readonly T packet, long channelId) where T : struct, IOutgoingPacket
+    internal void Send<T>(in T packet, long channelId) where T : struct, IOutgoingPacket
     {
         // This is a workaround for the lack readonly members on interfaces
         // https://github.com/dotnet/csharplang/issues/3055#issuecomment-1175881121

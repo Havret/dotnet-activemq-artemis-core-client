@@ -30,7 +30,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            connection.Send(ref createAddressMessage, ChannelId);
+            connection.Send(createAddressMessage, ChannelId);
             await tcs.Task;
         }
         catch (Exception)
@@ -56,7 +56,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            connection.Send(ref request, ChannelId);
+            connection.Send(request, ChannelId);
             var result = await tcs.Task;
             if (result is AddressInfo addressInfo)
             {
@@ -129,7 +129,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            connection.Send(ref request, ChannelId);
+            connection.Send(request, ChannelId);
              await tcs.Task;
         }
         catch (Exception)
@@ -155,7 +155,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            connection.Send(ref request, ChannelId);
+            connection.Send(request, ChannelId);
             var result = await tcs.Task;
             if (result is QueueInfo queueInfo)
             {
@@ -193,7 +193,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            connection.Send(ref request, ChannelId);
+            connection.Send(request, ChannelId);
             var result = await tcs.Task;
             if (result is QueueInfo)
             {
@@ -234,7 +234,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            connection.Send(ref request, ChannelId);
+            connection.Send(request, ChannelId);
             await tcs.Task;
             _consumers.TryRemove(consumerId, out _);
         }
@@ -256,7 +256,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             Id = 0,
             Address = producerConfiguration.Address
         };
-        connection.Send(ref request, ChannelId);
+        connection.Send(request, ChannelId);
         return ValueTask.FromResult<IProducer>(new Producer(this)
         {
             ProducerId = request.Id
@@ -288,7 +288,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            connection.Send(ref sessionStop, ChannelId);
+            connection.Send(sessionStop, ChannelId);
             await tcs.Task;
         }
         catch (Exception)
@@ -310,7 +310,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
-            connection.Send(ref sessionCloseMessage2, ChannelId);
+            connection.Send(sessionCloseMessage2, ChannelId);
             await tcs.Task;
         }
         catch (Exception)
