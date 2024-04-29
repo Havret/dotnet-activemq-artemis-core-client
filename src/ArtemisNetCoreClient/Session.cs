@@ -82,7 +82,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
     private static readonly RoutingType[] AnycastRoutingType = [RoutingType.Anycast];
     private static readonly RoutingType[] MulticastRoutingType = [RoutingType.Multicast];
 
-    private static RoutingType[] GetRoutingTypes(ref SessionBindingQueryResponseMessage sessionBindingQueryResponseMessage)
+    private static RoutingType[] GetRoutingTypes(in SessionBindingQueryResponseMessage sessionBindingQueryResponseMessage)
     {
         return sessionBindingQueryResponseMessage switch
         {
@@ -269,7 +269,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         {
             Id = producerId,
         };
-        connection.Send(ref request, ChannelId);
+        connection.Send(request, ChannelId);
         return ValueTask.CompletedTask;
     }
 
@@ -327,10 +327,10 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
     public void Start()
     {
         var sessionStart = new SessionStart();
-        connection.Send(ref sessionStart, ChannelId);
+        connection.Send(sessionStart, ChannelId);
     }
 
-    public void OnPacket(ref readonly InboundPacket packet)
+    public void OnPacket(in InboundPacket packet)
     {
         switch (packet.PacketType)
         {
@@ -350,7 +350,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
                 if (_completionSources.TryRemove(-1, out var tcs))
                 {
                     var result = response.Exists
-                        ? new AddressInfo { QueueNames = response.QueueNames, RoutingTypes = GetRoutingTypes(ref response) }
+                        ? new AddressInfo { QueueNames = response.QueueNames, RoutingTypes = GetRoutingTypes(response) }
                         : _emptyResult;
                     tcs.TrySetResult(result);
                 }

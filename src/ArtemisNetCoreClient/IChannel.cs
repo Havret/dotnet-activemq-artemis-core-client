@@ -2,5 +2,5 @@ namespace ActiveMQ.Artemis.Core.Client;
 
 internal interface IChannel
 {
-    void OnPacket(ref readonly InboundPacket packet);
+    void OnPacket(in InboundPacket packet);
 }

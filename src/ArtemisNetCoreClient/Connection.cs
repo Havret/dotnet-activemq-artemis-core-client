@@ -44,7 +44,7 @@ internal class Connection : IConnection, IChannel
                 {
                     if (_channels.TryGetValue(inboundPacket.ChannelId, out var channel))
                     {
-                        channel.OnPacket(ref inboundPacket);
+                        channel.OnPacket(inboundPacket);
                     }
                     else
                     {
@@ -70,7 +70,7 @@ internal class Connection : IConnection, IChannel
         }
     }
     
-    public void OnPacket(ref readonly InboundPacket packet)
+    public void OnPacket(in InboundPacket packet)
     {
         switch (packet.PacketType)
         {
