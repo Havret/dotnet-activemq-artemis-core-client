@@ -8,7 +8,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 
 public class ConsumerSpec(ITestOutputHelper testOutputHelper)
 {
-    [Fact(Skip = "Temporarily disabled")] 
+    [Fact] 
     public async Task should_receive_message()
     {
         // Arrange
@@ -39,8 +39,10 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         
         await producer.SendMessageAsync(new Message
         {
-            // Address = addressName,
-            // Durable = true,
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
             Body = "test_payload"u8.ToArray()
         }, testFixture.CancellationToken);
 
@@ -48,6 +50,6 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         var message = await consumer.ReceiveAsync(testFixture.CancellationToken);
         
         // Assert
-        Assert.Equal("test_payload"u8.ToArray(), message.Body);
+        Assert.Equal("test_payload"u8.ToArray(), message.Body.ToArray());
     }
 }

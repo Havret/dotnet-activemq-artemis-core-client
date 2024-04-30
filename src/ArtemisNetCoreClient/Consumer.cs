@@ -21,13 +21,8 @@ internal class Consumer : IConsumer
         });
         _reader = channel.Reader;
         _writer = channel.Writer;
-
-        // TODO: should this really be fire and forget?
-        // _ = session.SendAsync(new SessionConsumerFlowCreditMessage
-        // {
-        //     ConsumerId = ConsumerId,
-        //     Credits = 100
-        // }, default);
+        
+        session.SendConsumerCredits(ConsumerId, 100);
     }
 
     public required long ConsumerId { get; init; }
