@@ -17,9 +17,22 @@ public class TestFixture : IAsyncDisposable
     private TestFixture(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        _cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        _cts = new CancellationTokenSource(Timeout);
     }
-    
+
+    private static TimeSpan Timeout
+    {
+        get
+        {
+#if DEBUG
+            return TimeSpan.FromSeconds(60);
+#else
+            return TimeSpan.FromSeconds(5);
+#endif
+        }
+    }
+
     public async Task<IConnection> CreateConnectionAsync()
     {
         var connectionFactory = new ConnectionFactory
