@@ -32,7 +32,7 @@ internal readonly struct SessionCreateConsumerMessage : IOutgoingPacket
     {
         var offset = 0;
         
-        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetOffset(offset), Id);
+        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetReference(), Id);
         offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), QueueName);
         offset += ArtemisBinaryConverter.WriteNullableSimpleString(ref buffer.GetOffset(offset), FilterString);
         offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), BrowseOnly);

@@ -295,6 +295,16 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             throw;
         }
     }
+    
+    internal void SendConsumerCredits(long consumerId, int credit)
+    {
+        var request = new SessionConsumerFlowCreditMessage
+        {
+            ConsumerId = consumerId,
+            Credits = credit
+        };
+        connection.Send(request, ChannelId);
+    }
 
     public async ValueTask DisposeAsync()
     {
@@ -392,6 +402,16 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
                         RoutingType = response.RoutingType,
                     };
                     tcs.TrySetResult(queueInfo);
+                }
+
+                break;
+            }
+            case PacketType.SessionReceiveMessage:
+            {
+                var message = new SessionReceiveMessage(packet.Payload);
+                if (_consumers.TryGetValue(message.ConsumerId, out var consumer))
+                {
+                    consumer.OnMessage(message.Message);
                 }
 
                 break;

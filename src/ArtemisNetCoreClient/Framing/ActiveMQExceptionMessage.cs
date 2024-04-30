@@ -7,11 +7,11 @@ internal class ActiveMQExceptionMessage : Packet
     public int Code { get; private set; }
     public string? Message { get; set; }
     
-    public override void Encode(ByteBuffer buffer)
+    public virtual void Encode(ByteBuffer buffer)
     {
     }
 
-    public override void Decode(ByteBuffer buffer)
+    public virtual void Decode(ByteBuffer buffer)
     {
         Code = buffer.ReadInt();
         Message = buffer.ReadNullableString();
