@@ -548,4 +548,53 @@ public class ArtemisBinaryConverterSpec
         Assert.Equal(expected, value?.ToString());
         Assert.Equal(encoded.Length, readBytes);
     }
+
+    [Theory]
+    [InlineData(null, new byte[] { 0 })] // null
+    [InlineData(true, new byte[] { 2, unchecked((byte) -1) })] // true
+    [InlineData(false, new byte[] { 2, 0 })] // false
+    [InlineData((byte) 125, new byte[] { 3, 125 })] // byte
+    [InlineData(new byte[] { 1, 2, 3, 4, 5, 6 }, new byte[] { 4, 0, 0, 0, 6, 1, 2, 3, 4, 5, 6 })] // byte[]
+    [InlineData(125, new byte[] { 6, 0, 0, 0, 125 })] // int
+    [InlineData((short) 125, new byte[] { 5, 0, 125 })] // short
+    [InlineData(long.MaxValue, new byte[] { 7, 127, 255, 255, 255, 255, 255, 255, 255 })] // long
+    [InlineData(12.23F, new byte[] { 8, 65, 67, unchecked((byte) -82), 20 })] // float
+    [InlineData(12.23D, new byte[] { 9, 64, 40, 117, unchecked((byte) -62), unchecked((byte) -113), 92, 40, unchecked((byte) -10) })] // double
+    [InlineData("abcdefgh", new byte[] { 10, 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 })] // string
+    [InlineData('a', new byte[] { 11, 0, 97 })] // char
+    public void Should_encode_nullable_object(object? obj, byte[] encoded)
+    {
+        // Arrange
+        var byteBuffer = new byte[ArtemisBinaryConverter.GetNullableObjectByteCount(obj)];
+
+        // Act
+        var writtenBytes = ArtemisBinaryConverter.WriteNullableObject(ref byteBuffer.AsSpan().GetReference(), obj);
+
+        // Assert
+        Assert.Equal(encoded, byteBuffer);
+        Assert.Equal(encoded.Length, writtenBytes);
+    }
+    
+    [Theory]
+    [InlineData(new byte[] { 0 }, null)] // null
+    [InlineData(new byte[] { 2, unchecked((byte) -1) }, true)] // true
+    [InlineData(new byte[] { 2, 0 }, false)] // false
+    [InlineData(new byte[] { 3, 125 }, (byte) 125)] // byte
+    [InlineData(new byte[] { 4, 0, 0, 0, 6, 1, 2, 3, 4, 5, 6 }, new byte[] { 1, 2, 3, 4, 5, 6 })] // byte[]
+    [InlineData(new byte[] { 5, 0, 125 }, (short) 125)] // short
+    [InlineData(new byte[] { 6, 0, 0, 0, 125 }, 125)] // int
+    [InlineData(new byte[] { 7, 127, 255, 255, 255, 255, 255, 255, 255 }, long.MaxValue)] // long
+    [InlineData(new byte[] { 8, 65, 67, unchecked((byte) -82), 20 }, 12.23F)] // float
+    [InlineData(new byte[] { 9, 64, 40, 117, unchecked((byte) -62), unchecked((byte) -113), 92, 40, unchecked((byte) -10) }, 12.23D)] // double
+    [InlineData(new byte[] { 10, 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 }, "abcdefgh")] // string
+    [InlineData(new byte[] { 11, 0, 97 }, 'a')] // char
+    public void Should_decode_nullable_object(byte[] encoded, object? expected)
+    {
+        // Act
+        var readBytes = ArtemisBinaryConverter.ReadNullableObject(encoded, out var value);
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.Equal(encoded.Length, readBytes);
+    }
 }

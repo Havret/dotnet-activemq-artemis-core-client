@@ -133,14 +133,14 @@ internal static class ArtemisBinaryConverter
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ReadInt16(in ReadOnlySpan<byte> source, out short value)
+    private static int ReadInt16(in ReadOnlySpan<byte> source, out short value)
     {
         value = BinaryPrimitives.ReadInt16BigEndian(source);
         return sizeof(short);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteInt16(ref byte destination, short value)
+    private static int WriteInt16(ref byte destination, short value)
     {
         Unsafe.WriteUnaligned(ref destination, BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(value) : value);
         return sizeof(short);
@@ -440,6 +440,36 @@ internal static class ArtemisBinaryConverter
 
         return byteCount;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int WriteDouble(ref byte destination, double value)
+    {
+        var longValue = BitConverter.DoubleToInt64Bits(value);
+        return WriteInt64(ref destination, longValue);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int ReadDouble(in ReadOnlySpan<byte> source, out double value)
+    {
+        var readBytes = ReadInt64(source, out var longValue);
+        value = BitConverter.Int64BitsToDouble(longValue);
+        return readBytes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int WriteFloat(ref byte destination, float value)
+    {
+        var intValue = BitConverter.SingleToInt32Bits(value);
+        return WriteInt32(ref destination, intValue);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int ReadFloat(in ReadOnlySpan<byte> source, out float value)
+    {
+        var readBytes = ReadInt32(source, out var intValue);
+        value = BitConverter.Int32BitsToSingle(intValue);
+        return readBytes;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteNullableGuid(ref byte destination, Guid? value)
@@ -469,5 +499,173 @@ internal static class ArtemisBinaryConverter
         }
 
         return readBytes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int ReadBytes(in ReadOnlySpan<byte> source, out byte[] value)
+    {
+        var readBytes = ReadInt32(source, out var length);
+        value = new byte[length];
+        source.Slice(readBytes, length).CopyTo(value);
+        return readBytes + length;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int WriteBytes(ref byte destination, byte[] value)
+    {
+        var offset = 0;
+        offset += WriteInt32(ref destination, value.Length);
+        var span = MemoryMarshal.CreateSpan(ref destination.GetOffset(offset), value.Length);
+        value.CopyTo(span);
+        return offset + value.Length;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNullableObjectByteCount(object? value)
+    {
+        var byteCount = sizeof(byte);
+        switch (value)
+        {
+            case null:
+                break;
+            case string stringValue:
+                byteCount += GetSimpleStringByteCount(stringValue);
+                break;
+            case bool:
+            case byte:
+                byteCount += sizeof(byte);
+                break;
+            case byte[] bytes:
+                byteCount += sizeof(int) + bytes.Length;
+                break;
+            case short:
+            case char:
+                byteCount += sizeof(short);
+                break;
+            case long:
+            case double:
+                byteCount += sizeof(long);
+                break;
+            case int:
+            case float:
+                byteCount += sizeof(int);
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported object type: {value.GetType()}");
+        }
+
+        return byteCount;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadNullableObject(in ReadOnlySpan<byte> source, out object? value)
+    {
+        var readBytes = ReadByte(source, out var isNotNull);
+        switch (isNotNull)
+        {
+            case DataConstants.Null:
+                value = null;
+                break;
+            case DataConstants.String:
+                readBytes += ReadSimpleString(source[readBytes..], out var stringValue);
+                value = stringValue;
+                break;
+            case DataConstants.Byte:
+                readBytes += ReadByte(source[readBytes..], out var byteValue);
+                value = byteValue;
+                break;
+            case DataConstants.Bytes:
+                readBytes += ReadBytes(source[readBytes..], out var bytes);
+                value = bytes;
+                break;
+            case DataConstants.Bool:
+                readBytes += ReadBool(source[readBytes..], out var boolValue);
+                value = boolValue;
+                break;
+            case DataConstants.Char:
+                readBytes += ReadInt16(source[readBytes..], out var charValue);
+                value = (char) charValue;
+                break;
+            case DataConstants.Double:
+                readBytes += ReadDouble(source[readBytes..], out var doubleValue);
+                value = doubleValue;
+                break;
+            case DataConstants.Float:
+                readBytes += ReadFloat(source[readBytes..], out var floatValue);
+                value = floatValue;
+                break;
+            case DataConstants.Short:
+                readBytes += ReadInt16(source[readBytes..], out var shortValue);
+                value = shortValue;
+                break;
+            case DataConstants.Int:
+                readBytes += ReadInt32(source[readBytes..], out var intValue);
+                value = intValue;
+                break;
+            case DataConstants.Long:
+                readBytes += ReadInt64(source[readBytes..], out var longValue);
+                value = longValue;
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported object type: {isNotNull}");
+        }
+
+        return readBytes;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteNullableObject(ref byte destination, object? value)
+    {
+        var offset = 0;
+        switch (value)
+        {
+            case null:
+                offset += WriteByte(ref destination, DataConstants.Null);
+                break;
+            case bool boolValue:
+                offset += WriteByte(ref destination, DataConstants.Bool);
+                offset += WriteBool(ref destination.GetOffset(offset), boolValue);
+                break;
+            case byte byteValue:
+                offset += WriteByte(ref destination, DataConstants.Byte);
+                offset += WriteByte(ref destination.GetOffset(offset), byteValue);
+                break;
+            case string stringValue:
+                offset += WriteByte(ref destination, DataConstants.String);
+                offset += WriteSimpleString(ref destination.GetOffset(offset), stringValue);
+                break;
+            case byte[] bytes:
+                offset += WriteByte(ref destination, DataConstants.Bytes);
+                offset += WriteBytes(ref destination.GetOffset(offset), bytes);
+                break;
+            case char charValue:
+                offset += WriteByte(ref destination, DataConstants.Char);
+                offset += WriteInt16(ref destination.GetOffset(offset), (short) charValue);
+                break;
+            case double doubleValue:
+                offset += WriteByte(ref destination, DataConstants.Double);
+                offset += WriteDouble(ref destination.GetOffset(offset), doubleValue);
+                break;
+            case float floatValue:
+                offset += WriteByte(ref destination, DataConstants.Float);
+                offset += WriteFloat(ref destination.GetOffset(offset), floatValue);
+                break;
+            case short shortValue:
+                offset += WriteByte(ref destination, DataConstants.Short);
+                offset += WriteInt16(ref destination.GetOffset(offset), shortValue);
+                break;
+            case int intValue:
+                offset += WriteByte(ref destination, DataConstants.Int);
+                offset += WriteInt32(ref destination.GetOffset(offset), intValue);
+                break;
+            case long longValue:
+                offset += WriteByte(ref destination, DataConstants.Long);
+                offset += WriteInt64(ref destination.GetOffset(offset), longValue);
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported object type: {value.GetType()}");
+        }
+
+        return offset;
     }
 }
