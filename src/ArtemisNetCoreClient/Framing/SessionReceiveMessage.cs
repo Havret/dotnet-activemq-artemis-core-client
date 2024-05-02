@@ -71,17 +71,25 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int DecodeProperties(ReadOnlySpan<byte> buffer, out IDictionary<string, object> value)
+    private static int DecodeProperties(ReadOnlySpan<byte> buffer, out IDictionary<string, object?> value)
     {
         var readBytes = ArtemisBinaryConverter.ReadByte(buffer, out var isNotNull);
         if (isNotNull == DataConstants.NotNull)
         {
-            value = new Dictionary<string, object>();
+            readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out var count);
+            value = new Dictionary<string, object?>(count);
+            for (var i = 0; i < count; i++)
+            {
+                readBytes += ArtemisBinaryConverter.ReadSimpleString(buffer[readBytes..], out var key);
+                readBytes += ArtemisBinaryConverter.ReadNullableObject(buffer[readBytes..], out var obj);
+                value.Add(key, obj);
+            }
+            
             return readBytes;
         }
         else
         {
-            value = ReadOnlyDictionary<string, object>.Empty;
+            value = ReadOnlyDictionary<string, object?>.Empty;
             return readBytes;
         }
     }

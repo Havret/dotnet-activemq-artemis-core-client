@@ -21,4 +21,5 @@ internal enum PacketType : byte
     SessionSendMessage = 71,
     SessionConsumerFlowCreditMessage = 70,
     SessionReceiveMessage = 75,
+    Exception = 20,
 }

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using ActiveMQ.Artemis.Core.Client.Exceptions;
 using ActiveMQ.Artemis.Core.Client.Framing;
 using Microsoft.Extensions.Logging;
 
@@ -414,6 +415,19 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
                     consumer.OnMessage(message.Message);
                 }
 
+                break;
+            }
+            case PacketType.Exception:
+            {
+                var message = new ActiveMQExceptionMessage(packet.Payload);
+                if (_completionSources.TryRemove(message.CorrelationId, out var tcs))
+                {
+                    tcs.TrySetException(new ActiveMQException(message.Code, message.Message ?? "ActiveMQ Exception with no message received"));
+                }
+                else
+                {
+                    _logger.LogError("Received exception message with code {Code} and message {Message}", message.Code, message.Message);
+                }
                 break;
             }
             default:

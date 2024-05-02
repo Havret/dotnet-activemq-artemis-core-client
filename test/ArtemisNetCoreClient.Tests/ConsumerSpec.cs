@@ -47,7 +47,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         }, testFixture.CancellationToken);
 
         // Act
-        var message = await consumer.ReceiveAsync(testFixture.CancellationToken);
+        var message = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
         
         // Assert
         Assert.Equal("test_payload"u8.ToArray(), message.Body.ToArray());

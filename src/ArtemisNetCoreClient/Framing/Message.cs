@@ -10,7 +10,7 @@ public class Message
     /// <summary>
     /// The message properties
     /// </summary>
-    public IDictionary<string, object> Properties { get; set; }
+    public IDictionary<string, object?> Properties { get; set; }
     
     /// <summary>
     /// The message body (payload)
