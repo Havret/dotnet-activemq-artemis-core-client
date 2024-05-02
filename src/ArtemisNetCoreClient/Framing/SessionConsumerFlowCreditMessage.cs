@@ -6,8 +6,8 @@ internal readonly struct SessionConsumerFlowCreditMessage : IOutgoingPacket
 {
     public PacketType PacketType => PacketType.SessionConsumerFlowCreditMessage;
     
-    public readonly long ConsumerId { get; init; }
-    public readonly int Credits { get; init; }
+    public required long ConsumerId { get; init; }
+    public required int Credits { get; init; }
 
     public int GetRequiredBufferSize()
     {
