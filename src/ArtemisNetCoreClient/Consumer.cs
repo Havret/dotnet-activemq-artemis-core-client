@@ -32,7 +32,7 @@ internal class Consumer : IConsumer
         await _session.CloseConsumer(ConsumerId);
     }
 
-    public async ValueTask<Message> ReceiveAsync(CancellationToken cancellationToken)
+    public async ValueTask<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
     {
         return await _reader.ReadAsync(cancellationToken);
     }

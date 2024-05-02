@@ -1,19 +1,23 @@
+using System.Diagnostics;
+
 namespace ActiveMQ.Artemis.Core.Client.Framing;
 
-internal class ActiveMQExceptionMessage : Packet
+internal readonly struct ActiveMQExceptionMessage : IIncomingPacket
 {
-    public const byte Type = 20;
-
-    public int Code { get; private set; }
-    public string? Message { get; set; }
+    public readonly int Code;
+    public readonly string? Message;
+    public readonly long CorrelationId;
     
-    public virtual void Encode(ByteBuffer buffer)
+    public ActiveMQExceptionMessage(ReadOnlySpan<byte> buffer)
     {
-    }
-
-    public virtual void Decode(ByteBuffer buffer)
-    {
-        Code = buffer.ReadInt();
-        Message = buffer.ReadNullableString();
+        var readBytes = 0;
+        readBytes += ArtemisBinaryConverter.ReadInt32(buffer, out Code);
+        readBytes += ArtemisBinaryConverter.ReadNullableString(buffer[readBytes..], out Message);
+        if (buffer.Length - readBytes >= sizeof(long))
+        {
+            readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out CorrelationId);
+        }
+        
+        Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
     }
 }

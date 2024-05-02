@@ -27,7 +27,18 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
         byteCount += sizeof(long); // Expiration
         byteCount += sizeof(long); // Timestamp
         byteCount += sizeof(byte); // Priority
-        byteCount += sizeof(byte); // Properties size nullability
+        
+        byteCount += sizeof(byte); // Properties nullability
+        if (Message.Properties?.Count > 0)
+        {
+            byteCount += sizeof(int); // Properties count
+            foreach (var (key, value) in Message.Properties)
+            {
+                byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(key);
+                byteCount += ArtemisBinaryConverter.GetNullableObjectByteCount(value);
+            }
+        }
+        
         byteCount += sizeof(bool); // RequiresResponse
         byteCount += sizeof(long); // CorrelationId
         byteCount += sizeof(int); // ProducerId
@@ -85,12 +96,25 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int EncodeProperties(Span<byte> buffer)
+    private int EncodeProperties(Span<byte> buffer)
     {
         var offset = 0;
-        
-        offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetReference(), DataConstants.Null);
-        
+
+        if (Message.Properties?.Count > 0)
+        {
+            offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetReference(), DataConstants.NotNull);
+            offset += ArtemisBinaryConverter.WriteInt32(ref buffer.GetOffset(offset), Message.Properties.Count);
+            foreach (var (key, value) in Message.Properties)
+            {
+                offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), key);
+                offset += ArtemisBinaryConverter.WriteNullableObject(ref buffer.GetOffset(offset), value);
+            }
+        }
+        else
+        {
+            offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetReference(), DataConstants.Null);
+        }
+
         return offset;
     }
 }
