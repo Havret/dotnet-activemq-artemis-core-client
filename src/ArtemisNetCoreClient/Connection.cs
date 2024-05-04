@@ -106,9 +106,9 @@ internal class Connection : IConnection, IChannel
             ClientId = null,
         };
 
+        await _lock.WaitAsync(cancellationToken);
         try
         {
-            await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             Send(createSessionMessage, 1);

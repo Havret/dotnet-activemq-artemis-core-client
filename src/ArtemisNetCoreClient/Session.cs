@@ -26,9 +26,10 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             AutoCreated = false,
             RequiresResponse = true
         };
+        
+        await _lock.WaitAsync(cancellationToken);
         try
         {
-            await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             connection.Send(createAddressMessage, ChannelId);
@@ -52,9 +53,9 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             Address = address
         };
 
+        await _lock.WaitAsync(cancellationToken);
         try
         {
-            await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             connection.Send(request, ChannelId);
@@ -125,9 +126,9 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             GroupRebalancePauseDispatch = null
         };
 
+        await _lock.WaitAsync(cancellationToken);
         try
         {
-            await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             connection.Send(request, ChannelId);
@@ -151,9 +152,9 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             QueueName = queueName
         };
         
+        await _lock.WaitAsync(cancellationToken);
         try
         {
-            await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             connection.Send(request, ChannelId);
@@ -189,9 +190,10 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             RequiresResponse = true,
             FilterString = null
         };
+        
+        await _lock.WaitAsync(cancellationToken);
         try
         {
-            await _lock.WaitAsync(cancellationToken);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             connection.Send(request, ChannelId);
@@ -230,9 +232,10 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         {
             ConsumerId = consumerId
         };
+        
+        await _lock.WaitAsync();
         try
         {
-            await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             connection.Send(request, ChannelId);
@@ -317,9 +320,10 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
     private async ValueTask StopAsync()
     {
         var sessionStop = new SessionStop();
+        
+        await _lock.WaitAsync();
         try
         {
-            await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             connection.Send(sessionStop, ChannelId);
@@ -339,9 +343,10 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
     private async ValueTask CloseAsync()
     {
         var sessionCloseMessage2 = new SessionCloseMessage();
+        
+        await _lock.WaitAsync();
         try
         {
-            await _lock.WaitAsync();
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             connection.Send(sessionCloseMessage2, ChannelId);
