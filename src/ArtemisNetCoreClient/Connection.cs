@@ -16,7 +16,7 @@ internal class Connection : IConnection, IChannel
     private readonly Endpoint _endpoint;
     private readonly Task _receiveLoopTask;
     private readonly ConcurrentDictionary<long, IChannel> _channels = new();
-    private readonly ConcurrentDictionary<long, TaskCompletionSource<IIncomingPacket>> _completionSources = new();
+    private readonly ConcurrentDictionary<long, TaskCompletionSource<object>> _completionSources = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly IdGenerator _sessionChannelIdGenerator = new(10);
     private readonly CancellationTokenSource _receiveLoopCancellationToken;
@@ -78,7 +78,7 @@ internal class Connection : IConnection, IChannel
                 var createSessionResponseMessage = new CreateSessionResponseMessage(packet.Payload);
                 if (_completionSources.TryRemove(-1, out var tcs))
                 {
-                    tcs.TrySetResult(createSessionResponseMessage);
+                    tcs.TrySetResult(new SessionInfo { ServerVersion = createSessionResponseMessage.ServerVersion });
                 }
                 break;
             default:
@@ -109,10 +109,10 @@ internal class Connection : IConnection, IChannel
         try
         {
             await _lock.WaitAsync(cancellationToken);
-            var tcs = new TaskCompletionSource<IIncomingPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             _ = _completionSources.TryAdd(-1, tcs);
             Send(createSessionMessage, 1);
-            var incomingPacket = (CreateSessionResponseMessage) await tcs.Task;
+            var incomingPacket = (SessionInfo) await tcs.Task;
 
             var session = new Session(this, _loggerFactory)
             {
