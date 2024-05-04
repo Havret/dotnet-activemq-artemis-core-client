@@ -22,7 +22,7 @@ internal class Consumer : IConsumer
         _reader = channel.Reader;
         _writer = channel.Writer;
         
-        session.SendConsumerCredits(ConsumerId, 100);
+        session.SendConsumerCredits(ConsumerId, -1);
     }
 
     public required long ConsumerId { get; init; }

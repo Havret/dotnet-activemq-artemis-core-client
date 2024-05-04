@@ -1,4 +1,4 @@
-using ActiveMQ.Artemis.Core.Client.Utils;
+using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 
 namespace ActiveMQ.Artemis.Core.Client.Framing;
 

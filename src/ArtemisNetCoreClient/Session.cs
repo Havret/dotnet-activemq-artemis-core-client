@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using ActiveMQ.Artemis.Core.Client.Exceptions;
 using ActiveMQ.Artemis.Core.Client.Framing;
+using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 using Microsoft.Extensions.Logging;
 
 namespace ActiveMQ.Artemis.Core.Client;
@@ -13,6 +14,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
     private readonly ConcurrentDictionary<long, Consumer> _consumers = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly ILogger<Session> _logger = loggerFactory.CreateLogger<Session>();
+    private readonly IdGenerator _correlationIdGenerator = new(0);
 
     public required long ChannelId { get; init; }
     public required int ServerVersion { get; init; }
@@ -284,7 +286,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             Message = message,
             ProducerId = producerId,
             RequiresResponse = true,
-            CorrelationId = -4
+            CorrelationId = _correlationIdGenerator.GenerateId(),
         };
         try
         {

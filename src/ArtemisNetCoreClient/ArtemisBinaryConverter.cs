@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using ActiveMQ.Artemis.Core.Client.Utils;
+using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 
 namespace ActiveMQ.Artemis.Core.Client;
 

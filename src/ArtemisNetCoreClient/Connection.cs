@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ActiveMQ.Artemis.Core.Client.Framing;
-using ActiveMQ.Artemis.Core.Client.Utils;
+using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 using Microsoft.Extensions.Logging;
 
 namespace ActiveMQ.Artemis.Core.Client;

@@ -1,4 +1,4 @@
-namespace ActiveMQ.Artemis.Core.Client.Utils;
+namespace ActiveMQ.Artemis.Core.Client.InternalUtilities;
 
 internal class IdGenerator(long startId)
 {
