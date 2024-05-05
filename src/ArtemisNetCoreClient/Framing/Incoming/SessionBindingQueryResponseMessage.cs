@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 
 namespace ActiveMQ.Artemis.Core.Client.Framing.Incoming;
 
@@ -22,27 +21,27 @@ internal readonly struct SessionBindingQueryResponseMessage : IIncomingPacket
     
     public SessionBindingQueryResponseMessage(ReadOnlySpan<byte> buffer)
     {
-        var offset = 0;
-        offset += ArtemisBinaryConverter.ReadBool(buffer, out Exists);
-        offset += ArtemisBinaryConverter.ReadInt32(buffer[offset..], out var numQueues);
+        var readBytes = 0;
+        readBytes += ArtemisBinaryConverter.ReadBool(buffer, out Exists);
+        readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out var numQueues);
         QueueNames = new string[numQueues];
         for (var i = 0; i < numQueues; i++)
         {
-            offset += ArtemisBinaryConverter.ReadSimpleString(buffer[offset..], out QueueNames[i]);
+            readBytes += ArtemisBinaryConverter.ReadSimpleString(buffer[readBytes..], out QueueNames[i]);
         }
-        offset += ArtemisBinaryConverter.ReadBool(buffer[offset..], out AutoCreateQueues);
-        offset += ArtemisBinaryConverter.ReadBool(buffer[offset..], out AutoCreateAddresses);
-        offset += ArtemisBinaryConverter.ReadBool(buffer[offset..], out DefaultPurgeOnNoConsumers);
-        offset += ArtemisBinaryConverter.ReadInt32(buffer[offset..], out DefaultMaxConsumers);
-        offset += ArtemisBinaryConverter.ReadNullableBool(buffer[offset..], out DefaultExclusive);
-        offset += ArtemisBinaryConverter.ReadNullableBool(buffer[offset..], out DefaultLastValue);
-        offset += ArtemisBinaryConverter.ReadNullableSimpleString(buffer[offset..], out DefaultLastValueKey);
-        offset += ArtemisBinaryConverter.ReadNullableBool(buffer[offset..], out DefaultNonDestructive);
-        offset += ArtemisBinaryConverter.ReadNullableInt32(buffer[offset..], out DefaultConsumersBeforeDispatch);
-        offset += ArtemisBinaryConverter.ReadNullableInt64(buffer[offset..], out DefaultDelayBeforeDispatch);
-        offset += ArtemisBinaryConverter.ReadBool(buffer[offset..], out SupportsMulticast);
-        offset += ArtemisBinaryConverter.ReadBool(buffer[offset..], out SupportsAnycast);
-        
-        Debug.Assert(offset == buffer.Length, "offset == buffer.Length");
+        readBytes += ArtemisBinaryConverter.ReadBool(buffer[readBytes..], out AutoCreateQueues);
+        readBytes += ArtemisBinaryConverter.ReadBool(buffer[readBytes..], out AutoCreateAddresses);
+        readBytes += ArtemisBinaryConverter.ReadBool(buffer[readBytes..], out DefaultPurgeOnNoConsumers);
+        readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out DefaultMaxConsumers);
+        readBytes += ArtemisBinaryConverter.ReadNullableBool(buffer[readBytes..], out DefaultExclusive);
+        readBytes += ArtemisBinaryConverter.ReadNullableBool(buffer[readBytes..], out DefaultLastValue);
+        readBytes += ArtemisBinaryConverter.ReadNullableSimpleString(buffer[readBytes..], out DefaultLastValueKey);
+        readBytes += ArtemisBinaryConverter.ReadNullableBool(buffer[readBytes..], out DefaultNonDestructive);
+        readBytes += ArtemisBinaryConverter.ReadNullableInt32(buffer[readBytes..], out DefaultConsumersBeforeDispatch);
+        readBytes += ArtemisBinaryConverter.ReadNullableInt64(buffer[readBytes..], out DefaultDelayBeforeDispatch);
+        readBytes += ArtemisBinaryConverter.ReadBool(buffer[readBytes..], out SupportsMulticast);
+        readBytes += ArtemisBinaryConverter.ReadBool(buffer[readBytes..], out SupportsAnycast);
+     
+        Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
     }
 }

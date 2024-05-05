@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 
 namespace ActiveMQ.Artemis.Core.Client.Framing.Incoming;
 
@@ -13,20 +12,20 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
 
     public SessionReceiveMessage(ReadOnlySpan<byte> buffer)
     {
-        var offset = 0;
-        offset += DecodeMessageBody(buffer, out var body);
-        offset += DecodeHeaders(buffer[offset..], out var headers);
-        offset += DecodeProperties(buffer[offset..], out var properties);
+        var readBytes = 0;
+        readBytes += DecodeMessageBody(buffer, out var body);
+        readBytes += DecodeHeaders(buffer[readBytes..], out var headers);
+        readBytes += DecodeProperties(buffer[readBytes..], out var properties);
         Message = new Message
         {
             Body = body,
             Headers = headers,
             Properties = properties
         };
-        offset += ArtemisBinaryConverter.ReadInt64(buffer[offset..], out ConsumerId);
-        offset += ArtemisBinaryConverter.ReadInt32(buffer[offset..], out DeliveryCount);
+        readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out ConsumerId);
+        readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out DeliveryCount);
         
-        Debug.Assert(offset == buffer.Length, $"Expected to read {buffer.Length} bytes but got {offset}");
+        Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
