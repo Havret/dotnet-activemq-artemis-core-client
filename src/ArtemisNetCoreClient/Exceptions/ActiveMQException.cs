@@ -1,9 +1,9 @@
 namespace ActiveMQ.Artemis.Core.Client.Exceptions;
 
-public class ActiveMQException : Exception
+public class ActiveMQException(ActiveMQExceptionType type, string message) : Exception(message)
 {
-    public ActiveMQException(int code, string message) : base(message)
-    {
-        // TODO: Handle Exception Code as Exception Type
-    }
+    public ActiveMQExceptionType Type { get; } = type;
 }
+
+public class ActiveMQNonExistentQueueException() : ActiveMQException(ActiveMQExceptionType.QueueDoesNotExist, string.Empty)
+;

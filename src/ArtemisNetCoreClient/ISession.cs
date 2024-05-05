@@ -25,6 +25,9 @@ public interface ISession : IAsyncDisposable
     /// <summary>
     /// Delete a queue.
     /// </summary>
+    /// <exception cref="ActiveMQ.Artemis.Core.Client.Exceptions.ActiveMQNonExistentQueueException">
+    /// Thrown when the specified queue does not exist.
+    /// </exception>    
     Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken);
     
     /// <summary>

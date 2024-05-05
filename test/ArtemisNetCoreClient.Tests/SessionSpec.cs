@@ -1,3 +1,4 @@
+using ActiveMQ.Artemis.Core.Client.Exceptions;
 using ActiveMQ.Artemis.Core.Client.Framing;
 using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
@@ -166,5 +167,18 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         // Assert
         var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         Assert.Null(queueInfo);
+    }
+    
+    [Fact]
+    public async Task Should_not_delete_queue_when_it_does_not_exist()
+    {
+        // Arrange
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
+
+        // Act & Assert
+        var queueName = Guid.NewGuid().ToString();
+        await Assert.ThrowsAsync<ActiveMQNonExistentQueueException>(() => session.DeleteQueueAsync(queueName, testFixture.CancellationToken));
     }
 }
