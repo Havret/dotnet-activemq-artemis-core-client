@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
+using ActiveMQ.Artemis.Core.Client.Framing;
 using Microsoft.Extensions.Logging;
 
 namespace ActiveMQ.Artemis.Core.Client;
@@ -98,13 +99,13 @@ internal class Transport : IAsyncDisposable
 
     private const int HeaderSize = sizeof(int) + sizeof(byte) + sizeof(long);
 
-    private async ValueTask<Header> ReadHeaderAsync(CancellationToken cancellationToken)
+    private async ValueTask<PacketHeader> ReadHeaderAsync(CancellationToken cancellationToken)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(Header.HeaderSize);
+        var buffer = ArrayPool<byte>.Shared.Rent(PacketHeader.HeaderSize);
         try
         {
             await _reader.ReadExactlyAsync(buffer, 0, HeaderSize, cancellationToken);
-            return new Header(buffer);
+            return new PacketHeader(buffer);
         }
         finally
         {

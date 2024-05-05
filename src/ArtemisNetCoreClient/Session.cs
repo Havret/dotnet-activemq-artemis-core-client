@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using ActiveMQ.Artemis.Core.Client.Exceptions;
 using ActiveMQ.Artemis.Core.Client.Framing;
+using ActiveMQ.Artemis.Core.Client.Framing.Incoming;
+using ActiveMQ.Artemis.Core.Client.Framing.Outgoing;
 using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 using Microsoft.Extensions.Logging;
 

@@ -179,6 +179,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
 
         // Act & Assert
         var queueName = Guid.NewGuid().ToString();
-        await Assert.ThrowsAsync<ActiveMQNonExistentQueueException>(() => session.DeleteQueueAsync(queueName, testFixture.CancellationToken));
+        var exception = await Assert.ThrowsAsync<ActiveMQNonExistentQueueException>(() => session.DeleteQueueAsync(queueName, testFixture.CancellationToken));
+        Assert.Equal(ActiveMQExceptionType.QueueDoesNotExist, exception.Type);
     }
 }
