@@ -457,7 +457,14 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
                 var message = new ActiveMQExceptionMessage(packet.Payload);
                 if (_completionSources.TryRemove(message.CorrelationId, out var tcs))
                 {
-                    tcs.TrySetException(new ActiveMQException(message.Code, message.Message ?? "ActiveMQ Exception with no message received"));
+                    var exceptionType = (ActiveMQExceptionType) message.Code;
+                    var activeMQException = exceptionType switch
+                    {
+                        ActiveMQExceptionType.QueueDoesNotExist => new ActiveMQNonExistentQueueException(),
+                        _ => new ActiveMQException(exceptionType, message.Message ?? "ActiveMQ Exception with no message received")
+                    };
+
+                    tcs.TrySetException(activeMQException);
                 }
                 else
                 {

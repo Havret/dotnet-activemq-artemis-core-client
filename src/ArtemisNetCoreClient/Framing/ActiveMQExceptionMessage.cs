@@ -17,6 +17,10 @@ internal readonly struct ActiveMQExceptionMessage : IIncomingPacket
         {
             readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out CorrelationId);
         }
+        else
+        {
+            CorrelationId = -1;
+        }
         
         Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
     }
