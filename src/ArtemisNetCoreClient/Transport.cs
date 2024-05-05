@@ -96,15 +96,13 @@ internal class Transport : IAsyncDisposable
             throw;
         }
     }
-
-    private const int HeaderSize = sizeof(int) + sizeof(byte) + sizeof(long);
-
+    
     private async ValueTask<PacketHeader> ReadHeaderAsync(CancellationToken cancellationToken)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(PacketHeader.HeaderSize);
         try
         {
-            await _reader.ReadExactlyAsync(buffer, 0, HeaderSize, cancellationToken);
+            await _reader.ReadExactlyAsync(buffer, 0, PacketHeader.HeaderSize, cancellationToken);
             return new PacketHeader(buffer);
         }
         finally
