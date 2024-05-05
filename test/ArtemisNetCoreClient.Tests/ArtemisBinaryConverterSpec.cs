@@ -1,3 +1,4 @@
+using ActiveMQ.Artemis.Core.Client.Framing;
 using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 using Xunit;
 

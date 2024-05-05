@@ -1,5 +1,4 @@
 using System.Threading.Channels;
-using ActiveMQ.Artemis.Core.Client.Framing;
 
 namespace ActiveMQ.Artemis.Core.Client;
 

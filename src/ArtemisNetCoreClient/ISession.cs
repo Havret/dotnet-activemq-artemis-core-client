@@ -1,5 +1,3 @@
-using ActiveMQ.Artemis.Core.Client.Framing;
-
 namespace ActiveMQ.Artemis.Core.Client;
 
 /// <summary>
