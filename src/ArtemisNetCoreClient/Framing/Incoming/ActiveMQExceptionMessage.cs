@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 
 namespace ActiveMQ.Artemis.Core.Client.Framing.Incoming;
 

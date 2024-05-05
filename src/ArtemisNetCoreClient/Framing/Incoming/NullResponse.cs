@@ -1,4 +1,4 @@
-using ActiveMQ.Artemis.Core.Client.InternalUtilities;
+using System.Diagnostics;
 
 namespace ActiveMQ.Artemis.Core.Client.Framing.Incoming;
 
@@ -8,13 +8,16 @@ internal readonly struct NullResponse : IIncomingPacket
     
     public NullResponse(ReadOnlySpan<byte> buffer)
     {
+        var readBytes = 0;
         if (buffer.IsEmpty)
         {
             CorrelationId = -1;
         }
         else
         {
-            _ = ArtemisBinaryConverter.ReadInt64(buffer, out CorrelationId);
+            readBytes += ArtemisBinaryConverter.ReadInt64(buffer, out CorrelationId);
         }
+
+        Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
     }
 }
