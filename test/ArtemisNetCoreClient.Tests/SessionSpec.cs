@@ -1,4 +1,5 @@
 using ActiveMQ.Artemis.Core.Client.Framing;
+using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
 using Xunit;
 using Xunit.Abstractions;
@@ -76,7 +77,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         Assert.Null(addressInfo);
     }
 
-    [Fact(Skip = "Temporarily disabled")]
+    [Fact]
     public async Task should_not_return_queue_info_when_queue_does_not_exist()
     {
         // Arrange
@@ -138,5 +139,32 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         }, testFixture.CancellationToken);
 
         await producer.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Should_delete_queue()
+    {
+        // Arrange
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
+
+        var addressName = Guid.NewGuid().ToString();
+        await session.CreateAddressAsync(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
+        
+        var queueName = Guid.NewGuid().ToString();
+        await session.CreateQueueAsync(new QueueConfiguration
+        {
+            Address = addressName,
+            Name = queueName,
+            RoutingType = RoutingType.Multicast
+        }, testFixture.CancellationToken);
+        
+        // Act
+        await session.DeleteQueueAsync(queueName, testFixture.CancellationToken);
+        
+        // Assert
+        var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.Null(queueInfo);
     }
 }

@@ -180,6 +180,32 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             _lock.Release();
         }
     }
+    
+    public async Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken)
+    {
+        var request = new SessionDeleteQueueMessage
+        {
+            QueueName = queueName
+        };
+        
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(request, ChannelId);
+            await tcs.Task;
+        }
+        catch (Exception)
+        {
+            _completionSources.TryRemove(-1, out _);
+            throw;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
 
     public async Task<IConsumer> CreateConsumerAsync(ConsumerConfiguration consumerConfiguration, CancellationToken cancellationToken)
     {
@@ -403,13 +429,15 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
                 var response = new SessionQueueQueryResponseMessage(packet.Payload);
                 if (_completionSources.TryRemove(-1, out var tcs))
                 {
-                    var queueInfo = new QueueInfo
-                    {
-                        AddressName = response.Address!,
-                        QueueName = response.Name!,
-                        RoutingType = response.RoutingType,
-                    };
-                    tcs.TrySetResult(queueInfo);
+                    var result = response.Exists
+                        ? new QueueInfo
+                        {
+                            AddressName = response.Address!,
+                            QueueName = response.Name!,
+                            RoutingType = response.RoutingType,
+                        }
+                        : _emptyResult;
+                    tcs.TrySetResult(result);
                 }
 
                 break;

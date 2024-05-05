@@ -21,6 +21,11 @@ public interface ISession : IAsyncDisposable
     /// Create a queue with the given configuration if it does not already exist.
     /// </summary>
     Task CreateQueueAsync(QueueConfiguration queueConfiguration, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Delete a queue.
+    /// </summary>
+    Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken);
     
     /// <summary>
     /// Get information about a queue.
