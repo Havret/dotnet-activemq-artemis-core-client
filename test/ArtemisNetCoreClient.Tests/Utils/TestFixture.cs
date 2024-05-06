@@ -1,4 +1,3 @@
-using ActiveMQ.Artemis.Core.Client.Framing;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils.Logging;
 using Xunit.Abstractions;
 
@@ -9,6 +8,7 @@ public class TestFixture : IAsyncDisposable
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly CancellationTokenSource _cts;
     private IConnection? _testConnection;
+    private readonly List<string> _queues = new();
 
     public static async Task<TestFixture> CreateAsync(ITestOutputHelper testOutputHelper)
     {
@@ -48,6 +48,7 @@ public class TestFixture : IAsyncDisposable
             Name = queueName,
             RoutingType = routingType
         }, CancellationToken);
+        _queues.Add(queueName);
         return queueName;
     }
 
@@ -101,6 +102,19 @@ public class TestFixture : IAsyncDisposable
     
     public async ValueTask DisposeAsync()
     {
+        foreach (var queue in _queues)
+        {
+            try
+            {
+                var connection = await GetTestConnectionAsync();
+                await using var session = await connection.CreateSessionAsync(CancellationToken);
+                await session.DeleteQueueAsync(queue, CancellationToken);
+            }
+            catch (Exception e)
+            {
+                _testOutputHelper.WriteLine($"Failed to delete queue {queue}: {e.Message}");
+            }
+        }
         if (_testConnection != null)
         {
             await _testConnection.DisposeAsync();
