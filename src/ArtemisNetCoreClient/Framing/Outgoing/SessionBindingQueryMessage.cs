@@ -8,7 +8,7 @@ internal readonly struct SessionBindingQueryMessage : IOutgoingPacket
     public required string Address { get; init; }
     public int GetRequiredBufferSize()
     {
-        int byteCount = 0;
+        var byteCount = 0;
         byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(Address);
         return byteCount;
     }
