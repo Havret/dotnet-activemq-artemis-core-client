@@ -10,12 +10,13 @@ internal enum PacketType : sbyte
     SessionQueueQueryMessage = 45,
     SessionBindingQueryMessage = 49,
     SessionStart = 67,
-    SessionConsumerFlowCreditMessage = 70,
-    SessionSendMessage = 71,
     SessionStop = 68,
     SessionCloseMessage = 69,
-    SessionReceiveMessage = 75,
+    SessionConsumerFlowCreditMessage = 70,
+    SessionSendMessage = 71,
     SessionConsumerCloseMessage = 74,
+    SessionReceiveMessage = 75,
+    SessionIndividualAcknowledgeMessage = 81,
     CreateAddressMessage = -11,
     CreateQueueMessage = -12,
     SessionQueueQueryResponseMessage = -14,
@@ -23,4 +24,5 @@ internal enum PacketType : sbyte
     CreateProducerMessage = -20,
     RemoveProducerMessage = -21,
     SessionBindingQueryResponseMessage = -22,
+
 }
