@@ -16,14 +16,16 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
         readBytes += DecodeMessageBody(buffer, out var body);
         readBytes += DecodeHeaders(buffer[readBytes..], out var headers);
         readBytes += DecodeProperties(buffer[readBytes..], out var properties);
+        readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out ConsumerId);
+        readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out DeliveryCount);
+        
         Message = new ReceivedMessage
         {
             Body = body,
             Headers = headers,
-            Properties = properties
+            Properties = properties,
+            MessageDelivery = new MessageDelivery(ConsumerId, headers.MessageId)
         };
-        readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out ConsumerId);
-        readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out DeliveryCount);
         
         Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
     }

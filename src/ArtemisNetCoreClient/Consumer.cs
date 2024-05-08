@@ -36,6 +36,12 @@ internal class Consumer : IConsumer
         return await _reader.ReadAsync(cancellationToken);
     }
 
+
+    public ValueTask IndividualAcknowledgeAsync(in MessageDelivery messageDelivery, CancellationToken cancellationToken)
+    {
+        return _session.IndividualAcknowledgeAsync(messageDelivery, cancellationToken);
+    }
+
     internal void OnMessage(ReceivedMessage message)
     {
         // TODO: What if try write is false?
