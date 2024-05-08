@@ -29,7 +29,7 @@ public class MessageFlowSpec(ITestOutputHelper testOutputHelper)
                 QueueName = queueName,
             }, testFixture.CancellationToken);
 
-            var messages = new List<Message>();
+            var messages = new List<ReceivedMessage>();
             for (int i = 0; i < numberOfMessages; i++)
             {
                 messages.Add(await consumer.ReceiveMessageAsync(testFixture.CancellationToken));
