@@ -1,5 +1,9 @@
 namespace ActiveMQ.Artemis.Core.Client;
 
+/// <summary>
+/// <see cref="Message"/> is used to send data to ActiveMQ Artemis addresses. When receiving messages,
+/// the message is returned as a <see cref="ReceivedMessage"/>.
+/// </summary>
 public class Message
 {
     /// <summary>

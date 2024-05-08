@@ -6,7 +6,7 @@ namespace ActiveMQ.Artemis.Core.Client.Framing.Incoming;
 
 internal readonly struct SessionReceiveMessage : IIncomingPacket
 {
-    public readonly Message Message;
+    public readonly ReceivedMessage Message;
     public readonly long ConsumerId;
     public readonly int DeliveryCount;
 
@@ -16,7 +16,7 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
         readBytes += DecodeMessageBody(buffer, out var body);
         readBytes += DecodeHeaders(buffer[readBytes..], out var headers);
         readBytes += DecodeProperties(buffer[readBytes..], out var properties);
-        Message = new Message
+        Message = new ReceivedMessage
         {
             Body = body,
             Headers = headers,
@@ -43,7 +43,7 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int DecodeHeaders(ReadOnlySpan<byte> buffer, out Headers value)
+    private static int DecodeHeaders(ReadOnlySpan<byte> buffer, out ReadOnlyHeaders value)
     {
         var offset = 0;
         offset += ArtemisBinaryConverter.ReadInt64(buffer, out var messageId);
@@ -55,10 +55,10 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
         offset += ArtemisBinaryConverter.ReadInt64(buffer[offset..], out var timestamp);
         offset += ArtemisBinaryConverter.ReadByte(buffer[offset..], out var priority);
 
-        value = new Headers
+        value = new ReadOnlyHeaders
         {
             MessageId = messageId,
-            Address = address,
+            Address = address ?? "",
             UserId = userId,
             Type = type,
             Durable = durable,
@@ -71,19 +71,21 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int DecodeProperties(ReadOnlySpan<byte> buffer, out IDictionary<string, object?> value)
+    private static int DecodeProperties(ReadOnlySpan<byte> buffer, out IReadOnlyDictionary<string, object?> value)
     {
         var readBytes = ArtemisBinaryConverter.ReadByte(buffer, out var isNotNull);
         if (isNotNull == DataConstants.NotNull)
         {
             readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out var count);
-            value = new Dictionary<string, object?>(count);
+            var properties = new Dictionary<string, object?>(count);
             for (var i = 0; i < count; i++)
             {
                 readBytes += ArtemisBinaryConverter.ReadSimpleString(buffer[readBytes..], out var key);
                 readBytes += ArtemisBinaryConverter.ReadNullableObject(buffer[readBytes..], out var obj);
-                value.Add(key, obj);
+                properties.Add(key, obj);
             }
+
+            value = properties;
             
             return readBytes;
         }

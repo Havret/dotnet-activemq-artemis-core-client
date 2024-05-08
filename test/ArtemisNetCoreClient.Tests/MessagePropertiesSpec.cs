@@ -1,4 +1,3 @@
-using ActiveMQ.Artemis.Core.Client.Framing;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
 using Xunit;
 using Xunit.Abstractions;
@@ -41,7 +40,7 @@ public class MessagePropertiesSpec(ITestOutputHelper testOutputHelper)
             Body = "test_payload"u8.ToArray(),
             Headers = new Headers
             {
-                Address = addressName
+                Address = addressName,
             },
             Properties = new Dictionary<string, object?>
             {
