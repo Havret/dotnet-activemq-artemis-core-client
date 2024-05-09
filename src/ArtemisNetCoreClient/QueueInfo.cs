@@ -5,4 +5,5 @@ public class QueueInfo
     public required string QueueName { get; init; }
     public required string AddressName { get; init; }
     public required RoutingType RoutingType { get; init; }
+    public long MessageCount { get; init; }
 }

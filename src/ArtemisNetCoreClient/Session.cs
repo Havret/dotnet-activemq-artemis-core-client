@@ -339,6 +339,28 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         };
         connection.Send(request, ChannelId);
     }
+    
+    internal async ValueTask IndividualAcknowledgeAsync(MessageDelivery messageDelivery, CancellationToken cancellationToken)
+    {
+        var request = new SessionIndividualAcknowledgeMessage
+        {
+            ConsumerId = messageDelivery.ConsumerId,
+            MessageId = messageDelivery.MessageId,
+            RequiresResponse = true,
+        };
+        try
+        {
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(request, ChannelId);
+            await tcs.Task.WaitAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            _completionSources.TryRemove(-1, out _);
+            throw;
+        }
+    }
 
     public async ValueTask DisposeAsync()
     {
@@ -437,6 +459,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
                             AddressName = response.Address!,
                             QueueName = response.Name!,
                             RoutingType = response.RoutingType,
+                            MessageCount = response.MessageCount
                         }
                         : _emptyResult;
                     tcs.TrySetResult(result);
