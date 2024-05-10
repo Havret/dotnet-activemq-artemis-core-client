@@ -107,4 +107,79 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         Assert.NotNull(queueInfo);
         Assert.Equal(0, queueInfo.MessageCount);
     }
+
+    [Fact]
+    public async Task should_acknowledge_messages()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        
+        var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+        var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+        
+        // Create a session that with AutoCommitAcks set to true
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
+        
+        await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
+        {
+            Address = addressName
+        }, testFixture.CancellationToken);
+        
+        await using var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
+        {
+            QueueName = queueName,
+        }, testFixture.CancellationToken);
+        
+        await producer.SendMessageAsync(new Message
+        {
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
+            Body = "msg_1"u8.ToArray()
+        }, testFixture.CancellationToken);
+        
+        await producer.SendMessageAsync(new Message
+        {
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
+            Body = "msg_2"u8.ToArray()
+        }, testFixture.CancellationToken);
+        
+        await producer.SendMessageAsync(new Message
+        {
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
+            Body = "msg_3"u8.ToArray()
+        }, testFixture.CancellationToken);
+
+        // Receive the messages
+        _ = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+        var receivedMessage2 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+        var receivedMessage3 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+        
+        // Verify that there is two outstanding message on the queue
+        var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(3, queueInfo.MessageCount);
+
+        // Acknowledge the second message
+        await consumer.AcknowledgeAsync(receivedMessage2.MessageDelivery, testFixture.CancellationToken);
+        
+        // Verify that one outstanding message remains on the queue (two messages were acknowledged in one go)
+        queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(1, queueInfo.MessageCount);
+        
+        // Acknowledge the third message
+        await consumer.AcknowledgeAsync(receivedMessage3.MessageDelivery, testFixture.CancellationToken);
+        
+        queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(0, queueInfo.MessageCount);
+    }
 }
