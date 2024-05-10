@@ -36,6 +36,10 @@ internal class Consumer : IConsumer
         return await _reader.ReadAsync(cancellationToken);
     }
 
+    public ValueTask AcknowledgeAsync(MessageDelivery messageDelivery, CancellationToken cancellationToken)
+    {
+        return _session.AcknowledgeAsync(messageDelivery, cancellationToken);
+    }
 
     public ValueTask IndividualAcknowledgeAsync(in MessageDelivery messageDelivery, CancellationToken cancellationToken)
     {
