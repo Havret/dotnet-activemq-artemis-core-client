@@ -136,7 +136,7 @@ internal class Connection : IConnection, IChannel
     
     internal void Send<T>(in T packet, long channelId) where T : struct, IOutgoingPacket
     {
-        // This is a workaround for the lack readonly members on interfaces
+        // This is a workaround for the lack of readonly members on interfaces
         // https://github.com/dotnet/csharplang/issues/3055#issuecomment-1175881121
         ref var packetRef = ref Unsafe.AsRef(in packet);
         
