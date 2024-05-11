@@ -162,12 +162,12 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         var receivedMessage2 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
         var receivedMessage3 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
         
-        // Verify that there is two outstanding message on the queue
+        // Verify that there are three outstanding message on the queue
         var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         Assert.NotNull(queueInfo);
         Assert.Equal(3, queueInfo.MessageCount);
 
-        // Acknowledge the second message
+        // Acknowledge messages up to the second message (inclusive)
         await consumer.AcknowledgeAsync(receivedMessage2.MessageDelivery, testFixture.CancellationToken);
         
         // Verify that one outstanding message remains on the queue (two messages were acknowledged in one go)
@@ -175,9 +175,10 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         Assert.NotNull(queueInfo);
         Assert.Equal(1, queueInfo.MessageCount);
         
-        // Acknowledge the third message
+        // Acknowledge messages up to the third (the remaining) message (inclusive)
         await consumer.AcknowledgeAsync(receivedMessage3.MessageDelivery, testFixture.CancellationToken);
         
+        // Verify that there are no outstanding messages on the queue
         queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         Assert.NotNull(queueInfo);
         Assert.Equal(0, queueInfo.MessageCount);
