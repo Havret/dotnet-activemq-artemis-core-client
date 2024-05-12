@@ -234,7 +234,6 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
                 {
                     ConsumerId = request.Id
                 };
-                // TODO: We should remove consumer from this dictionary on dispose
                 _consumers.TryAdd(request.Id, consumer);
                 
                 return consumer;
