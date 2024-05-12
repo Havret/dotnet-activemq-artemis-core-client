@@ -88,9 +88,24 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
         offset += ArtemisBinaryConverter.WriteNullableGuid(ref buffer.GetOffset(offset), Message.Headers.UserId);
         offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Headers.Type);
         offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), Message.Headers.Durable);
-        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetOffset(offset), Message.Headers.Expiration);
+        
+        offset += EncodeExpiration(buffer[offset..]);
+        
         offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetOffset(offset), Message.Headers.Timestamp);
         offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Headers.Priority);
+        
+        return offset;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int EncodeExpiration(Span<byte> buffer)
+    {
+        var offset = 0;
+
+        var expiration = Message.Headers.Expiration != DateTimeOffset.MinValue
+            ? Message.Headers.Expiration.ToUnixTimeMilliseconds()
+            : 0;
+        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetReference(), expiration);
         
         return offset;
     }
