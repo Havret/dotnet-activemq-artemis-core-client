@@ -35,6 +35,14 @@ internal class Connection : IConnection, IChannel
         _receiveLoopTask = Task.Run(ReceiveLoop);
     }
     
+    internal void SendHandshake()
+    {
+        var handshake = "ARTEMIS"u8;
+        var buffer = ArrayPool<byte>.Shared.Rent(handshake.Length);
+        handshake.CopyTo(buffer);
+        _transport.Send(buffer.AsMemory(0, handshake.Length));
+    }    
+
     private async Task ReceiveLoop()
     {
         while (_receiveLoopCancellationToken.IsCancellationRequested == false)
