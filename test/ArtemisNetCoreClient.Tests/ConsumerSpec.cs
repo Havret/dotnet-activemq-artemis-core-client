@@ -52,7 +52,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
         var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
         
-        // Create a session that with AutoCommitAcks set to true
+        // Create a session with AutoCommitAcks enabled (default)
         await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
         
         await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
@@ -87,7 +87,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         var receivedMessage1 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
         var receivedMessage2 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
         
-        // Verify that there is two outstanding message on the queue
+        // Confirm message count before acknowledgment
         var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         Assert.NotNull(queueInfo);
         Assert.Equal(2, queueInfo.MessageCount);
@@ -103,6 +103,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         // Acknowledge the second message
         await consumer.IndividualAcknowledgeAsync(receivedMessage2.MessageDelivery, testFixture.CancellationToken);
         
+        // Verify that there are no outstanding messages on the queue
         queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         Assert.NotNull(queueInfo);
         Assert.Equal(0, queueInfo.MessageCount);
@@ -117,7 +118,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
         var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
         
-        // Create a session that with AutoCommitAcks set to true
+        // Create a session with AutoCommitAcks enabled (default)
         await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
         
         await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
@@ -162,7 +163,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         var receivedMessage2 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
         var receivedMessage3 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
         
-        // Verify that there are three outstanding message on the queue
+        // Verify that there are three outstanding messages on the queue
         var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         Assert.NotNull(queueInfo);
         Assert.Equal(3, queueInfo.MessageCount);
@@ -175,10 +176,163 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
         Assert.NotNull(queueInfo);
         Assert.Equal(1, queueInfo.MessageCount);
         
-        // Acknowledge messages up to the third (the remaining) message (inclusive)
+        // Acknowledge messages up to the third (the last remaining) message (inclusive)
         await consumer.AcknowledgeAsync(receivedMessage3.MessageDelivery, testFixture.CancellationToken);
         
         // Verify that there are no outstanding messages on the queue
+        queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(0, queueInfo.MessageCount);
+    }
+    
+    [Fact]
+    public async Task should_acknowledge_individual_messages_only_post_session_commit_when_AutoCommitAcks_is_disabled()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        
+        var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+        var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+        
+        // Create a session with AutoCommitAcks disabled
+        await using var session = await connection.CreateSessionAsync(new SessionConfiguration
+        {
+            AutoCommitAcks = false
+        }, testFixture.CancellationToken);
+        
+        await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
+        {
+            Address = addressName
+        }, testFixture.CancellationToken);
+        
+        await using var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
+        {
+            QueueName = queueName,
+        }, testFixture.CancellationToken);
+        
+        await producer.SendMessageAsync(new Message
+        {
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
+            Body = "msg_1"u8.ToArray()
+        }, testFixture.CancellationToken);
+        
+        await producer.SendMessageAsync(new Message
+        {
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
+            Body = "msg_2"u8.ToArray()
+        }, testFixture.CancellationToken);
+
+        // Receive the messages but do not commit the session yet
+        var receivedMessage1 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+        var receivedMessage2 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+        
+        // Confirm message count before acknowledgment
+        var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(2, queueInfo.MessageCount);
+
+        // Acknowledge messages individually
+        await consumer.IndividualAcknowledgeAsync(receivedMessage1.MessageDelivery, testFixture.CancellationToken);
+        await consumer.IndividualAcknowledgeAsync(receivedMessage2.MessageDelivery, testFixture.CancellationToken);
+        
+        // Verify that the messages are still present on the queue as the session is not committed
+        queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(2, queueInfo.MessageCount);
+        
+        // Commit the session and verify message clearance
+        await session.CommitAsync(testFixture.CancellationToken);
+        queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(0, queueInfo.MessageCount);
+    }
+    
+    [Fact]
+    public async Task should_acknowledge_all_messages_only_post_session_commit_when_AutoCommitAcks_is_disabled()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        
+        var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+        var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+        
+        // Create a session with AutoCommitAcks disabled
+        await using var session = await connection.CreateSessionAsync(new SessionConfiguration
+        {
+            AutoCommitAcks = false
+        }, testFixture.CancellationToken);
+        
+        await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
+        {
+            Address = addressName
+        }, testFixture.CancellationToken);
+        
+        await using var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
+        {
+            QueueName = queueName,
+        }, testFixture.CancellationToken);
+        
+        await producer.SendMessageAsync(new Message
+        {
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
+            Body = "msg_1"u8.ToArray()
+        }, testFixture.CancellationToken);
+        
+        await producer.SendMessageAsync(new Message
+        {
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
+            Body = "msg_2"u8.ToArray()
+        }, testFixture.CancellationToken);
+        
+        await producer.SendMessageAsync(new Message
+        {
+            Headers = new Headers
+            {
+                Address = addressName,
+            },
+            Body = "msg_3"u8.ToArray()
+        }, testFixture.CancellationToken);
+
+        // Receive the messages but do not commit the session yet
+        _ = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+        var receivedMessage2 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+        var receivedMessage3 = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+        
+        // Confirm message count before acknowledgment
+        var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(3, queueInfo.MessageCount);
+
+        // Acknowledge messages up to the second message (inclusive)
+        await consumer.AcknowledgeAsync(receivedMessage2.MessageDelivery, testFixture.CancellationToken);
+        
+        // Verify that the messages are still present on the queue as the session is not committed
+        queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(3, queueInfo.MessageCount);
+        
+        // Acknowledge messages up to the third message (inclusive)
+        await consumer.AcknowledgeAsync(receivedMessage3.MessageDelivery, testFixture.CancellationToken);
+        
+        // Verify that the messages are still present on the queue as the session is not committed
+        queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+        Assert.NotNull(queueInfo);
+        Assert.Equal(3, queueInfo.MessageCount);
+        
+        // Commit the session and verify message clearance
+        await session.CommitAsync(testFixture.CancellationToken);
         queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
         Assert.NotNull(queueInfo);
         Assert.Equal(0, queueInfo.MessageCount);

@@ -42,4 +42,9 @@ public interface ISession : IAsyncDisposable
     /// Create a producer with the given configuration.
     /// </summary>
     ValueTask<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Commit the current transaction (any pending sends and acks).
+    /// </summary>
+    Task CommitAsync(CancellationToken cancellationToken);
 }

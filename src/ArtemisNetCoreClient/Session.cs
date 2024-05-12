@@ -296,7 +296,27 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             ProducerId = request.Id
         });
     }
-    
+
+    public async Task CommitAsync(CancellationToken cancellationToken)
+    {
+        var request = new SessionCommitMessage
+        {
+            CorrelationId = _correlationIdGenerator.GenerateId()
+        };
+        try
+        {
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources.TryAdd(request.CorrelationId, tcs);
+            connection.Send(request, ChannelId);
+            await tcs.Task.WaitAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            _completionSources.TryRemove(request.CorrelationId, out _);
+            throw;
+        }
+    }
+
     internal ValueTask RemoveProducerAsync(int producerId)
     {
         var request = new RemoveProducerMessage
