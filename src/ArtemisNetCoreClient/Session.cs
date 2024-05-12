@@ -469,6 +469,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
 
     public void OnPacket(in InboundPacket packet)
     {
+        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
         switch (packet.PacketType)
         {
             case PacketType.NullResponse:
