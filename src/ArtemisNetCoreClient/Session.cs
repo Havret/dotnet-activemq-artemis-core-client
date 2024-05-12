@@ -367,6 +367,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             MessageId = messageDelivery.MessageId,
             RequiresResponse = true,
         };
+        await _lock.WaitAsync(cancellationToken);
         try
         {
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -378,6 +379,10 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         {
             _completionSources.TryRemove(-1, out _);
             throw;
+        }
+        finally
+        {
+            _lock.Release();
         }
     }
     
