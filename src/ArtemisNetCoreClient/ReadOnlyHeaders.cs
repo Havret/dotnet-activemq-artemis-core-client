@@ -12,8 +12,11 @@ public readonly struct ReadOnlyHeaders
     
     public required bool Durable { get; init; }
     
-    // GMT milliseconds at which this message expires. 0 means never expires *
-    public required  long Expiration { get; init; }
+    /// <summary>
+    /// Gets the date and time when this message expires. If set to <see cref="DateTimeOffset.MinValue"/>,
+    /// the message is considered to never expire.
+    /// </summary>
+    public DateTimeOffset Expiration { get; init; }
     
     // TODO: Change to DateTime
     public required long Timestamp { get; init; }

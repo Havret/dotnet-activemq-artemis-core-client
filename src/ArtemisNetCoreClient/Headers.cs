@@ -12,8 +12,12 @@ public struct Headers
     
     public bool Durable { get; set; }
     
-    // GMT milliseconds at which this message expires. 0 means never expires *
-    public long Expiration { get; set; }
+    /// <summary>
+    /// Gets or sets the date and time when this message expires. If set to <see cref="DateTimeOffset.MinValue"/>,
+    /// the message is considered to never expire.
+    /// Note that when setting this property, any time precision finer than milliseconds will be lost.
+    /// </summary>
+    public DateTimeOffset Expiration { get; set; }
     
     // TODO: Change to DateTime
     public long Timestamp { get; set; }
