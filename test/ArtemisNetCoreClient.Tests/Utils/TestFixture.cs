@@ -88,7 +88,7 @@ public class TestFixture : IAsyncDisposable
         var userName = Environment.GetEnvironmentVariable("ARTEMIS_USERNAME") ?? "artemis";
         var password = Environment.GetEnvironmentVariable("ARTEMIS_PASSWORD") ?? "artemis";
         var host = Environment.GetEnvironmentVariable("ARTEMIS_HOST") ?? "localhost";
-        var port = int.Parse(Environment.GetEnvironmentVariable("ARTEMIS_PORT") ?? "5445");
+        var port = int.Parse(Environment.GetEnvironmentVariable("ARTEMIS_PORT") ?? "61616");
         return new Endpoint
         {
             Host = host,

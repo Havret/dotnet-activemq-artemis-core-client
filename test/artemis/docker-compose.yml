@@ -5,6 +5,6 @@ services:
     image: havret/dotnet-activemq-artemis-client-test-broker:2.30.0
     ports:
       - 8161:8161
-      - 5445:5445
+      - 61616:61616
     volumes:
       - ./broker.xml:/artemis/amq/etc/broker.xml

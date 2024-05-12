@@ -47,7 +47,10 @@ public class ConnectionFactory
         var transport = new Transport(LoggerFactory.CreateLogger<Transport>(), socket);
 
 
-        return new Connection(LoggerFactory, transport, endpoint);
+        var connection = new Connection(LoggerFactory, transport, endpoint);
+        connection.SendHandshake();
+
+        return connection;
     }
     
     public ILoggerFactory LoggerFactory { get; set; } = new NullLoggerFactory();

@@ -16,7 +16,7 @@ public class Endpoint
     public int Port { get; init; }
     
     /// <summary>
-    /// Gets or sets the user name that is used for authentication.
+    /// Gets or sets the username that is used for authentication.
     /// </summary>
     public string? User { get; init; }
     
