@@ -89,7 +89,7 @@ internal class Connection : IConnection, IChannel
         }
     }
 
-    public async Task<ISession> CreateSessionAsync(CancellationToken cancellationToken = default)
+    public async Task<ISession> CreateSessionAsync(SessionConfiguration configuration, CancellationToken cancellationToken = default)
     {
         var createSessionMessage = new CreateSessionMessage
         {
@@ -101,7 +101,7 @@ internal class Connection : IConnection, IChannel
             MinLargeMessageSize = 100 * 1024,
             Xa = false,
             AutoCommitSends = true,
-            AutoCommitAcks = true,
+            AutoCommitAcks = configuration.AutoCommitAcks,
             PreAcknowledge = false,
             WindowSize = -1,
             DefaultAddress = null,
