@@ -65,7 +65,7 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
             Type = type,
             Durable = durable,
             Expiration = expiration == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeMilliseconds(expiration),
-            Timestamp = timestamp,
+            Timestamp = timestamp == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeMilliseconds(timestamp),
             Priority = priority
         };
 

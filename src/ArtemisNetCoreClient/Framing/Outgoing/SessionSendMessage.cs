@@ -82,34 +82,19 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
     private int EncodeHeaders(Span<byte> buffer)
     {
         var offset = 0;
-        
+
         offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetReference(), Message.Headers.MessageId);
         offset += ArtemisBinaryConverter.WriteNullableSimpleString(ref buffer.GetOffset(offset), Message.Headers.Address);
         offset += ArtemisBinaryConverter.WriteNullableGuid(ref buffer.GetOffset(offset), Message.Headers.UserId);
         offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Headers.Type);
         offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), Message.Headers.Durable);
-        
-        offset += EncodeExpiration(buffer[offset..]);
-        
-        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetOffset(offset), Message.Headers.Timestamp);
+        offset += ArtemisBinaryConverter.WriteDateTimeOffset(ref buffer.GetOffset(offset), Message.Headers.Expiration);
+        offset += ArtemisBinaryConverter.WriteDateTimeOffset(ref buffer.GetOffset(offset), Message.Headers.Timestamp);
         offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Headers.Priority);
         
         return offset;
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int EncodeExpiration(Span<byte> buffer)
-    {
-        var offset = 0;
 
-        var expiration = Message.Headers.Expiration != DateTimeOffset.MinValue
-            ? Message.Headers.Expiration.ToUnixTimeMilliseconds()
-            : 0;
-        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetReference(), expiration);
-        
-        return offset;
-    }
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int EncodeProperties(Span<byte> buffer)
     {

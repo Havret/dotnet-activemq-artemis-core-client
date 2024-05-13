@@ -17,9 +17,11 @@ public readonly struct ReadOnlyHeaders
     /// the message is considered to never expire.
     /// </summary>
     public DateTimeOffset Expiration { get; init; }
-    
-    // TODO: Change to DateTime
-    public required long Timestamp { get; init; }
+
+    /// <summary>
+    /// Gets the date and time when this message was created.
+    /// </summary>
+    public required DateTimeOffset Timestamp { get; init; }
     
     // TODO: Enum?
     public required byte Priority { get; init; }
