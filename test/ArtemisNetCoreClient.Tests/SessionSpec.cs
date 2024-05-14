@@ -143,6 +143,28 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
+    public async Task Should_create_multiple_producers_using_the_same_session()
+    {
+        // Arrange
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
+        
+        var addressName = await testFixture.CreateAddressAsync();
+        
+        // Act
+        await using var producer1 = await session.CreateProducerAsync(new ProducerConfiguration
+        {
+            Address = addressName
+        }, testFixture.CancellationToken);
+        await using var producer2 = await session.CreateProducerAsync(new ProducerConfiguration
+        {
+            Address = addressName
+        }, testFixture.CancellationToken);
+    }
+    
+
+    [Fact]
     public async Task Should_delete_queue()
     {
         // Arrange

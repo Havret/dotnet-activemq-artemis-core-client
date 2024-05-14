@@ -2,5 +2,10 @@ namespace ActiveMQ.Artemis.Core.Client.InternalUtilities;
 
 internal class IdGenerator(long startId)
 {
-    public long GenerateId() => Interlocked.Increment(ref startId);
+    private long _startId = startId - 1;
+
+    public long GenerateId()
+    {
+        return Interlocked.Increment(ref _startId);
+    }
 }
