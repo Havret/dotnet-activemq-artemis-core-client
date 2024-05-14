@@ -668,4 +668,11 @@ internal static class ArtemisBinaryConverter
 
         return offset;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteDateTimeOffset(ref byte destination, DateTimeOffset value)
+    {
+        var milliseconds = value != DateTimeOffset.MinValue ? value.ToUnixTimeMilliseconds() : 0;
+        return WriteInt64(ref destination, milliseconds);
+    }
 }

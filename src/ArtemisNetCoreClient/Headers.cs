@@ -19,8 +19,11 @@ public struct Headers
     /// </summary>
     public DateTimeOffset Expiration { get; set; }
     
-    // TODO: Change to DateTime
-    public long Timestamp { get; set; }
+    /// <summary>
+    /// Gets or sets the date and time when this message was created.
+    /// Note that when setting this property, any time precision finer than milliseconds will be lost.
+    /// </summary>
+    public DateTimeOffset Timestamp { get; set; }
     
     // TODO: Enum?
     public byte Priority { get; set; }
