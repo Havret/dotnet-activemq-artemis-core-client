@@ -123,6 +123,29 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
     }
     
     [Fact]
+    public async Task Should_create_multiple_consumers_using_the_same_session()
+    {
+        // Arrange
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
+        
+        var addressName = await testFixture.CreateAddressAsync();
+        var queueName = await testFixture.CreateQueueAsync(addressName);
+        
+        // Act
+        await using var consumer1 = await session.CreateConsumerAsync(new ConsumerConfiguration
+        {
+            QueueName = queueName
+        }, testFixture.CancellationToken);
+        
+        await using var consumer2 = await session.CreateConsumerAsync(new ConsumerConfiguration
+        {
+            QueueName = queueName
+        }, testFixture.CancellationToken);
+    }    
+    
+    [Fact]
     public async Task Should_create_and_dispose_producer()
     {
         // Arrange
