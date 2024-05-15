@@ -17,6 +17,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly ILogger<Session> _logger = loggerFactory.CreateLogger<Session>();
     private readonly IdGenerator _correlationIdGenerator = new(0);
+    private readonly IdGenerator _consumerIdGenerator = new(0);
     private readonly IdGenerator _producerIdGenerator = new(1);
 
     public required long ChannelId { get; init; }
@@ -212,9 +213,10 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
 
     public async Task<IConsumer> CreateConsumerAsync(ConsumerConfiguration consumerConfiguration, CancellationToken cancellationToken)
     {
+        var generateId = _consumerIdGenerator.GenerateId();
         var request = new SessionCreateConsumerMessage
         {
-            Id = 0,
+            Id = generateId,
             QueueName = consumerConfiguration.QueueName,
             Priority = 0,
             BrowseOnly = false,
