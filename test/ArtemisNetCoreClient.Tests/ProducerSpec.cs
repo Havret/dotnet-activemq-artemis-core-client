@@ -1,4 +1,3 @@
-using ActiveMQ.Artemis.Core.Client.Framing;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
 using Xunit;
 using Xunit.Abstractions;

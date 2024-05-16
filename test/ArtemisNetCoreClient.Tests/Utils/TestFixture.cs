@@ -40,7 +40,7 @@ public class TestFixture : IAsyncDisposable
     public async Task<string> CreateQueueAsync(string addressName, RoutingType routingType = RoutingType.Multicast)
     {
         var connection = await GetTestConnectionAsync();
-        var session = await connection.CreateSessionAsync(CancellationToken);
+        await using var session = await connection.CreateSessionAsync(CancellationToken);
         var queueName = Guid.NewGuid().ToString();
         await session.CreateQueueAsync(new QueueConfiguration
         {
@@ -50,6 +50,24 @@ public class TestFixture : IAsyncDisposable
         }, CancellationToken);
         _queues.Add(queueName);
         return queueName;
+    }
+
+    public async Task SendMessageAsync(string addressName, ReadOnlyMemory<byte> messagePayload)
+    {
+        var connection = await GetTestConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(CancellationToken);
+        await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
+        {
+            Address = addressName
+        }, CancellationToken);
+        await producer.SendMessageAsync(new Message
+        {
+            Body = messagePayload,
+            Headers = new Headers
+            {
+                Address = addressName
+            }
+        }, CancellationToken);
     }
 
     private async ValueTask<IConnection> GetTestConnectionAsync()
