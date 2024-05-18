@@ -8,7 +8,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 public class ConsumerSpec(ITestOutputHelper testOutputHelper)
 {
     [Fact]
-    public async Task should_receive_message()
+    public async Task Should_receive_message()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
@@ -45,7 +45,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task should_individually_acknowledge_message()
+    public async Task Should_individually_acknowledge_message()
     {
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
@@ -114,7 +114,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task should_acknowledge_messages()
+    public async Task Should_acknowledge_messages()
     {
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
@@ -185,7 +185,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task should_acknowledge_individual_messages_only_post_session_commit_when_AutoCommitAcks_is_disabled()
+    public async Task Should_acknowledge_individual_messages_only_post_session_commit_when_AutoCommitAcks_is_disabled()
     {
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
@@ -260,7 +260,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task should_acknowledge_all_messages_only_post_session_commit_when_AutoCommitAcks_is_disabled()
+    public async Task Should_acknowledge_all_messages_only_post_session_commit_when_AutoCommitAcks_is_disabled()
     {
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));

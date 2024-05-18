@@ -7,7 +7,7 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 public class ArtemisBinaryConverterSpec
 {
     [Fact]
-    public void should_encode_byte()
+    public void Should_encode_byte()
     {
         // Arrange
         var byteBuffer = new byte[1];
@@ -21,7 +21,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_decode_byte()
+    public void Should_decode_byte()
     {
         // Arrange
         var byteBuffer = new byte[]{125};
@@ -37,7 +37,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(true, new[] { unchecked((byte) -1) })]
     [InlineData(false, new byte[] { 0 })]
-    public void should_encode_bool(bool value, byte[] encoded)
+    public void Should_encode_bool(bool value, byte[] encoded)
     {
         // Arrange
         var byteBuffer = new byte[1];
@@ -53,7 +53,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(new[] { unchecked((byte) -1) }, true)]
     [InlineData(new byte[] { 0 }, false)]
-    public void should_decode_bool(byte[] encoded, bool expected)
+    public void Should_decode_bool(byte[] encoded, bool expected)
     {
         // Act
         var readBytes = ArtemisBinaryConverter.ReadBool(encoded, out var value);
@@ -67,7 +67,7 @@ public class ArtemisBinaryConverterSpec
     [InlineData(true, new[] { unchecked((byte) -1), unchecked((byte) -1) })]
     [InlineData(false, new[] { unchecked((byte) -1), (byte) 0 })]
     [InlineData(null, new byte[] { 0 })]
-    public void should_encode_nullable_bool(bool? value, byte[] encoded)
+    public void Should_encode_nullable_bool(bool? value, byte[] encoded)
     {
         // Arrange
         var bufferSize = ArtemisBinaryConverter.GetNullableBoolByteCount(value);
@@ -85,7 +85,7 @@ public class ArtemisBinaryConverterSpec
     [InlineData(new[] { unchecked((byte) -1), unchecked((byte) -1) }, true)]
     [InlineData(new[] { unchecked((byte) -1), (byte) 0 }, false)]
     [InlineData(new byte[] { 0 }, null)]
-    public void should_decode_nullable_bool(byte[] encoded, bool? expected)
+    public void Should_decode_nullable_bool(byte[] encoded, bool? expected)
     {
         // Act
         var readBytes = ArtemisBinaryConverter.ReadNullableBool(encoded, out var value);
@@ -96,7 +96,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_encode_int()
+    public void Should_encode_int()
     {
         // Arrange
         var byteBuffer = new byte[4];
@@ -110,7 +110,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_decode_int()
+    public void Should_decode_int()
     {
         // Arrange
         var byteBuffer = new byte[] { 0, 0, 0, 125 };
@@ -126,7 +126,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(170, new byte[] { unchecked((byte) -1), 0, 0, 0, unchecked((byte) -86) })]
     [InlineData(null, new byte[] { 0 })]
-    public void should_encode_nullable_int(int? value, byte[] encoded)
+    public void Should_encode_nullable_int(int? value, byte[] encoded)
     {
         // Arrange
         var bufferSize = ArtemisBinaryConverter.GetNullableInt32ByteCount(value);
@@ -143,7 +143,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(new byte[] { unchecked((byte) -1), 0, 0, 0, unchecked((byte) -86) }, 170)]
     [InlineData(new byte[] { 0 }, null)]
-    public void should_decode_nullable_int(byte[] encoded, int? expected)
+    public void Should_decode_nullable_int(byte[] encoded, int? expected)
     {
         // Act
         var readBytes = ArtemisBinaryConverter.ReadNullableInt32(encoded, out var value);
@@ -154,7 +154,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_encode_long()
+    public void Should_encode_long()
     {
         // Arrange
         var byteBuffer = new byte[8];
@@ -179,7 +179,7 @@ public class ArtemisBinaryConverterSpec
     }
 
     [Fact]
-    public void should_decode_long()
+    public void Should_decode_long()
     {
         // Arrange
         var byteBuffer = new byte[]
@@ -205,7 +205,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(280L, new byte[] { unchecked((byte) -1), 0, 0, 0, 0, 0, 0, 1, 24 })]
     [InlineData(null, new byte[] { 0 })]
-    public void should_encode_nullable_long(long? value, byte[] encoded)
+    public void Should_encode_nullable_long(long? value, byte[] encoded)
     {
         // Arrange
         var bufferSize = ArtemisBinaryConverter.GetNullableInt64ByteCount(value);
@@ -222,7 +222,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(new byte[] { unchecked((byte) -1), 0, 0, 0, 0, 0, 0, 1, 24 }, 280L)]
     [InlineData(new byte[] { 0 }, null)]
-    public void should_decode_nullable_long(byte[] encoded, long? expected)
+    public void Should_decode_nullable_long(byte[] encoded, long? expected)
     {
         // Act
         var readBytes = ArtemisBinaryConverter.ReadNullableInt64(encoded, out var value);
@@ -233,7 +233,7 @@ public class ArtemisBinaryConverterSpec
     }
 
     [Fact]
-    public void should_encode_short_string()
+    public void Should_encode_short_string()
     {
         // Arrange
         var str = "abcdefgh";
@@ -250,7 +250,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_decode_short_string()
+    public void Should_decode_short_string()
     {
         // Arrange
         var byteBuffer = new byte[] { 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 };
@@ -264,7 +264,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_encode_medium_string()
+    public void Should_encode_medium_string()
     {
         // Arrange
         var str = "abcdefghijkl";
@@ -281,7 +281,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_decode_medium_string()
+    public void Should_decode_medium_string()
     {
         // Arrange
         var byteBuffer = new byte[] {0, 0, 0, 12, 0, 12, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108};
@@ -295,7 +295,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_encode_long_string()
+    public void Should_encode_long_string()
     {
         // Arrange
         var str = Enumerable.Repeat(0, 513).Aggregate("", (s, _) => s + "abcdefgh");
@@ -312,7 +312,7 @@ public class ArtemisBinaryConverterSpec
     }
     
     [Fact]
-    public void should_decode_long_string()
+    public void Should_decode_long_string()
     {
         // Arrange
         var byteBuffer = File.ReadAllText("long_encoded_string.txt").Split(",").Select(byte.Parse).ToArray();
@@ -329,7 +329,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData("abcdefgh", new byte[] { 1, 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 })]
     [InlineData(null, new byte[] { 0 })]
-    public void should_encode_nullable_string(string value, byte[] encoded)
+    public void Should_encode_nullable_string(string value, byte[] encoded)
     {
         // Arrange
         var byteBuffer = new byte[encoded.Length];
@@ -345,7 +345,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(new byte[] { 1, 0, 0, 0, 8, 0, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104 }, "abcdefgh")]
     [InlineData(new byte[] { 0 }, null)]
-    public void should_decode_nullable_string(byte[] encoded, string? expected)
+    public void Should_decode_nullable_string(byte[] encoded, string? expected)
     {
         // Act
         var readBytes = ArtemisBinaryConverter.ReadNullableString(encoded, out var value);
@@ -389,7 +389,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(new byte[] { 1, 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 }, "abcdefgh")]
     [InlineData(new byte[] { 0 }, null)]
-    public void should_decode_nullable_simple_string(byte[] encoded, string? expected)
+    public void Should_decode_nullable_simple_string(byte[] encoded, string? expected)
     {
         // Act
         var readBytes = ArtemisBinaryConverter.ReadNullableSimpleString(encoded, out var value);
@@ -402,7 +402,7 @@ public class ArtemisBinaryConverterSpec
     [Theory]
     [InlineData(new byte[] { 1, 0, 0, 0, 16, 97, 0, 98, 0, 99, 0, 100, 0, 101, 0, 102, 0, 103, 0, 104, 0 }, "abcdefgh")]
     [InlineData(new byte[] { 0 }, null)]
-    public void should_encode_nullable_simple_string(byte[] encoded, string? expected)
+    public void Should_encode_nullable_simple_string(byte[] encoded, string? expected)
     {
         // Arrange
         var byteCount = ArtemisBinaryConverter.GetNullableSimpleStringByteCount(expected);
