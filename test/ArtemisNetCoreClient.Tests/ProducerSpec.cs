@@ -1,4 +1,5 @@
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
+using NScenario;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -7,29 +8,122 @@ namespace ActiveMQ.Artemis.Core.Client.Tests;
 public class ProducerSpec(ITestOutputHelper testOutputHelper)
 {
     [Fact]
-    public async Task should_send_message()
+    public async Task Should_send_message_immediately_when_AutoCommitSends_is_enabled()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
+
         await using var connection = await testFixture.CreateConnectionAsync();
-        await using var session = await connection.CreateSessionAsync(testFixture.CancellationToken);
-        
-        var addressName = Guid.NewGuid().ToString();
-        await session.CreateAddressAsync(addressName, new [] { RoutingType.Multicast }, testFixture.CancellationToken);
-        await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
+
+        var (addressName, queueName) = await scenario.Step("Create address and queue", async () =>
         {
-            Address = addressName
-        }, testFixture.CancellationToken);
+            var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+            var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+            return (addressName, queueName);
+        });
         
-        // Act
-        var message = new Message
+        await using var session = await scenario.Step("Create a session with AutoCommitSends enabled (default)", async () =>
         {
-            Body = "test_payload"u8.ToArray(),
-            Headers = new Headers
+            return await connection.CreateSessionAsync(testFixture.CancellationToken);
+        });
+        
+        await using var producer = await scenario.Step("Create message producer", async () =>
+        {
+            return await session.CreateProducerAsync(new ProducerConfiguration
             {
-                Address = addressName
-            }
-        };
-        await producer.SendMessageAsync(message, testFixture.CancellationToken);
+                Address = addressName,
+            }, testFixture.CancellationToken);
+        });
+        
+        await scenario.Step("Send a message", async () =>
+        {
+            await producer.SendMessageAsync(new Message
+            {
+                Body = "msg_1"u8.ToArray(),
+                Headers = new Headers
+                {
+                    Address = addressName,
+                }
+            }, testFixture.CancellationToken);
+        });
+
+        await scenario.Step("Confirm message count (one messages should be available on the queue)", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(1, queueInfo.MessageCount);
+        });
+    }
+
+    [Fact]
+    public async Task Should_send_messages_only_post_session_commit_when_AutoCommitSends_is_disabled()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
+
+        await using var connection = await testFixture.CreateConnectionAsync();
+
+        var (addressName, queueName) = await scenario.Step("Create address and queue", async () =>
+        {
+            var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+            var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+            return (addressName, queueName);
+        });
+
+        await using var session = await scenario.Step("Create a session with AutoCommitSends disabled", async () =>
+        {
+            return await connection.CreateSessionAsync(new SessionConfiguration
+            {
+                AutoCommitSends = false,
+            }, testFixture.CancellationToken);
+        });
+
+        await using var producer = await scenario.Step("Create message producer", async () =>
+        {
+            return await session.CreateProducerAsync(new ProducerConfiguration
+            {
+                Address = addressName,
+            }, testFixture.CancellationToken);
+        });
+
+        await scenario.Step("Send two messages", async () =>
+        {
+            await producer.SendMessageAsync(new Message
+            {
+                Body = "msg_1"u8.ToArray(),
+                Headers = new Headers
+                {
+                    Address = addressName,
+                }
+            }, testFixture.CancellationToken);
+            await producer.SendMessageAsync(new Message
+            {
+                Body = "msg_2"u8.ToArray(),
+                Headers = new Headers
+                {
+                    Address = addressName,
+                }
+            }, testFixture.CancellationToken);
+        });
+
+        await scenario.Step("Confirm message count (no message should be available on the queue)", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(0, queueInfo.MessageCount);
+        });
+
+        await scenario.Step("Commit the session", async () =>
+        {
+            await session.CommitAsync(testFixture.CancellationToken);
+        });
+
+        await scenario.Step("Confirm message count (two messages should be available on the queue)", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(2, queueInfo.MessageCount);
+        });
     }
 }

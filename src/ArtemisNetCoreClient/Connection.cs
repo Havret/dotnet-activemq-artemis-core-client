@@ -108,7 +108,7 @@ internal class Connection : IConnection, IChannel
             Password = _endpoint.Password,
             MinLargeMessageSize = 100 * 1024,
             Xa = false,
-            AutoCommitSends = true,
+            AutoCommitSends = configuration.AutoCommitSends,
             AutoCommitAcks = configuration.AutoCommitAcks,
             PreAcknowledge = false,
             WindowSize = -1,

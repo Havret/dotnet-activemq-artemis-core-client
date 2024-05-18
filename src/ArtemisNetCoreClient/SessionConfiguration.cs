@@ -17,4 +17,16 @@ public class SessionConfiguration
     /// for efficiency or consistency reasons.
     /// </summary>
     public bool AutoCommitAcks { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the session should automatically commit the transaction
+    /// after each message send. When set to true, each time a message is sent by a producer created from this
+    /// session, the session will automatically commit the transaction associated with that send. This property
+    /// simplifies transaction management but may affect performance and consistency depending on the use case.
+    ///
+    /// Default value is true, which enables automatic commits. Set this to false if you need more control
+    /// over when transactions are committed, such as when batching multiple sends into a single transaction
+    /// for efficiency or consistency reasons.
+    /// </summary>
+    public bool AutoCommitSends { get; set; } = true;
 }
