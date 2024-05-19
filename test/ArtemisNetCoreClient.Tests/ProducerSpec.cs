@@ -10,7 +10,6 @@ public class ProducerSpec(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task Should_send_message_immediately_when_AutoCommitSends_is_enabled()
     {
-        // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
         var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
 
@@ -41,7 +40,6 @@ public class ProducerSpec(ITestOutputHelper testOutputHelper)
             await producer.SendMessageAsync(new Message
             {
                 Body = "msg_1"u8.ToArray(),
-                Address = addressName,
             }, testFixture.CancellationToken);
         });
 
@@ -89,12 +87,10 @@ public class ProducerSpec(ITestOutputHelper testOutputHelper)
             await producer.SendMessageAsync(new Message
             {
                 Body = "msg_1"u8.ToArray(),
-                Address = addressName,
             }, testFixture.CancellationToken);
             await producer.SendMessageAsync(new Message
             {
                 Body = "msg_2"u8.ToArray(),
-                Address = addressName,
             }, testFixture.CancellationToken);
         });
 

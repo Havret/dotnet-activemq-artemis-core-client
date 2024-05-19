@@ -108,7 +108,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             Address = queueConfiguration.Address,
             QueueName = queueConfiguration.Name,
             FilterString = null,
-            Durable = false,
+            Durable = true,
             Temporary = false,
             RequiresResponse = true,
             AutoCreated = false,
@@ -239,6 +239,8 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
                 };
                 _consumers.TryAdd(request.Id, consumer);
                 
+                consumer.Start();
+                
                 return consumer;
             }
             else
@@ -294,6 +296,22 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         };
         connection.Send(request, ChannelId);
         return ValueTask.FromResult<IProducer>(new Producer(this)
+        {
+            ProducerId = request.Id,
+            Address = producerConfiguration.Address,
+            RoutingType = producerConfiguration.RoutingType
+        });
+    }
+
+    public ValueTask<IAnonymousProducer> CreateAnonymousProducerAsync(CancellationToken cancellationToken)
+    {
+        var request = new CreateProducerMessage
+        {
+            Id = (int) _producerIdGenerator.GenerateId(),
+            Address = null
+        };
+        connection.Send(request, ChannelId);
+        return ValueTask.FromResult<IAnonymousProducer>(new AnonymousProducer(this)
         {
             ProducerId = request.Id
         });

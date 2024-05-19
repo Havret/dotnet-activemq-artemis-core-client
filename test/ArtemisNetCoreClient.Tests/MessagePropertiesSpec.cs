@@ -38,7 +38,6 @@ public class MessagePropertiesSpec(ITestOutputHelper testOutputHelper)
         await producer.SendMessageAsync(new Message
         {
             Body = "test_payload"u8.ToArray(),
-            Address = addressName,
             Properties = new Dictionary<string, object?>
             {
                 ["null_property"] = null,

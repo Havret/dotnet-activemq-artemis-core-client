@@ -29,13 +29,22 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
         byteCount += sizeof(byte); // Priority
         
         byteCount += sizeof(byte); // Properties nullability
-        if (Message.Properties?.Count > 0)
+        if (Message.Properties?.Count > 0 || Message.RoutingType.HasValue)
         {
             byteCount += sizeof(int); // Properties count
-            foreach (var (key, value) in Message.Properties)
+            if (Message.Properties != null)
             {
-                byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(key);
-                byteCount += ArtemisBinaryConverter.GetNullableObjectByteCount(value);
+                foreach (var (key, value) in Message.Properties)
+                {
+                    byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(key);
+                    byteCount += ArtemisBinaryConverter.GetNullableObjectByteCount(value);
+                }
+            }
+
+            if (Message.RoutingType.HasValue)
+            {
+                byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(MessageHeaders.RoutingType);
+                byteCount += ArtemisBinaryConverter.GetNullableObjectByteCount((byte) Message.RoutingType);
             }
         }
         
@@ -99,15 +108,32 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
     private int EncodeProperties(Span<byte> buffer)
     {
         var offset = 0;
+        
+        var propertiesCount = Message.Properties?.Count ?? 0;
+        if (Message.RoutingType.HasValue)
+        {
+            propertiesCount++;
+        }
 
-        if (Message.Properties?.Count > 0)
+        if (propertiesCount > 0)
         {
             offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetReference(), DataConstants.NotNull);
-            offset += ArtemisBinaryConverter.WriteInt32(ref buffer.GetOffset(offset), Message.Properties.Count);
-            foreach (var (key, value) in Message.Properties)
+            offset += ArtemisBinaryConverter.WriteInt32(ref buffer.GetOffset(offset), propertiesCount);
+
+            if (Message.Properties != null)
             {
-                offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), key);
-                offset += ArtemisBinaryConverter.WriteNullableObject(ref buffer.GetOffset(offset), value);
+                foreach (var (key, value) in Message.Properties)
+                {
+                    offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), key);
+                    offset += ArtemisBinaryConverter.WriteNullableObject(ref buffer.GetOffset(offset), value);
+                }
+            }
+
+            if (Message.RoutingType.HasValue)
+            {
+                // TODO: Maybe we can cache this string?
+                offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), MessageHeaders.RoutingType);
+                offset += ArtemisBinaryConverter.WriteNullableObject(ref buffer.GetOffset(offset), (byte) Message.RoutingType.Value);
             }
         }
         else
