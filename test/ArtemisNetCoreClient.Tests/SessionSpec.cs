@@ -1,6 +1,4 @@
 using ActiveMQ.Artemis.Core.Client.Exceptions;
-using ActiveMQ.Artemis.Core.Client.Framing;
-using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
 using Xunit;
 using Xunit.Abstractions;
@@ -79,7 +77,7 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task should_not_return_queue_info_when_queue_does_not_exist()
+    public async Task Should_not_return_queue_info_when_queue_does_not_exist()
     {
         // Arrange
         await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
