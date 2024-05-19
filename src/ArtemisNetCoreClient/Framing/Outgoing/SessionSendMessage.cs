@@ -20,8 +20,8 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
         byteCount += sizeof(int); // Message body length
         byteCount += Message.Body.Length; // Actual message body length
         byteCount += sizeof(long); // MessageId
-        byteCount += ArtemisBinaryConverter.GetNullableSimpleStringByteCount(Message.Headers.Address);
-        byteCount += ArtemisBinaryConverter.GetNullableGuidByteCount(Message.Headers.UserId);
+        byteCount += ArtemisBinaryConverter.GetNullableSimpleStringByteCount(Message.Address);
+        byteCount += ArtemisBinaryConverter.GetNullableGuidByteCount(Message.UserId);
         byteCount += sizeof(byte); // Type
         byteCount += sizeof(bool); // Durable
         byteCount += sizeof(long); // Expiration
@@ -83,14 +83,14 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
     {
         var offset = 0;
 
-        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetReference(), Message.Headers.MessageId);
-        offset += ArtemisBinaryConverter.WriteNullableSimpleString(ref buffer.GetOffset(offset), Message.Headers.Address);
-        offset += ArtemisBinaryConverter.WriteNullableGuid(ref buffer.GetOffset(offset), Message.Headers.UserId);
-        offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Headers.Type);
-        offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), Message.Headers.Durable);
-        offset += ArtemisBinaryConverter.WriteDateTimeOffset(ref buffer.GetOffset(offset), Message.Headers.Expiration);
-        offset += ArtemisBinaryConverter.WriteDateTimeOffset(ref buffer.GetOffset(offset), Message.Headers.Timestamp);
-        offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Headers.Priority);
+        offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetReference(), Message.MessageId);
+        offset += ArtemisBinaryConverter.WriteNullableSimpleString(ref buffer.GetOffset(offset), Message.Address);
+        offset += ArtemisBinaryConverter.WriteNullableGuid(ref buffer.GetOffset(offset), Message.UserId);
+        offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Type);
+        offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), Message.Durable);
+        offset += ArtemisBinaryConverter.WriteDateTimeOffset(ref buffer.GetOffset(offset), Message.Expiration);
+        offset += ArtemisBinaryConverter.WriteDateTimeOffset(ref buffer.GetOffset(offset), Message.Timestamp);
+        offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Priority);
         
         return offset;
     }

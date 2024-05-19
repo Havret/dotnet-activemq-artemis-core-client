@@ -31,13 +31,10 @@ public class MessageExpirationSpec(ITestOutputHelper testOutputHelper)
         var expiration = DateTimeOffset.UtcNow.Add(TimeSpan.FromHours(10));
         await producer.SendMessageAsync(new Message
         {
+            Address = addressName,
+            Expiration = expiration,
+            Durable = true,
             Body = "expiry_message"u8.ToArray(),
-            Headers = new Headers
-            {
-                Address = addressName,
-                Expiration = expiration,
-                Durable = true
-            },
         }, testFixture.CancellationToken);
 
         var receivedMessage = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
@@ -75,11 +72,8 @@ public class MessageExpirationSpec(ITestOutputHelper testOutputHelper)
         await producer.SendMessageAsync(new Message
         {
             Body = "expiry_message"u8.ToArray(),
-            Headers = new Headers
-            {
-                Address = addressName,
-                Expiration = expiration,
-            }
+            Address = addressName,
+            Expiration = expiration,
         }, testFixture.CancellationToken);
         
         var receivedMessage = await RetryUtil.RetryUntil(
