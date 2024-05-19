@@ -63,10 +63,7 @@ public class TestFixture : IAsyncDisposable
         await producer.SendMessageAsync(new Message
         {
             Body = messagePayload,
-            Headers = new Headers
-            {
-                Address = addressName
-            }
+            Address = addressName
         }, CancellationToken);
     }
 

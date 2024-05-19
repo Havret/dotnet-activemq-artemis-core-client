@@ -41,10 +41,7 @@ public class ProducerSpec(ITestOutputHelper testOutputHelper)
             await producer.SendMessageAsync(new Message
             {
                 Body = "msg_1"u8.ToArray(),
-                Headers = new Headers
-                {
-                    Address = addressName,
-                }
+                Address = addressName,
             }, testFixture.CancellationToken);
         });
 
@@ -92,18 +89,12 @@ public class ProducerSpec(ITestOutputHelper testOutputHelper)
             await producer.SendMessageAsync(new Message
             {
                 Body = "msg_1"u8.ToArray(),
-                Headers = new Headers
-                {
-                    Address = addressName,
-                }
+                Address = addressName,
             }, testFixture.CancellationToken);
             await producer.SendMessageAsync(new Message
             {
                 Body = "msg_2"u8.ToArray(),
-                Headers = new Headers
-                {
-                    Address = addressName,
-                }
+                Address = addressName,
             }, testFixture.CancellationToken);
         });
 

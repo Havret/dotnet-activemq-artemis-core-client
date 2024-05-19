@@ -30,10 +30,7 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
 
         await producer.SendMessageAsync(new Message
         {
-            Headers = new Headers
-            {
-                Address = addressName,
-            },
+            Address = addressName,
             Body = "test_payload"u8.ToArray()
         }, testFixture.CancellationToken);
 

@@ -51,10 +51,7 @@ public class MessageFlowSpec(ITestOutputHelper testOutputHelper)
             {
                 tasks.Add(producer.SendMessageAsync(new Message
                 {
-                    Headers = new Headers
-                    {
-                        Address = addressName,
-                    },
+                    Address = addressName,
                     Properties = new Dictionary<string, object?>
                     {
                         ["index"] = i

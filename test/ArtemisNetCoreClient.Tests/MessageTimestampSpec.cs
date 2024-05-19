@@ -32,11 +32,8 @@ public class MessageTimestampSpec(ITestOutputHelper testOutputHelper)
         await producer.SendMessageAsync(new Message
         {
             Body = "test_msg"u8.ToArray(),
-            Headers = new Headers
-            {
-                Address = addressName,
-                Timestamp = timestamp,
-            },
+            Address = addressName,
+            Timestamp = timestamp,
         }, testFixture.CancellationToken);
 
         var receivedMessage = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
