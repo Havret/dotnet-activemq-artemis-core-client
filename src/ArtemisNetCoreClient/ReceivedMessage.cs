@@ -6,10 +6,29 @@ namespace ActiveMQ.Artemis.Core.Client;
 /// </summary>
 public class ReceivedMessage
 {
+    public required long MessageId { get; init; }
+    
+    public required string Address { get; init; }
+    
+    public required Guid? UserId { get; init; }
+    
+    public required byte Type { get; init; }
+    
+    public required bool Durable { get; init; }
+    
     /// <summary>
-    /// The message headers
+    /// Gets the date and time when this message expires. If set to <see cref="DateTimeOffset.MinValue"/>,
+    /// the message is considered to never expire.
     /// </summary>
-    public required ReadOnlyHeaders Headers { get; init; }
+    public DateTimeOffset Expiration { get; init; }
+
+    /// <summary>
+    /// Gets the date and time when this message was created.
+    /// </summary>
+    public required DateTimeOffset Timestamp { get; init; }
+    
+    // TODO: Enum?
+    public required byte Priority { get; init; }
     
     /// <summary>
     /// The message properties

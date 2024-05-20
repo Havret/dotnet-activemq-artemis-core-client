@@ -40,6 +40,6 @@ public class MessageTimestampSpec(ITestOutputHelper testOutputHelper)
         
         // Assert
         Assert.NotNull(receivedMessage);
-        Assert.Equal(timestamp.DropTicsPrecision(), receivedMessage.Headers.Timestamp);
+        Assert.Equal(timestamp.DropTicsPrecision(), receivedMessage.Timestamp);
     }
 }

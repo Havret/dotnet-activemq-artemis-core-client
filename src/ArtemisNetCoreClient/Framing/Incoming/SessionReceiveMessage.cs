@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -14,7 +15,14 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
     {
         var readBytes = 0;
         readBytes += DecodeMessageBody(buffer, out var body);
-        readBytes += DecodeHeaders(buffer[readBytes..], out var headers);
+        readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out var messageId);
+        readBytes += ArtemisBinaryConverter.ReadNullableSimpleString(buffer[readBytes..], out var address);
+        readBytes += ArtemisBinaryConverter.ReadNullableGuid(buffer[readBytes..], out var userId);
+        readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var type);
+        readBytes += ArtemisBinaryConverter.ReadBool(buffer[readBytes..], out var durable);
+        readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out var expiration);
+        readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out var timestamp);
+        readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var priority);
         readBytes += DecodeProperties(buffer[readBytes..], out var properties);
         readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out ConsumerId);
         readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out DeliveryCount);
@@ -22,9 +30,16 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
         Message = new ReceivedMessage
         {
             Body = body,
-            Headers = headers,
+            MessageId = messageId,
+            Address = address ?? "",
+            UserId = userId,
+            Type = type,
+            Durable = durable,
+            Expiration = expiration == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeMilliseconds(expiration),
+            Timestamp =  timestamp == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeMilliseconds(timestamp),
+            Priority = priority,
             Properties = properties,
-            MessageDelivery = new MessageDelivery(ConsumerId, headers.MessageId)
+            MessageDelivery = new MessageDelivery(ConsumerId, messageId),
         };
         
         Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
@@ -43,34 +58,6 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
         
         return offset + bodyLength;
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int DecodeHeaders(ReadOnlySpan<byte> buffer, out ReadOnlyHeaders value)
-    {
-        var offset = 0;
-        offset += ArtemisBinaryConverter.ReadInt64(buffer, out var messageId);
-        offset += ArtemisBinaryConverter.ReadNullableSimpleString(buffer[offset..], out var address);
-        offset += ArtemisBinaryConverter.ReadNullableGuid(buffer[offset..], out var userId);
-        offset += ArtemisBinaryConverter.ReadByte(buffer[offset..], out var type);
-        offset += ArtemisBinaryConverter.ReadBool(buffer[offset..], out var durable);
-        offset += ArtemisBinaryConverter.ReadInt64(buffer[offset..], out var expiration);
-        offset += ArtemisBinaryConverter.ReadInt64(buffer[offset..], out var timestamp);
-        offset += ArtemisBinaryConverter.ReadByte(buffer[offset..], out var priority);
-
-        value = new ReadOnlyHeaders
-        {
-            MessageId = messageId,
-            Address = address ?? "",
-            UserId = userId,
-            Type = type,
-            Durable = durable,
-            Expiration = expiration == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeMilliseconds(expiration),
-            Timestamp = timestamp == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeMilliseconds(timestamp),
-            Priority = priority
-        };
-
-        return offset;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int DecodeProperties(ReadOnlySpan<byte> buffer, out IReadOnlyDictionary<string, object?> value)
@@ -87,7 +74,7 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
                 properties.Add(key, obj);
             }
 
-            value = properties;
+            value = properties.ToFrozenDictionary();
             
             return readBytes;
         }

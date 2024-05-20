@@ -42,7 +42,7 @@ public class MessageExpirationSpec(ITestOutputHelper testOutputHelper)
         // Assert
         Assert.NotNull(receivedMessage);
         Assert.Equal("expiry_message"u8.ToArray(), receivedMessage.Body.ToArray());
-        Assert.Equal(expiration.DropTicsPrecision(), receivedMessage.Headers.Expiration);
+        Assert.Equal(expiration.DropTicsPrecision(), receivedMessage.Expiration);
     }
 
     [Fact]
