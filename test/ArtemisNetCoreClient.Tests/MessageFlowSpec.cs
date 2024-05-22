@@ -51,7 +51,6 @@ public class MessageFlowSpec(ITestOutputHelper testOutputHelper)
             {
                 tasks.Add(producer.SendMessageAsync(new Message
                 {
-                    Address = addressName,
                     Properties = new Dictionary<string, object?>
                     {
                         ["index"] = i

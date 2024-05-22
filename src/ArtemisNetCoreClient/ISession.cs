@@ -8,7 +8,7 @@ public interface ISession : IAsyncDisposable
     /// <summary>
     /// Create an address with the given routing types if it does not already exist.
     /// </summary>
-    Task CreateAddressAsync(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken);
+    Task CreateAddressAsync(string address, IEnumerable<RoutingType> routingTypes, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Get information about an address.
@@ -42,6 +42,8 @@ public interface ISession : IAsyncDisposable
     /// Create a producer with the given configuration.
     /// </summary>
     ValueTask<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken);
+    
+    ValueTask<IAnonymousProducer> CreateAnonymousProducerAsync(CancellationToken cancellationToken);
     
     /// <summary>
     /// Commit the current transaction (any pending sends and acks).

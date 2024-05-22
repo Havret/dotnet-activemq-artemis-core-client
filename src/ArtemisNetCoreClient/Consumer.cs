@@ -20,15 +20,13 @@ internal class Consumer : IConsumer
         });
         _reader = channel.Reader;
         _writer = channel.Writer;
-        
-        session.SendConsumerCredits(ConsumerId, -1);
     }
 
     public required long ConsumerId { get; init; }
 
-    public async ValueTask DisposeAsync()
+    public void Start()
     {
-        await _session.CloseConsumer(ConsumerId);
+        _session.SendConsumerCredits(ConsumerId, -1);
     }
 
     public async ValueTask<ReceivedMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
@@ -51,4 +49,9 @@ internal class Consumer : IConsumer
         // TODO: What if try write is false?
         _ = _writer.TryWrite(message);
     }
+    
+    public async ValueTask DisposeAsync()
+    {
+        await _session.CloseConsumer(ConsumerId);
+    }    
 }

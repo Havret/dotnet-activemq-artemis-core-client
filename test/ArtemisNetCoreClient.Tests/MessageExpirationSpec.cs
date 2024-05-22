@@ -31,7 +31,6 @@ public class MessageExpirationSpec(ITestOutputHelper testOutputHelper)
         var expiration = DateTimeOffset.UtcNow.Add(TimeSpan.FromHours(10));
         await producer.SendMessageAsync(new Message
         {
-            Address = addressName,
             Expiration = expiration,
             Durable = true,
             Body = "expiry_message"u8.ToArray(),
@@ -72,7 +71,6 @@ public class MessageExpirationSpec(ITestOutputHelper testOutputHelper)
         await producer.SendMessageAsync(new Message
         {
             Body = "expiry_message"u8.ToArray(),
-            Address = addressName,
             Expiration = expiration,
         }, testFixture.CancellationToken);
         
