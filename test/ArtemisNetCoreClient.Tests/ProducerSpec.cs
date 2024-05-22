@@ -113,4 +113,130 @@ public class ProducerSpec(ITestOutputHelper testOutputHelper)
             Assert.Equal(2, queueInfo.MessageCount);
         });
     }
+    
+    [Fact]
+    public async Task Should_send_messages_to_anycast_or_multicast_queues_depending_on_configured_routing_type()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
+        
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync();
+
+        var address = await scenario.Step("Create address supporting both anycast and multicast routing types", async () =>
+        {
+            var address = Guid.NewGuid().ToString();
+            await session.CreateAddressAsync(address, [RoutingType.Anycast, RoutingType.Multicast], testFixture.CancellationToken);
+            return address;
+        });
+        
+        var anycastQueue = await scenario.Step("Create an anycast queue", async () =>
+        {
+            var queueName = Guid.NewGuid().ToString();
+            await session.CreateQueueAsync(new QueueConfiguration
+            {
+                Address = address,
+                Name = queueName,
+                RoutingType = RoutingType.Anycast,
+            }, testFixture.CancellationToken);
+            return queueName;
+        });
+        
+        var multicastQueue = await scenario.Step("Create a multicast queue", async () =>
+        {
+            var queueName = Guid.NewGuid().ToString();
+            await session.CreateQueueAsync(new QueueConfiguration
+            {
+                Address = address,
+                Name = queueName,
+                RoutingType = RoutingType.Multicast
+            }, testFixture.CancellationToken);
+            return queueName;
+        });
+        
+        await scenario.Step("Send two messages to the anycast queue", async () =>
+        {
+            await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
+            {
+                Address = address,
+                RoutingType = RoutingType.Anycast
+            }, testFixture.CancellationToken);
+
+            for (int i = 0; i < 2; i++)
+            {
+                await producer.SendMessageAsync(new Message
+                {
+                    Body = "anycast_msg"u8.ToArray(),
+                }, testFixture.CancellationToken);
+            }
+        });
+        
+        await scenario.Step("Confirm message count (two messages should be available on the anycast queue)", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(anycastQueue, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(2, queueInfo.MessageCount);
+
+            await scenario.Step("Verify message payload", async () =>
+            {
+                await using var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
+                {
+                    QueueName = anycastQueue
+                }, testFixture.CancellationToken);
+                var messages = new[]
+                {
+                    await consumer.ReceiveMessageAsync(testFixture.CancellationToken),
+                    await consumer.ReceiveMessageAsync(testFixture.CancellationToken)
+                };
+                Assert.All(messages, message =>
+                {
+                    Assert.NotNull(message);
+                    Assert.Equal("anycast_msg"u8.ToArray(), message.Body.ToArray());
+                });
+            });
+        });
+        
+        await scenario.Step("Send two messages to the multicast queue", async () =>
+        {
+            await using var producer = await session.CreateProducerAsync(new ProducerConfiguration
+            {
+                Address = address,
+                RoutingType = RoutingType.Multicast
+            }, testFixture.CancellationToken);
+            
+            for (int i = 0; i < 2; i++)
+            {
+                await producer.SendMessageAsync(new Message
+                {
+                    Durable = true,
+                    Body = "multicast_msg"u8.ToArray(),
+                }, testFixture.CancellationToken);
+            }
+        });
+        
+        await scenario.Step("Confirm message count (two messages should be available on the multicast queue)", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(multicastQueue, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(2, queueInfo.MessageCount);
+            
+            await scenario.Step("Verify message payload", async () =>
+            {
+                await using var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
+                {
+                    QueueName = multicastQueue
+                }, testFixture.CancellationToken);
+                var messages = new[]
+                {
+                    await consumer.ReceiveMessageAsync(testFixture.CancellationToken),
+                    await consumer.ReceiveMessageAsync(testFixture.CancellationToken)
+                };
+                Assert.All(messages, message =>
+                {
+                    Assert.NotNull(message);
+                    Assert.Equal("multicast_msg"u8.ToArray(), message.Body.ToArray());
+                });
+            });
+        });
+    }
 }
