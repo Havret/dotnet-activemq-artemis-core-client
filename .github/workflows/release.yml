@@ -1,0 +1,53 @@
+name: Release to NuGet
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          [
+            ArtemisNetCoreClient
+          ]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: "8.0.x"
+      - name: Create NuGet Package
+        run: dotnet pack -c Release /p:Version=${{ github.event.release.name }} /p:PackageReleaseNotes="See https://github.com/Havret/dotnet-activemq-artemis-core-client/releases/tag/${{ github.event.release.tag_name }}"
+      - name: Archive NuGet Package
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.package }}
+          path: ./src/${{ matrix.package }}/bin/Release/${{ matrix.package }}.${{ github.event.release.name }}.nupkg
+      - name: Archive NuGet Package With Symbols
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.package }}
+          path: ./src/${{ matrix.package }}/bin/Release/${{ matrix.package }}.${{ github.event.release.name }}.snupkg
+      - name: Publish NuGet Package
+        run: dotnet nuget push ./src/${{ matrix.package }}/bin/Release/${{ matrix.package }}.${{ github.event.release.name }}.nupkg --api-key ${{ secrets.nuget_api_key }} --source https://api.nuget.org/v3/index.json
+      - name: Upload NuGet Package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./src/${{ matrix.package }}/bin/Release/${{ matrix.package }}.${{ github.event.release.name }}.nupkg
+          asset_name: ${{ matrix.package }}.${{ github.event.release.name }}.nupkg
+          asset_content_type: application/zip
+      - name: NuGet Package With Symbols
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./src/${{ matrix.package }}/bin/Release/${{ matrix.package }}.${{ github.event.release.name }}.snupkg
+          asset_name: ${{ matrix.package }}.${{ github.event.release.name }}.snupkg
+          asset_content_type: application/zip
