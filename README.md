@@ -20,6 +20,72 @@ Apache ActiveMQ Artemis is an open-source project to build a multi-protocol, emb
 
 This .NET client library is an open-source effort to equip .NET developers with a powerful, straightforward client for Apache ActiveMQ Artemis. Utilizing the broker's Core protocol, this library focuses on high-performance messaging, ensuring compatibility and comprehensive feature support with Apache ActiveMQ Artemis.
 
+## Quickstart
+
+Add `ArtemisNetCoreClient` NuGet package to your project using dotnet CLI:
+
+```sh
+dotnet add package ArtemisNetCoreClient --prerelease
+```
+
+The API interfaces and classes are defined in the `ActiveMQ.Artemis.Core.Client` namespace. Make sure to include it at the top of your file:
+
+```csharp
+using ActiveMQ.Artemis.Core.Client;
+```
+
+Before sending or receiving messages, you need to establish a connection to the broker endpoint. Create a connection using the `ConnectionFactory` object.
+
+```csharp
+var connectionFactory = new ConnectionFactory();
+var endpoint = new Endpoint
+{
+    Host = "localhost",
+    Port = 61616,
+    User = "guest",
+    Password = "guest"
+};
+var connection = await connectionFactory.CreateAsync(endpoint);
+```
+
+Once the connection is established, create a session.
+
+```csharp
+var session = await connection.CreateSessionAsync();
+```
+
+Create an address and a queue for messaging.
+
+```csharp
+await session.CreateAddressAsync("a1", [RoutingType.Anycast]);
+await session.CreateQueueAsync(new QueueConfiguration
+{
+    Address = "a1",
+    Name = "q1",
+    RoutingType = RoutingType.Anycast
+});
+```
+
+Create a producer to send a message to the address.
+
+```csharp
+var producer = await session.CreateProducerAsync(new ProducerConfiguration
+{
+    Address = "a1"
+});
+await producer.SendMessageAsync(new Message { Body = "my-msg"u8.ToArray() });
+```
+
+Create a consumer to receive messages from the queue.
+
+```csharp
+var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
+{
+    QueueName = "q1"
+});
+var message = await consumer.ReceiveMessageAsync();
+```
+
 ## Running the tests
 
 To run the tests, you need an Apache ActiveMQ Artemis server. The server can be hosted in a Docker container.
