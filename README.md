@@ -86,6 +86,10 @@ var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
 var message = await consumer.ReceiveMessageAsync();
 ```
 
+## Online resources
+
+- [ActiveMQ Artemis address model explained with examples in .NET](https://havret.io/activemq-artemis-address-model) (April 19, 2022)[^1]
+
 ## Running the tests
 
 To run the tests, you need an Apache ActiveMQ Artemis server. The server can be hosted in a Docker container.
@@ -116,3 +120,5 @@ If you are in search of a production-ready ActiveMQ Artemis client for .NET, we 
 ## License
 
 This project is licensed under the [Apache-2.0 License](https://github.com/Havret/dotnet-activemq-artemis-core-client/blob/main/LICENSE). You are welcome to use it freely, without any restrictive obligations.
+
+[^1]: Examples in this article were created using [AMQP-based client](https://github.com/Havret/dotnet-activemq-artemis-client).
