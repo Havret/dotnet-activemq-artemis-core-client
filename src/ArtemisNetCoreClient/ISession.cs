@@ -18,7 +18,7 @@ public interface ISession : IAsyncDisposable
     /// <summary>
     /// Create a queue with the given configuration if it does not already exist.
     /// </summary>
-    Task CreateQueueAsync(QueueConfiguration queueConfiguration, CancellationToken cancellationToken);
+    Task CreateQueueAsync(QueueConfiguration queueConfiguration, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Delete a queue.
@@ -36,12 +36,12 @@ public interface ISession : IAsyncDisposable
     /// <summary>
     /// Create a consumer with the given configuration.
     /// </summary>
-    Task<IConsumer> CreateConsumerAsync(ConsumerConfiguration consumerConfiguration, CancellationToken cancellationToken);
+    Task<IConsumer> CreateConsumerAsync(ConsumerConfiguration consumerConfiguration, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Create a producer with the given configuration.
     /// </summary>
-    ValueTask<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken);
+    ValueTask<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken = default);
     
     ValueTask<IAnonymousProducer> CreateAnonymousProducerAsync(CancellationToken cancellationToken);
     

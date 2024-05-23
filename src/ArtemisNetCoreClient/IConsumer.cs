@@ -2,7 +2,7 @@ namespace ActiveMQ.Artemis.Core.Client;
 
 public interface IConsumer : IAsyncDisposable
 {
-    ValueTask<ReceivedMessage> ReceiveMessageAsync(CancellationToken cancellationToken);
+    ValueTask<ReceivedMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Acknowledges all messages received by the consumer so far.
