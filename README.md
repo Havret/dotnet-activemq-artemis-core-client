@@ -90,6 +90,29 @@ var message = await consumer.ReceiveMessageAsync();
 
 - [ActiveMQ Artemis address model explained with examples in .NET](https://havret.io/activemq-artemis-address-model) (April 19, 2022)[^1]
 
+## Performance
+
+```sh
+OS=macOS 14.5 (23F79) [Darwin 23.5.0]
+Apple M1 Pro, 1 CPU, 10 logical and 10 physical cores
+.NET SDK=8.0.100
+  [Host]     : .NET 8.0.0 (8.0.23.53103), Arm64 RyuJIT
+  DefaultJob : .NET 8.0.0 (8.0.23.53103), Arm64 RyuJIT
+```
+
+### Request-Reply (PingPong) Benchmark
+
+This benchmark compares the performance of two client libraries — ArtemisNetCoreClient and NMS.AMQP — in a request-reply messaging scenario. The test setup involves two components, `Ping` and `Pong`:
+
+- **`Ping`**: Sends a message to `Pong` and starts a timer.
+- **`Pong`**: Receives the message and responds back immediately.
+
+The cycle of messages between `Ping` and `Pong` provides metrics on round-trip time, throughput, and system efficiency when under load. Each test cycle involved sending and receiving 10,000 messages, with performance measured by recording the time taken to process these messages and calculating the throughput in messages per second. This benchmark is designed to demonstrate how each client library handles intensive message exchanges, offering insights into their suitability for high-demand environments.
+
+<div align="center">
+  <img src="./readme/PingPong_Benchmark.svg" alt="Benchmark Results Diagram"/>
+</div>
+
 ## Running the tests
 
 To run the tests, you need an Apache ActiveMQ Artemis server. The server can be hosted in a Docker container.

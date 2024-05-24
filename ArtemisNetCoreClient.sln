@@ -4,6 +4,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtemisNetCoreClient", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtemisNetCoreClient.Tests", "test\ArtemisNetCoreClient.Tests\ArtemisNetCoreClient.Tests.csproj", "{0C9852DE-7477-4B3A-93FD-74EEBA8195CA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{F1AC22BC-1EC4-46A7-96B6-6C117EF29DB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingPong_ArtemisNetCoreClient", "benchmark\PingPong_ArtemisNetCoreClient\PingPong_ArtemisNetCoreClient.csproj", "{410586C1-5DE7-4EE3-BB96-6163A4A5D5BE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PingPong", "PingPong", "{12B2FE3E-96BE-4AC2-8D93-9371BB3B1A14}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingPong_NMS.AMQP", "benchmark\PingPong_NMS.AMQP\PingPong_NMS.AMQP.csproj", "{F5B9E0A9-B86E-440F-B68B-AAB3F69CF86F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +26,18 @@ Global
 		{0C9852DE-7477-4B3A-93FD-74EEBA8195CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C9852DE-7477-4B3A-93FD-74EEBA8195CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C9852DE-7477-4B3A-93FD-74EEBA8195CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{410586C1-5DE7-4EE3-BB96-6163A4A5D5BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{410586C1-5DE7-4EE3-BB96-6163A4A5D5BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{410586C1-5DE7-4EE3-BB96-6163A4A5D5BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{410586C1-5DE7-4EE3-BB96-6163A4A5D5BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5B9E0A9-B86E-440F-B68B-AAB3F69CF86F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5B9E0A9-B86E-440F-B68B-AAB3F69CF86F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5B9E0A9-B86E-440F-B68B-AAB3F69CF86F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5B9E0A9-B86E-440F-B68B-AAB3F69CF86F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{12B2FE3E-96BE-4AC2-8D93-9371BB3B1A14} = {F1AC22BC-1EC4-46A7-96B6-6C117EF29DB9}
+		{410586C1-5DE7-4EE3-BB96-6163A4A5D5BE} = {12B2FE3E-96BE-4AC2-8D93-9371BB3B1A14}
+		{F5B9E0A9-B86E-440F-B68B-AAB3F69CF86F} = {12B2FE3E-96BE-4AC2-8D93-9371BB3B1A14}
 	EndGlobalSection
 EndGlobal
