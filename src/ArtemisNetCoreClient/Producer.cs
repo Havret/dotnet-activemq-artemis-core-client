@@ -14,6 +14,10 @@ internal class Producer(Session session) : IProducer
     public async ValueTask SendMessageAsync(Message message, CancellationToken cancellationToken)
     {
         message.Address = Address;
+        if (RoutingType.HasValue)
+        {
+            message.RoutingType = RoutingType.Value;
+        }
         await session.SendMessageAsync(message: message, producerId: ProducerId, cancellationToken: cancellationToken);
     }
 }
