@@ -433,6 +433,28 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             _lock.Release();
         }
     }
+    
+    public void Acknowledge(in MessageDelivery messageDelivery)
+    {
+        var request = new SessionAcknowledgeMessage
+        {
+            ConsumerId = messageDelivery.ConsumerId,
+            MessageId = messageDelivery.MessageId,
+            RequiresResponse = false,
+        };
+        connection.Send(request, ChannelId);
+    }
+    
+    public void IndividualAcknowledge(in MessageDelivery messageDelivery)
+    {
+        var request = new SessionIndividualAcknowledgeMessage
+        {
+            ConsumerId = messageDelivery.ConsumerId,
+            MessageId = messageDelivery.MessageId,
+            RequiresResponse = false,
+        };
+        connection.Send(request, ChannelId);
+    }
 
     public async ValueTask DisposeAsync()
     {

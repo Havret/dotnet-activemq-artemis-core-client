@@ -108,6 +108,75 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
             Assert.Equal(0, queueInfo.MessageCount);
         });
     }
+    
+    [Fact]
+    public async Task Should_individually_acknowledge_message_without_waiting_for_confirmation_from_the_broker()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
+
+        await using var connection = await testFixture.CreateConnectionAsync();
+
+        var (addressName, queueName) = await scenario.Step("Create address and queue", async () =>
+        {
+            var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+            var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+            return (addressName, queueName);
+        });
+
+        await using var session = await scenario.Step("Create a session with AutoCommitAcks enabled (default)",
+            async () => { return await connection.CreateSessionAsync(testFixture.CancellationToken); });
+
+        await scenario.Step("Send two messages", async () =>
+        {
+            await testFixture.SendMessageAsync(addressName, "msg_1"u8.ToArray());
+            await testFixture.SendMessageAsync(addressName, "msg_2"u8.ToArray());
+        });
+
+        await using var consumer = await scenario.Step("Create message consumer", async () =>
+        {
+            return await session.CreateConsumerAsync(new ConsumerConfiguration
+            {
+                QueueName = queueName,
+            }, testFixture.CancellationToken);
+        });
+
+        var messages = await scenario.Step("Receive the messages", async () =>
+        {
+            return new[]
+            {
+                await consumer.ReceiveMessageAsync(testFixture.CancellationToken),
+                await consumer.ReceiveMessageAsync(testFixture.CancellationToken)
+            };
+        });
+
+        await scenario.Step("Confirm message count before acknowledgment", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(2, queueInfo.MessageCount);
+        });
+
+        await scenario.Step("Acknowledge the first message",
+            () => { consumer.IndividualAcknowledge(messages[0].MessageDelivery); });
+
+        await scenario.Step("Verify that one outstanding message remains on the queue", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(1, queueInfo.MessageCount);
+        });
+
+        await scenario.Step("Acknowledge the second message",
+            async () => { await consumer.IndividualAcknowledgeAsync(messages[1].MessageDelivery, testFixture.CancellationToken); });
+
+        await scenario.Step("Verify that there are no outstanding messages on the queue", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(0, queueInfo.MessageCount);
+        });
+    }    
 
     [Fact]
     public async Task Should_acknowledge_messages()
@@ -179,6 +248,77 @@ public class ConsumerSpec(ITestOutputHelper testOutputHelper)
             Assert.Equal(0, queueInfo.MessageCount);
         });
     }
+    
+    [Fact]
+    public async Task Should_acknowledge_messages_without_waiting_for_confirmation_from_the_broker()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
+
+        await using var connection = await testFixture.CreateConnectionAsync();
+
+        var (addressName, queueName) = await scenario.Step("Create address and queue", async () =>
+        {
+            var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+            var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+            return (addressName, queueName);
+        });
+
+        await using var session = await scenario.Step("Create a session with AutoCommitAcks enabled (default)",
+            async () => { return await connection.CreateSessionAsync(testFixture.CancellationToken); });
+
+        await scenario.Step("Send three messages", async () =>
+        {
+            await testFixture.SendMessageAsync(addressName, "msg_1"u8.ToArray());
+            await testFixture.SendMessageAsync(addressName, "msg_2"u8.ToArray());
+            await testFixture.SendMessageAsync(addressName, "msg_3"u8.ToArray());
+        });
+
+        await using var consumer = await scenario.Step("Create message consumer", async () =>
+        {
+            return await session.CreateConsumerAsync(new ConsumerConfiguration
+            {
+                QueueName = queueName,
+            }, testFixture.CancellationToken);
+        });
+
+        var messages = await scenario.Step("Receive the messages", async () =>
+        {
+            return new[]
+            {
+                await consumer.ReceiveMessageAsync(testFixture.CancellationToken),
+                await consumer.ReceiveMessageAsync(testFixture.CancellationToken),
+                await consumer.ReceiveMessageAsync(testFixture.CancellationToken)
+            };
+        });
+
+        await scenario.Step("Confirm message count before acknowledgment", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(3, queueInfo.MessageCount);
+        });
+
+        await scenario.Step("Acknowledge messages up to the second message",
+            () => { consumer.Acknowledge(messages[1].MessageDelivery); });
+
+        await scenario.Step("Verify that one outstanding message remains on the queue", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(1, queueInfo.MessageCount);
+        });
+
+        await scenario.Step("Acknowledge the last remaining message",
+            () => { consumer.Acknowledge(messages[2].MessageDelivery); });
+
+        await scenario.Step("Verify that there are no outstanding messages on the queue", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(0, queueInfo.MessageCount);
+        });
+    }    
 
     [Fact]
     public async Task Should_acknowledge_individual_messages_only_post_session_commit_when_AutoCommitAcks_is_disabled()
