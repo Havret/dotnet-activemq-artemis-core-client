@@ -44,6 +44,16 @@ internal class Consumer : IConsumer
         return _session.IndividualAcknowledgeAsync(messageDelivery, cancellationToken);
     }
 
+    public void Acknowledge(in MessageDelivery messageDelivery)
+    {
+        _session.Acknowledge(messageDelivery);
+    }
+
+    public void IndividualAcknowledge(in MessageDelivery messageDelivery)
+    {
+        _session.IndividualAcknowledge(messageDelivery);
+    }
+
     internal void OnMessage(ReceivedMessage message)
     {
         // TODO: What if try write is false?
