@@ -264,7 +264,14 @@ under the License.
                   <durable>true</durable>
                </queue>
             </anycast>
-         </address>             
+         </address>
+         <address name="throughput">
+            <anycast>
+               <queue name="throughput">
+                  <durable>true</durable>
+               </queue>
+            </anycast>
+         </address>
 
       </addresses>
 
