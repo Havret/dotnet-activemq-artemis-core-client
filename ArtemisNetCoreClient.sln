@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Throughput", "Throughput", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Throughput_NMS.AMQP", "benchmark\Throughput_NMS.AMQP\Throughput_NMS.AMQP.csproj", "{7E352FBC-72E8-4D8B-B35F-5EB7ECC234B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Throughput_ArtemisNetCoreClient", "Throughput_ArtemisNetCoreClient\Throughput_ArtemisNetCoreClient.csproj", "{204727DC-1368-4BD9-A918-7788AE474782}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Throughput_ArtemisNetCoreClient", "benchmark\Throughput_ArtemisNetCoreClient\Throughput_ArtemisNetCoreClient.csproj", "{204727DC-1368-4BD9-A918-7788AE474782}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

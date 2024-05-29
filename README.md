@@ -92,6 +92,8 @@ var message = await consumer.ReceiveMessageAsync();
 
 ## Performance
 
+All benchmarks are conducted on the following hardware and software configuration:
+
 ```sh
 OS=macOS 14.5 (23F79) [Darwin 23.5.0]
 Apple M1 Pro, 1 CPU, 10 logical and 10 physical cores
@@ -100,17 +102,48 @@ Apple M1 Pro, 1 CPU, 10 logical and 10 physical cores
   DefaultJob : .NET 8.0.0 (8.0.23.53103), Arm64 RyuJIT
 ```
 
+Both the benchmark applications and the broker are hosted on the same machine, with the broker running inside a Docker container. Configuration for the queues used in benchmarks is detailed within the [`broker.xml`](test/artemis/broker.xml) file. Each message utilized in the benchmarks carries a simple payload of 1KB or a randomly generated payload.
+
+The baseline for these benchmarks is set using the official [Apache NMS.AMQP library](https://github.com/apache/activemq-nms-amqp).
+
 ### Request-Reply (PingPong) Benchmark
 
-This benchmark compares the performance of two client libraries — ArtemisNetCoreClient and NMS.AMQP — in a request-reply messaging scenario. The test setup involves two components, `Ping` and `Pong`:
+This benchmark measures the performance in a request-reply messaging scenario. The test setup involves two components, `Ping` and `Pong`:
 
 - **`Ping`**: Sends a message to `Pong` and starts a timer.
 - **`Pong`**: Receives the message and responds back immediately.
 
-The cycle of messages between `Ping` and `Pong` provides metrics on round-trip time, throughput, and system efficiency when under load. Each test cycle involved sending and receiving 10,000 messages, with performance measured by recording the time taken to process these messages and calculating the throughput in messages per second. This benchmark is designed to demonstrate how each client library handles intensive message exchanges, offering insights into their suitability for high-demand environments.
+The performance is assessed by measuring the round-trip time and calculating the throughput in terms of round-trips per second, over the course of sending and receiving 10,000 messages.
+
+| Library                | Round-trips per Second |
+|------------------------|------------------------|
+| ArtemisNetCoreClient   | 1990.34                |
+| NMS.AMQP               | 948.13                 |
 
 <div align="center">
   <img src="./readme/PingPong_Benchmark.svg" alt="Benchmark Results Diagram"/>
+</div>
+
+### Throughput
+
+This benchmark assesses the ability of the library to handle large volumes of messages efficiently, focusing on both sending and receiving processes:
+
+- **`Producer`**: Sends 100,000 messages. The performance metric is the rate of messages sent per second (msgs/s).
+- **`Consumer`**: Receives an equivalent volume of messages. The performance metric is the rate of messages processed per second (msgs/s).
+
+Results show how quickly each library can transmit and receive messages:
+
+| Library                | Sending msgs/s | Consuming msgs/s |
+|------------------------|----------------|------------------|
+| ArtemisNetCoreClient   | 5392.804       | 139728.836       |
+| NMS.AMQP               | 2667.195       | 72159.994        |
+
+<div align="center">
+  <img src="./readme/Throughput_Benchmark.svg" alt="Benchmark Results Diagram"/>
+</div>
+
+<div align="center">
+  <img src="./readme/Throughput_Benchmark_2.svg" alt="Benchmark Results Diagram"/>
 </div>
 
 ## Running the tests
