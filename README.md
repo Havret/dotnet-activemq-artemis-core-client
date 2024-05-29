@@ -92,7 +92,7 @@ var message = await consumer.ReceiveMessageAsync();
 
 ## Performance
 
-All benchmarks are conducted on the following hardware and software configuration:
+All benchmarks are executed on the following hardware and software configuration:
 
 ```sh
 OS=macOS 14.5 (23F79) [Darwin 23.5.0]
@@ -102,7 +102,7 @@ Apple M1 Pro, 1 CPU, 10 logical and 10 physical cores
   DefaultJob : .NET 8.0.0 (8.0.23.53103), Arm64 RyuJIT
 ```
 
-Both the benchmark applications and the broker are hosted on the same machine, with the broker running inside a Docker container. Configuration for the queues used in benchmarks is detailed within the [`broker.xml`](test/artemis/broker.xml) file. Each message utilized in the benchmarks carries a simple payload of 1KB or a randomly generated payload.
+Both the benchmark applications and the broker are hosted on the same machine, with the broker running inside a Docker container. The configuration for the queues used in the benchmarks is specified within the [`broker.xml`](test/artemis/broker.xml) file. Each message used in the benchmarks contains a simple payload consisting of 1KB of randomly generated data.
 
 The baseline for these benchmarks is set using the official [Apache NMS.AMQP library](https://github.com/apache/activemq-nms-amqp).
 
