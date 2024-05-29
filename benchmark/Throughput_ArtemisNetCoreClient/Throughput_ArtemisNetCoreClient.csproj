@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\ArtemisNetCoreClient\ArtemisNetCoreClient.csproj" />
+      <ProjectReference Include="..\..\src\ArtemisNetCoreClient\ArtemisNetCoreClient.csproj" />
     </ItemGroup>
 
 </Project>
