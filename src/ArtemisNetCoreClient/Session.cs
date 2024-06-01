@@ -347,6 +347,18 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         return ValueTask.CompletedTask;
     }
     
+    internal void SendMessage(Message message, int producerId)
+    {
+        var request = new SessionSendMessage
+        {
+            Message = message,
+            ProducerId = producerId,
+            RequiresResponse = false,
+            CorrelationId = -1,
+        };
+        connection.Send(request, ChannelId);
+    }
+    
     internal async ValueTask SendMessageAsync(Message message, int producerId, CancellationToken cancellationToken)
     {
         var request = new SessionSendMessage

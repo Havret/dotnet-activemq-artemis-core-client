@@ -11,6 +11,16 @@ internal class Producer(Session session) : IProducer
         return session.RemoveProducerAsync(ProducerId);
     }
 
+    public void SendMessage(Message message)
+    {
+        message.Address = Address;
+        if (RoutingType.HasValue)
+        {
+            message.RoutingType = RoutingType.Value;
+        }
+        session.SendMessage(message: message, producerId: ProducerId);
+    }
+
     public async ValueTask SendMessageAsync(Message message, CancellationToken cancellationToken)
     {
         message.Address = Address;
@@ -18,6 +28,7 @@ internal class Producer(Session session) : IProducer
         {
             message.RoutingType = RoutingType.Value;
         }
+
         await session.SendMessageAsync(message: message, producerId: ProducerId, cancellationToken: cancellationToken);
     }
 }
