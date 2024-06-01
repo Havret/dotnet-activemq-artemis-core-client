@@ -92,6 +92,9 @@ var message = await consumer.ReceiveMessageAsync();
 
 ## Performance
 
+> [!NOTE]
+> The benchmark results seem to be a bit too good to be true. Please take them with a pinch of salt. Further investigation into potential misconfigurations is advised. For more details, see [Issue #116](https://github.com/Havret/dotnet-activemq-artemis-core-client/issues/116).
+
 All benchmarks are executed on the following hardware and software configuration:
 
 ```sh
