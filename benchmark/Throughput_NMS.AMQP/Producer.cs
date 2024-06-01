@@ -24,20 +24,27 @@ public class Producer : IDisposable
         var session = await connection.CreateSessionAsync();
 
         var producer = await session.CreateProducerAsync(await session.GetQueueAsync("throughput"));
-        producer.DeliveryMode = MsgDeliveryMode.Persistent;
+        producer.DeliveryMode = MsgDeliveryMode.NonPersistent;
         return new Producer(connection, session, producer);
     }
 
-    public Task SendMessagesAsync(int messages, int payloadSize)
+    public async Task SendMessagesAsync(int messages, int payloadSize)
     {
-        return Task.Run(async () =>
+        for (var i = 0; i < messages; i++)
         {
-            for (var i = 0; i < messages; i++)
-            {
-                var pingMessage = await _producer.CreateBytesMessageAsync(GenerateRandomData(payloadSize));
-                await _producer.SendAsync(pingMessage);
-            }
-        });
+            var pingMessage = await _producer.CreateBytesMessageAsync(GenerateRandomData(payloadSize));
+            
+            var lastMessage = i == messages - 1;
+            
+            // The last message should be persistent.
+            // For persistent messages NMS.AMQP will await for the confirmation that the message was received by the broker.
+            // If the last message was received by the broker, we can be sure that all messages were received.
+            pingMessage.NMSDeliveryMode = lastMessage 
+                ? MsgDeliveryMode.Persistent 
+                : MsgDeliveryMode.NonPersistent;
+
+            await _producer.SendAsync(pingMessage);
+        }
     }
 
     private byte[] GenerateRandomData(int size)
