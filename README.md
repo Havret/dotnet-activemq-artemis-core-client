@@ -134,12 +134,14 @@ This benchmark assesses the ability of the library to handle large volumes of me
 - **`Producer`**: Sends 100,000 messages. The performance metric is the rate of messages sent per second (msgs/s).
 - **`Consumer`**: Receives an equivalent volume of messages. The performance metric is the rate of messages processed per second (msgs/s).
 
+To ensure that broker disk I/O does not influence the results, messages are sent as non-durable.
+
 Results show how quickly each library can transmit and receive messages:
 
 | Library                | Sending msgs/s | Consuming msgs/s |
 |------------------------|----------------|------------------|
-| ArtemisNetCoreClient   | 5392.804       | 139728.836       |
-| NMS.AMQP               | 2667.195       | 72159.994        |
+| ArtemisNetCoreClient   | 135,550.65     | 138,047.69       |
+| NMS.AMQP               | 67,937.65      | 65,838.88        |
 
 <div align="center">
   <img src="./readme/Throughput_Benchmark.svg" alt="Benchmark Results Diagram"/>

@@ -28,30 +28,40 @@ public class Producer : IAsyncDisposable
         return new Producer(connection, session, producer);
     }
 
-    public Task SendMessagesAsync(int messages, int payloadSize)
+    public async Task SendMessages(int messages, int payloadSize)
     {
-        return Task.Run(async () =>
+        for (var i = 0; i < messages; i++)
         {
-            for (var i = 0; i < messages; i++)
+            var lastMessage = i == messages - 1;
+            if (!lastMessage)
             {
-                var buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
-                try
+                var message = new Message
                 {
-                    FillRandomData(buffer.AsSpan(0, payloadSize));
-                    var message = new Message { Body = new ReadOnlyMemory<byte>(buffer, 0, payloadSize), };
-                    await _producer.SendMessageAsync(message);
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(buffer);
-                }
+                    Body = GenerateRandomData(payloadSize),
+                    Durable = false
+                };
+                // ReSharper disable once MethodHasAsyncOverload
+                _producer.SendMessage(message);
             }
-        });
+            else
+            {
+                // The last message should not be sent in a fire-and-forget manner as we want to ensure that all messages are received
+                // by the broker before leaving this method.
+                var message = new Message
+                {
+                    Body = GenerateRandomData(payloadSize),
+                    Durable = true
+                };
+                await _producer.SendMessageAsync(message);
+            }
+        }
     }
-
-    private void FillRandomData(Span<byte> buffer)
+    
+    private byte[] GenerateRandomData(int size)
     {
-        _random.NextBytes(buffer);
+        var data = new byte[size];
+        _random.NextBytes(data);
+        return data;
     }
 
     public async ValueTask DisposeAsync()
