@@ -272,6 +272,13 @@ under the License.
                </queue>
             </anycast>
          </address>
+         <address name="latency">
+            <anycast>
+               <queue name="latency">
+                  <durable>true</durable>
+               </queue>
+            </anycast>
+         </address>         
 
       </addresses>
 

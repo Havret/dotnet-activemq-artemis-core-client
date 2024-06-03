@@ -151,6 +151,22 @@ The performance is assessed by measuring the round-trip time and calculating the
   <img src="./readme/PingPong_Benchmark.svg" alt="Benchmark Results Diagram"/>
 </div>
 
+### Latency Benchmark
+
+This benchmark measures the latency of message delivery between a producer and a consumer.
+
+- **`Producer`**: Initiates the sending of 10,000 messages, each embedded with a high-precision timestamp immediately before dispatch.
+- **`Consumer`**: Receives messages and calculates the latency for each by comparing the embedded timestamp with the time of receipt.
+
+| Library                | Average Latency (µs)   |
+|------------------------|------------------------|
+| ArtemisNetCoreClient   | 524.31                 |
+| NMS.AMQP               | 552.49                 |
+
+<div align="center">
+  <img src="./readme/Latency_Benchmark.svg" alt="Benchmark Results Diagram"/>
+</div>
+
 ## Running the tests
 
 To run the tests, you need an Apache ActiveMQ Artemis server. The server can be hosted in a Docker container.
