@@ -36,11 +36,12 @@ namespace PingPong_NMS.AMQP
             if (_counter == _numberOfMessages)
             {
                 _stopwatch.Stop();
-                _tsc.SetResult(new Stats { MessagesCount = _counter, Elapsed = _stopwatch.Elapsed });                
+                _tsc?.SetResult(new Stats { MessagesCount = _counter, Elapsed = _stopwatch.Elapsed });                
             }
             else
             {
                 var pingMessage = _messageProducer.CreateBytesMessage("Ping"u8.ToArray());
+                pingMessage.NMSDeliveryMode = MsgDeliveryMode.NonPersistent;
                 _messageProducer.Send(pingMessage);
             }
         }
@@ -52,6 +53,7 @@ namespace PingPong_NMS.AMQP
             _tsc = new TaskCompletionSource<Stats>(TaskCreationOptions.RunContinuationsAsynchronously);
             _stopwatch.Start();
             var pingMessage = _messageProducer.CreateBytesMessage("Ping"u8.ToArray());
+            pingMessage.NMSDeliveryMode = MsgDeliveryMode.NonPersistent;
             _messageProducer.Send(pingMessage);
             return _tsc.Task;
         }

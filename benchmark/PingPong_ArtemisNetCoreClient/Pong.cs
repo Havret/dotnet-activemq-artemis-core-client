@@ -41,8 +41,9 @@ namespace PingPong_ArtemisNetCoreClient
                     while (!_cts.IsCancellationRequested)
                     {
                         var pingMsg = await _consumer.ReceiveMessageAsync(_cts.Token);
-                        var pongMessage = new Message { Body = "Pong"u8.ToArray() };
-                        await _producer.SendMessageAsync(pongMessage, _cts.Token);
+                        var pongMessage = new Message { Body = "Pong"u8.ToArray(), Durable = false };
+                        // ReSharper disable once MethodHasAsyncOverload
+                        _producer.SendMessage(pongMessage);
                         await _consumer.AcknowledgeAsync(pingMsg.MessageDelivery, _cts.Token);
                     }
                 }

@@ -47,8 +47,8 @@ namespace PingPong_ArtemisNetCoreClient
             _skipMessages = skipMessages;
             _stopwatch.Start();
             _tsc = new TaskCompletionSource<Stats>();
-            var pingMessage = new Message { Body = "Ping"u8.ToArray() };
-            _producer.SendMessageAsync(pingMessage);
+            var pingMessage = new Message { Body = "Ping"u8.ToArray(), Durable = false };
+            _producer.SendMessage(pingMessage);
             return _tsc.Task;
         }
 
@@ -73,9 +73,11 @@ namespace PingPong_ArtemisNetCoreClient
                         }
                         else
                         {
-                            var pingMessage = new Message { Body = "Ping"u8.ToArray() };
-                            await _producer.SendMessageAsync(pingMessage, _cts.Token);
+                            var pingMessage = new Message { Body = "Ping"u8.ToArray(), Durable = false };
+                            // ReSharper disable once MethodHasAsyncOverload
+                            _producer.SendMessage(pingMessage);
                         }
+
                         await _consumer.AcknowledgeAsync(msg.MessageDelivery, _cts.Token);
                     }
                 }

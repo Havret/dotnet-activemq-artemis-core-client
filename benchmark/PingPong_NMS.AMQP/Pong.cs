@@ -22,6 +22,7 @@ public class Pong : IDisposable
     private void OnMessage(IMessage message)
     {
         var pongMessage = _session.CreateBytesMessage("Pong"u8.ToArray());
+        pongMessage.NMSDeliveryMode = MsgDeliveryMode.NonPersistent;
         _messageProducer.Send(pongMessage);
     }
 
