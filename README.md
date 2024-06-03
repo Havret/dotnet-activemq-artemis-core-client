@@ -109,24 +109,6 @@ Both the benchmark applications and the broker are hosted on the same machine, w
 
 The baseline for these benchmarks is set using the official [Apache NMS.AMQP library](https://github.com/apache/activemq-nms-amqp).
 
-### Request-Reply (PingPong) Benchmark
-
-This benchmark measures the performance in a request-reply messaging scenario. The test setup involves two components, `Ping` and `Pong`:
-
-- **`Ping`**: Sends a message to `Pong` and starts a timer.
-- **`Pong`**: Receives the message and responds back immediately.
-
-The performance is assessed by measuring the round-trip time and calculating the throughput in terms of round-trips per second, over the course of sending and receiving 10,000 messages.
-
-| Library                | Round-trips per Second |
-|------------------------|------------------------|
-| ArtemisNetCoreClient   | 1990.34                |
-| NMS.AMQP               | 948.13                 |
-
-<div align="center">
-  <img src="./readme/PingPong_Benchmark.svg" alt="Benchmark Results Diagram"/>
-</div>
-
 ### Throughput
 
 This benchmark assesses the ability of the library to handle large volumes of messages efficiently, focusing on both sending and receiving processes:
@@ -149,6 +131,24 @@ Results show how quickly each library can transmit and receive messages:
 
 <div align="center">
   <img src="./readme/Throughput_Benchmark_2.svg" alt="Benchmark Results Diagram"/>
+</div>
+
+### Request-Reply (PingPong) Benchmark
+
+This benchmark measures the performance in a request-reply messaging scenario. The test setup involves two components, `Ping` and `Pong`:
+
+- **`Ping`**: Sends a message to `Pong` and starts a timer.
+- **`Pong`**: Receives the message and responds back immediately.
+
+The performance is assessed by measuring the round-trip time and calculating the throughput in terms of round-trips per second, over the course of sending and receiving 10,000 messages.
+
+| Library                | Round-trips per Second |
+|------------------------|------------------------|
+| ArtemisNetCoreClient   | 2,205.86               |
+| NMS.AMQP               | 905.55                 |
+
+<div align="center">
+  <img src="./readme/PingPong_Benchmark.svg" alt="Benchmark Results Diagram"/>
 </div>
 
 ## Running the tests
