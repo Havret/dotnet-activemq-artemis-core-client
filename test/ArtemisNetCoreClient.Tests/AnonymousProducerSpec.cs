@@ -227,4 +227,52 @@ public class AnonymousProducerSpec(ITestOutputHelper testOutputHelper)
             });
         });
     }
+    
+    [Fact]
+    public async Task Should_send_message_to_specific_address_in_a_fire_and_forget_manner()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
+        
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync();
+
+        var (addressName, queueName) = await scenario.Step("Create address and queue", async () =>
+        {
+            var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+            var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+            return (addressName, queueName);
+        });
+        
+        await scenario.Step("Send a message in a fire-and-forget manner", async () =>
+        {
+            await using var producer = await session.CreateAnonymousProducerAsync(testFixture.CancellationToken);
+            
+            // ReSharper disable once MethodHasAsyncOverload
+            producer.SendMessage(address: addressName, routingType: RoutingType.Anycast, message: new Message
+            {
+                Body = "fire_and_forget_msg"u8.ToArray(),
+            });
+        });
+        
+        await scenario.Step("Confirm message count (one message should be available on the queue)", async () =>
+        {
+            await RetryUtil.RetryUntil(
+                func: () => session.GetQueueInfoAsync(queueName, testFixture.CancellationToken),
+                until: info => info?.MessageCount == 1,
+                cancellationToken: testFixture.CancellationToken
+            );
+        });
+        
+        await scenario.Step("Verify message payload", async () =>
+        {
+            await using var consumer = await session.CreateConsumerAsync(new ConsumerConfiguration
+            {
+                QueueName = queueName
+            }, testFixture.CancellationToken);
+            var message = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+            Assert.NotNull(message);
+            Assert.Equal("fire_and_forget_msg"u8.ToArray(), message.Body.ToArray());
+        });
+    }    
 }
