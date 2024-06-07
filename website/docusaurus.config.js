@@ -3,15 +3,15 @@ module.exports = {
   tagline: 'Unofficial .NET client library for Apache ActiveMQ Artemis utilizing the CORE protocol',
   url: 'https://havret.github.io',
   baseUrl: '/dotnet-activemq-artemis-core-client',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/artemis.png',
   organizationName: 'havret', // Usually your GitHub org/user name.
   projectName: 'dotnet-activemq-artemis-core-client', // Usually your repo name.
   themeConfig: {
     navbar: {
       title: '.NET CORE Client for ActiveMQ Artemis',
       logo: {
-        alt: 'My Site Logo',
-        src: 'img/logo.svg',
+        alt: '.NET CORE Client for ActiveMQ Artemis',
+        src: 'img/artemis.png',
       },
       items: [
         {
@@ -63,7 +63,7 @@ module.exports = {
     algolia : {
       appId: 'RMXXLJY88T',
       apiKey: 'bdcaf022e9869ccbf8537bbc9bd7e75f',
-      indexName: 'dotnet-activemq-artemis-client',
+      indexName: 'dotnet-activemq-artemis-core-client',
       contextualSearch: false
     },
     announcementBar: {
