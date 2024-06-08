@@ -57,7 +57,7 @@ function Home() {
   return (
     <Layout
       title={siteConfig.title}
-      description="Unofficial ActiveMQ Artemis .NET Client for .NET Core and .NET Framework">
+      description="Unofficial ActiveMQ Artemis .NET CORE Client">
       <header className={classnames('hero hero--primary', styles.heroBanner)}>
         <div className="container">
           <h1 className="hero__title">{siteConfig.title}</h1>
