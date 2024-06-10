@@ -9,6 +9,7 @@ internal enum PacketType : sbyte
     SessionCreateConsumerMessage = 40,
     SessionAcknowledgeMessage = 41,
     SessionCommitMessage = 43,
+    SessionRollbackMessage = 44,
     SessionQueueQueryMessage = 45,
     SessionBindingQueryMessage = 49,
     SessionStart = 67,
@@ -26,5 +27,4 @@ internal enum PacketType : sbyte
     CreateProducerMessage = -20,
     RemoveProducerMessage = -21,
     SessionBindingQueryResponseMessage = -22,
-
 }
