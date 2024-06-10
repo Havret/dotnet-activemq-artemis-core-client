@@ -337,6 +337,32 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         }
     }
 
+    public async Task RollbackAsync(CancellationToken cancellationToken)
+    {
+        var request = new RollbackMessage
+        {
+            ConsiderLastMessageAsDelivered = false
+        };
+
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = _completionSources.TryAdd(-1, tcs);
+            connection.Send(request, ChannelId);
+            await tcs.Task;
+        }
+        catch (Exception)
+        {
+            _completionSources.TryRemove(-1, out _);
+            throw;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
     internal ValueTask RemoveProducerAsync(int producerId)
     {
         var request = new RemoveProducerMessage

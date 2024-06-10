@@ -49,4 +49,9 @@ public interface ISession : IAsyncDisposable
     /// Commit the current transaction (any pending sends and acks).
     /// </summary>
     Task CommitAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Rollback the current transaction (any pending sends and acks).
+    /// </summary>
+    Task RollbackAsync(CancellationToken cancellationToken);
 }

@@ -1,5 +1,6 @@
 using ActiveMQ.Artemis.Core.Client.Exceptions;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
+using NScenario;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -183,7 +184,6 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
             Address = addressName
         }, testFixture.CancellationToken);
     }
-    
 
     [Fact]
     public async Task Should_delete_queue()
@@ -225,4 +225,55 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         var exception = await Assert.ThrowsAsync<ActiveMQNonExistentQueueException>(() => session.DeleteQueueAsync(queueName, testFixture.CancellationToken));
         Assert.Equal(ActiveMQExceptionType.QueueDoesNotExist, exception.Type);
     }
+
+    [Fact]
+    public async Task Should_rollback_pending_sends()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
+        
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(new SessionConfiguration
+        {
+            AutoCommitSends = false
+        }, testFixture.CancellationToken);
+        
+        var (addressName, queueName) = await scenario.Step("Create address and queue", async () =>
+        {
+            var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+            var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+            return (addressName, queueName);
+        });
+
+        await using var producer = await scenario.Step("Create producer", async () =>
+        {
+            return await session.CreateProducerAsync(new ProducerConfiguration
+            {
+                Address = addressName,
+                RoutingType = RoutingType.Anycast
+            }, testFixture.CancellationToken);
+        });
+        
+        await scenario.Step("Send message", async () =>
+        {
+            await producer.SendMessageAsync(new Message
+            {
+                Body = "test_payload"u8.ToArray()
+            }, testFixture.CancellationToken);
+        });
+        
+        await scenario.Step("Rollback transaction", async () =>
+        {
+            await session.RollbackAsync(testFixture.CancellationToken);
+        });
+        
+        await scenario.Step("Confirm that the queue is empty", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(0, queueInfo.MessageCount);
+        });
+    }
+    
+    // TODO: Add test for Rollback with pending acks
 }
