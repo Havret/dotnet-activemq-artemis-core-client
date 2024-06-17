@@ -30,3 +30,37 @@ The main API interfaces and classes are:
 - `IConsumer`: represents a message consumer
 - `IProducer`: represents a message producer attached to a specified *address*
 - `IAnonymousProducer`: represents a message producer capable of sending messages to multiple addresses
+
+## Creating a Connection
+
+To send or receive messages, you first need to establish a connection with the broker endpoint. This connection process starts by setting up an `Endpoint` class instance, which specifies the connection parameters.
+
+### Initializing the Endpoint
+
+You can initialize an `Endpoint` object using the following object initializer in C#:
+
+```csharp
+var endpoint = new Endpoint
+{
+    Host = "localhost",
+    Port = 61616,
+    User = "guest",
+    Password = "guest"
+};
+```
+
+- `Host` and `Port` properties specify the TCP endpoint for the connection.
+- `User` and `Password` are credentials used to authenticate the client application with the broker.
+
+### Establishing a Connection
+
+To connect to an ActiveMQ Artemis node, create a `ConnectionFactory` object. This factory provides a method to asynchronously create connections using the previously defined `Endpoint` object.
+
+Here is how you can connect to an ActiveMQ Artemis node using the `Endpoint` configuration:
+
+```csharp
+var connectionFactory = new ConnectionFactory();
+var connection = await connectionFactory.CreateAsync(endpoint);
+```
+
+This example demonstrates how to connect to an ActiveMQ Artemis node using `localhost` on port `61616` with the username and password both set to `guest`.
