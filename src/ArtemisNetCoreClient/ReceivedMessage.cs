@@ -14,6 +14,11 @@ public class ReceivedMessage
     
     public required byte Type { get; init; }
     
+    /// <summary>
+    /// Gets a value indicating whether the message is durable or not.
+    /// Durable messages are persisted in permanent storage and will survive server failure or restart.
+    /// Non-durable messages will not survive server failure or restart.
+    /// </summary>
     public required bool Durable { get; init; }
     
     /// <summary>

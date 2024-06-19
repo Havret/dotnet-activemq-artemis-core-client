@@ -14,6 +14,11 @@ public class Message
     
     public byte Type { get; set; }
     
+    /// <summary>
+    /// Gets or sets a value indicating whether the message is durable or not.
+    /// Durable messages are persisted in permanent storage and will survive server failure or restart.
+    /// Non-durable messages will not survive server failure or restart.
+    /// </summary>
     public bool Durable { get; set; }
     
     /// <summary>
