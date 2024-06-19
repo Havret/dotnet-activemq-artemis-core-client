@@ -11,7 +11,9 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
     public required bool RequiresResponse { get; init; }
     public required long CorrelationId { get; init; }
     public required int ProducerId { get; init; }
-
+    public required string Address { get; init; }
+    public required RoutingType? RoutingType { get; init; }
+    
     public int GetRequiredBufferSize()
     {
         int byteCount = 0;
@@ -20,7 +22,7 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
         byteCount += sizeof(int); // Message body length
         byteCount += Message.Body.Length; // Actual message body length
         byteCount += sizeof(long); // MessageId
-        byteCount += ArtemisBinaryConverter.GetNullableSimpleStringByteCount(Message.Address);
+        byteCount += ArtemisBinaryConverter.GetNullableSimpleStringByteCount(Address);
         byteCount += ArtemisBinaryConverter.GetNullableGuidByteCount(Message.UserId);
         byteCount += sizeof(byte); // Type
         byteCount += sizeof(bool); // Durable
@@ -29,7 +31,7 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
         byteCount += sizeof(byte); // Priority
         
         byteCount += sizeof(byte); // Properties nullability
-        if (Message.Properties?.Count > 0 || Message.RoutingType.HasValue)
+        if (Message.Properties?.Count > 0 || RoutingType.HasValue)
         {
             byteCount += sizeof(int); // Properties count
             if (Message.Properties != null)
@@ -41,10 +43,10 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
                 }
             }
 
-            if (Message.RoutingType.HasValue)
+            if (RoutingType.HasValue)
             {
                 byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(MessageHeaders.RoutingType);
-                byteCount += ArtemisBinaryConverter.GetNullableObjectByteCount((byte) Message.RoutingType);
+                byteCount += ArtemisBinaryConverter.GetNullableObjectByteCount((byte) RoutingType);
             }
         }
         
@@ -93,7 +95,7 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
         var offset = 0;
 
         offset += ArtemisBinaryConverter.WriteInt64(ref buffer.GetReference(), Message.MessageId);
-        offset += ArtemisBinaryConverter.WriteNullableSimpleString(ref buffer.GetOffset(offset), Message.Address);
+        offset += ArtemisBinaryConverter.WriteNullableSimpleString(ref buffer.GetOffset(offset), Address);
         offset += ArtemisBinaryConverter.WriteNullableGuid(ref buffer.GetOffset(offset), Message.UserId);
         offset += ArtemisBinaryConverter.WriteByte(ref buffer.GetOffset(offset), Message.Type);
         offset += ArtemisBinaryConverter.WriteBool(ref buffer.GetOffset(offset), Message.Durable);
@@ -110,7 +112,7 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
         var offset = 0;
         
         var propertiesCount = Message.Properties?.Count ?? 0;
-        if (Message.RoutingType.HasValue)
+        if (RoutingType.HasValue)
         {
             propertiesCount++;
         }
@@ -129,11 +131,11 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
                 }
             }
 
-            if (Message.RoutingType.HasValue)
+            if (RoutingType.HasValue)
             {
                 // TODO: Maybe we can cache this string?
                 offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), MessageHeaders.RoutingType);
-                offset += ArtemisBinaryConverter.WriteNullableObject(ref buffer.GetOffset(offset), (byte) Message.RoutingType.Value);
+                offset += ArtemisBinaryConverter.WriteNullableObject(ref buffer.GetOffset(offset), (byte) RoutingType.Value);
             }
         }
         else

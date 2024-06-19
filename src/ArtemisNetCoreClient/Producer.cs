@@ -13,22 +13,16 @@ internal class Producer(Session session) : IProducer
 
     public void SendMessage(Message message)
     {
-        message.Address = Address;
-        if (RoutingType.HasValue)
-        {
-            message.RoutingType = RoutingType.Value;
-        }
-        session.SendMessage(message: message, producerId: ProducerId);
+        session.SendMessage(message: message, address: Address, routingType: RoutingType, producerId: ProducerId);
     }
 
-    public async ValueTask SendMessageAsync(Message message, CancellationToken cancellationToken)
+    public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
     {
-        message.Address = Address;
-        if (RoutingType.HasValue)
-        {
-            message.RoutingType = RoutingType.Value;
-        }
-
-        await session.SendMessageAsync(message: message, producerId: ProducerId, cancellationToken: cancellationToken);
+        return session.SendMessageAsync(message: message,
+            address: Address,
+            routingType: RoutingType,
+            producerId: ProducerId,
+            cancellationToken: cancellationToken
+        );
     }
 }

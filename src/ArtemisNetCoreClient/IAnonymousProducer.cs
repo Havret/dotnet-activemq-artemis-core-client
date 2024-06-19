@@ -40,5 +40,5 @@ public interface IAnonymousProducer : IAsyncDisposable
     /// </param>
     /// <param name="message">The message to send.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    ValueTask SendMessageAsync(string address, RoutingType? routingType, Message message, CancellationToken cancellationToken = default);
+    Task SendMessageAsync(string address, RoutingType? routingType, Message message, CancellationToken cancellationToken = default);
 }
