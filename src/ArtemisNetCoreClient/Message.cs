@@ -7,8 +7,6 @@ namespace ActiveMQ.Artemis.Core.Client;
 public class Message
 {
     public long MessageId { get; set; }
-
-    internal string? Address { get; set; }
     
     public Guid? UserId { get; set; }
     
@@ -36,11 +34,6 @@ public class Message
     
     // TODO: Enum?
     public byte Priority { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the Routing Type for this message. Ensures that this message is only routed to queues with matching routing type.
-    /// </summary>
-    internal RoutingType? RoutingType { get; set; }
 
     /// <summary>
     /// The message properties

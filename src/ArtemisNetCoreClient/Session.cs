@@ -373,7 +373,7 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
         return ValueTask.CompletedTask;
     }
     
-    internal void SendMessage(Message message, int producerId)
+    internal void SendMessage(Message message, string address, RoutingType? routingType, int producerId)
     {
         var request = new SessionSendMessage
         {
@@ -381,11 +381,13 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             ProducerId = producerId,
             RequiresResponse = false,
             CorrelationId = -1,
+            Address = address,
+            RoutingType = routingType
         };
         connection.Send(request, ChannelId);
     }
     
-    internal async ValueTask SendMessageAsync(Message message, int producerId, CancellationToken cancellationToken)
+    internal async Task SendMessageAsync(Message message, string address, RoutingType? routingType, int producerId, CancellationToken cancellationToken)
     {
         var request = new SessionSendMessage
         {
@@ -393,6 +395,8 @@ internal class Session(Connection connection, ILoggerFactory loggerFactory) : IS
             ProducerId = producerId,
             RequiresResponse = true,
             CorrelationId = _correlationIdGenerator.GenerateId(),
+            Address = address,
+            RoutingType = routingType
         };
         try
         {

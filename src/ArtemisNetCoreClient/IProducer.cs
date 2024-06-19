@@ -29,5 +29,5 @@ public interface IProducer : IAsyncDisposable
     /// confirms the persistence of the message. For non-durable messages, the completion of the task
     /// indicates that the broker has received the message.
     /// </remarks> 
-    ValueTask SendMessageAsync(Message message, CancellationToken cancellationToken = default);
+    Task SendMessageAsync(Message message, CancellationToken cancellationToken = default);
 }

@@ -46,7 +46,7 @@ public class MessageFlowSpec(ITestOutputHelper testOutputHelper)
                 Address = addressName
             }, testFixture.CancellationToken);
 
-            var tasks = new List<ValueTask>(numberOfMessages);
+            var tasks = new List<Task>(numberOfMessages);
             for (int i = 0; i < numberOfMessages; i++)
             {
                 tasks.Add(producer.SendMessageAsync(new Message
@@ -58,7 +58,7 @@ public class MessageFlowSpec(ITestOutputHelper testOutputHelper)
                 }, testFixture.CancellationToken));
             }
 
-            await Task.WhenAll(tasks.Select(t => t.AsTask()));
+            await Task.WhenAll(tasks);
         });
 
         var messages = await consumedMessagesTask.WaitAsync(testFixture.CancellationToken);

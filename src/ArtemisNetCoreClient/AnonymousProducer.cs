@@ -11,23 +11,16 @@ internal class AnonymousProducer(Session session) : IAnonymousProducer
 
     public void SendMessage(string address, RoutingType? routingType, Message message)
     {
-        message.Address = address;
-        if (routingType != null)
-        {
-            message.RoutingType = routingType;
-        }
-
-        session.SendMessage(message: message, producerId: ProducerId);
+        session.SendMessage(message: message, address: address, routingType: routingType, producerId: ProducerId);
     }
 
-    public async ValueTask SendMessageAsync(string address, RoutingType? routingType, Message message, CancellationToken cancellationToken = default)
+    public Task SendMessageAsync(string address, RoutingType? routingType, Message message, CancellationToken cancellationToken = default)
     {
-        message.Address = address;
-        if (routingType != null)
-        {
-            message.RoutingType = routingType;
-        }
-
-        await session.SendMessageAsync(message: message, producerId: ProducerId, cancellationToken: cancellationToken);
+        return session.SendMessageAsync(message: message,
+            address: address,
+            routingType: routingType,
+            producerId: ProducerId,
+            cancellationToken: cancellationToken
+        );
     }
 }
