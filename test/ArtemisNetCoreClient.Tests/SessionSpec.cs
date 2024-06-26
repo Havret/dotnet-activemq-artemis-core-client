@@ -275,5 +275,67 @@ public class SessionSpec(ITestOutputHelper testOutputHelper)
         });
     }
     
-    // TODO: Add test for Rollback with pending acks
+    [Fact]
+    public async Task Should_rollback_pending_acks()
+    {
+        await using var testFixture = await TestFixture.CreateAsync(testOutputHelper);
+        var scenario = TestScenarioFactory.Default(new XUnitOutputAdapter(testOutputHelper));
+        
+        await using var connection = await testFixture.CreateConnectionAsync();
+        await using var session = await connection.CreateSessionAsync(new SessionConfiguration
+        {
+            AutoCommitAcks = false
+        }, testFixture.CancellationToken);
+        
+        var (addressName, queueName) = await scenario.Step("Create address and queue", async () =>
+        {
+            var addressName = await testFixture.CreateAddressAsync(RoutingType.Anycast);
+            var queueName = await testFixture.CreateQueueAsync(addressName, RoutingType.Anycast);
+            return (addressName, queueName);
+        });
+
+        await using var producer = await scenario.Step("Create producer", async () =>
+        {
+            return await session.CreateProducerAsync(new ProducerConfiguration
+            {
+                Address = addressName,
+                RoutingType = RoutingType.Anycast
+            }, testFixture.CancellationToken);
+        });
+        
+        await using var consumer = await scenario.Step("Create consumer", async () =>
+        {
+            return await session.CreateConsumerAsync(new ConsumerConfiguration
+            {
+                QueueName = queueName
+            }, testFixture.CancellationToken);
+        });
+        
+        await scenario.Step("Send message", async () =>
+        {
+            await producer.SendMessageAsync(new Message
+            {
+                Body = "test_payload"u8.ToArray()
+            }, testFixture.CancellationToken);
+        });
+        
+        await scenario.Step("Receive message", async () =>
+        {
+            var message = await consumer.ReceiveMessageAsync(testFixture.CancellationToken);
+            Assert.NotNull(message);
+            await consumer.AcknowledgeAsync(message.MessageDelivery, testFixture.CancellationToken);
+        });
+        
+        await scenario.Step("Rollback transaction", async () =>
+        {
+            await session.RollbackAsync(testFixture.CancellationToken);
+        });
+        
+        await scenario.Step("Confirm that the queue is not empty", async () =>
+        {
+            var queueInfo = await session.GetQueueInfoAsync(queueName, testFixture.CancellationToken);
+            Assert.NotNull(queueInfo);
+            Assert.Equal(1, queueInfo.MessageCount);
+        });
+    }
 }
