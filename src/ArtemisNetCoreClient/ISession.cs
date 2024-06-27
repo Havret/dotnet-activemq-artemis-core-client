@@ -43,6 +43,9 @@ public interface ISession : IAsyncDisposable
     /// </summary>
     ValueTask<IProducer> CreateProducerAsync(ProducerConfiguration producerConfiguration, CancellationToken cancellationToken = default);
     
+    /// <summary>
+    /// Create an anonymous producer.
+    /// </summary>
     ValueTask<IAnonymousProducer> CreateAnonymousProducerAsync(CancellationToken cancellationToken);
     
     /// <summary>
