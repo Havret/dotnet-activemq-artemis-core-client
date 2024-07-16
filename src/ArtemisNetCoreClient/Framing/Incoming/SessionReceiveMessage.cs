@@ -23,7 +23,7 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
         readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out var expiration);
         readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out var timestamp);
         readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var priority);
-        readBytes += DecodeProperties(buffer[readBytes..], out var properties);
+        readBytes += DecodeProperties(buffer[readBytes..], out var properties, out var routingType);
         readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out ConsumerId);
         readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out DeliveryCount);
         
@@ -40,6 +40,7 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
             Priority = priority,
             Properties = properties,
             MessageDelivery = new MessageDelivery(ConsumerId, messageId),
+            RoutingType = routingType
         };
         
         Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
@@ -60,28 +61,39 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int DecodeProperties(ReadOnlySpan<byte> buffer, out IReadOnlyDictionary<string, object?> value)
+    private static int DecodeProperties(ReadOnlySpan<byte> buffer, out IReadOnlyDictionary<string, object?> properties, out RoutingType? routingType)
     {
+        routingType = null;
+        properties = ReadOnlyDictionary<string, object?>.Empty;
+        
         var readBytes = ArtemisBinaryConverter.ReadByte(buffer, out var isNotNull);
         if (isNotNull == DataConstants.NotNull)
         {
             readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out var count);
-            var properties = new Dictionary<string, object?>(count);
+            var mutableProperties = new Dictionary<string, object?>(count);
             for (var i = 0; i < count; i++)
             {
                 readBytes += ArtemisBinaryConverter.ReadSimpleString(buffer[readBytes..], out var key);
-                readBytes += ArtemisBinaryConverter.ReadNullableObject(buffer[readBytes..], out var obj);
-                properties.Add(key, obj);
+
+                if (key == MessageHeaders.RoutingType)
+                {
+                    readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var type);
+                    if (type == DataConstants.Byte)
+                    {
+                        readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var routingTypeByte);
+                        routingType = (RoutingType) routingTypeByte;
+                    }
+                }
+                else
+                {
+                    readBytes += ArtemisBinaryConverter.ReadNullableObject(buffer[readBytes..], out var obj);
+                    mutableProperties.Add(key, obj);
+                }
             }
 
-            value = properties.ToFrozenDictionary();
-            
-            return readBytes;
+            properties = mutableProperties.ToFrozenDictionary();
         }
-        else
-        {
-            value = ReadOnlyDictionary<string, object?>.Empty;
-            return readBytes;
-        }
+
+        return readBytes;
     }
 }

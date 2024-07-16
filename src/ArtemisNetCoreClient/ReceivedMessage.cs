@@ -50,4 +50,9 @@ public class ReceivedMessage
     /// even if the message has been disposed or discarded.
     /// </summary>
     public required MessageDelivery MessageDelivery { get; init; }
+    
+    /// <summary>
+    /// The routing type used when sending the message.
+    /// </summary>
+    public required RoutingType? RoutingType { get; init; }
 }
