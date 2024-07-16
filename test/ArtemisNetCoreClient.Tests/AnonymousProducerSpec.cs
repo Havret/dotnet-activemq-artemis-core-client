@@ -1,4 +1,3 @@
-using ActiveMQ.Artemis.Core.Client.InternalUtilities;
 using ActiveMQ.Artemis.Core.Client.Tests.Utils;
 using NScenario;
 using Xunit;
@@ -185,6 +184,7 @@ public class AnonymousProducerSpec(ITestOutputHelper testOutputHelper)
                 Assert.All(messages, message =>
                 {
                     Assert.NotNull(message);
+                    Assert.Equal(RoutingType.Anycast, message.RoutingType);
                     Assert.Equal("anycast_msg"u8.ToArray(), message.Body.ToArray());
                 });
             });
@@ -222,6 +222,7 @@ public class AnonymousProducerSpec(ITestOutputHelper testOutputHelper)
                 Assert.All(messages, message =>
                 {
                     Assert.NotNull(message);
+                    Assert.Equal(RoutingType.Multicast, message.RoutingType);
                     Assert.Equal("multicast_msg"u8.ToArray(), message.Body.ToArray());
                 });
             });

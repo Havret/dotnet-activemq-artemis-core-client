@@ -560,8 +560,8 @@ internal static class ArtemisBinaryConverter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ReadNullableObject(in ReadOnlySpan<byte> source, out object? value)
     {
-        var readBytes = ReadByte(source, out var isNotNull);
-        switch (isNotNull)
+        var readBytes = ReadByte(source, out var type);
+        switch (type)
         {
             case DataConstants.Null:
                 value = null;
@@ -607,7 +607,7 @@ internal static class ArtemisBinaryConverter
                 value = longValue;
                 break;
             default:
-                throw new NotSupportedException($"Unsupported object type: {isNotNull}");
+                throw new NotSupportedException($"Unsupported object type: {type}");
         }
 
         return readBytes;
