@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace ActiveMQ.Artemis.Core.Client.Framing.Incoming;
 
-public readonly struct SessionQueueQueryResponseMessage : IIncomingPacket
+internal readonly struct SessionQueueQueryResponseMessage : IIncomingPacket
 {
     public readonly bool Exists;
     public readonly bool Durable;
