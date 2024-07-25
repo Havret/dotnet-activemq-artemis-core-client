@@ -48,6 +48,12 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
                 byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(MessageHeaders.RoutingType);
                 byteCount += ArtemisBinaryConverter.GetNullableObjectByteCount((byte) RoutingType);
             }
+
+            if (Message.GroupId != null)
+            {
+                byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(MessageHeaders.GroupId);
+                byteCount += ArtemisBinaryConverter.GetSimpleStringByteCount(Message.GroupId);
+            }
         }
         
         byteCount += sizeof(bool); // RequiresResponse
@@ -136,6 +142,12 @@ internal readonly struct SessionSendMessage : IOutgoingPacket
                 // TODO: Maybe we can cache this string?
                 offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), MessageHeaders.RoutingType);
                 offset += ArtemisBinaryConverter.WriteNullableObject(ref buffer.GetOffset(offset), (byte) RoutingType.Value);
+            }
+
+            if (Message.GroupId != null)
+            {
+                offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), MessageHeaders.GroupId);
+                offset += ArtemisBinaryConverter.WriteSimpleString(ref buffer.GetOffset(offset), Message.GroupId);
             }
         }
         else

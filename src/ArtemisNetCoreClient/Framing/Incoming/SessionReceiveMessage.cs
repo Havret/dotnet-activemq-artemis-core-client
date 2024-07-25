@@ -23,7 +23,7 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
         readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out var expiration);
         readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out var timestamp);
         readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var priority);
-        readBytes += DecodeProperties(buffer[readBytes..], out var properties, out var routingType);
+        readBytes += DecodeProperties(buffer[readBytes..], out var properties, out var routingType, out var groupId);
         readBytes += ArtemisBinaryConverter.ReadInt64(buffer[readBytes..], out ConsumerId);
         readBytes += ArtemisBinaryConverter.ReadInt32(buffer[readBytes..], out DeliveryCount);
         
@@ -40,7 +40,8 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
             Priority = priority,
             Properties = properties,
             MessageDelivery = new MessageDelivery(ConsumerId, messageId),
-            RoutingType = routingType
+            RoutingType = routingType,
+            GroupId = groupId,
         };
         
         Debug.Assert(readBytes == buffer.Length, $"Expected to read {buffer.Length} bytes but got {readBytes}");
@@ -61,9 +62,13 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int DecodeProperties(ReadOnlySpan<byte> buffer, out IReadOnlyDictionary<string, object?> properties, out RoutingType? routingType)
+    private static int DecodeProperties(ReadOnlySpan<byte> buffer,
+        out IReadOnlyDictionary<string, object?> properties,
+        out RoutingType? routingType,
+        out string? groupId)
     {
         routingType = null;
+        groupId = null;
         properties = ReadOnlyDictionary<string, object?>.Empty;
         
         var readBytes = ArtemisBinaryConverter.ReadByte(buffer, out var isNotNull);
@@ -82,6 +87,14 @@ internal readonly struct SessionReceiveMessage : IIncomingPacket
                     {
                         readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var routingTypeByte);
                         routingType = (RoutingType) routingTypeByte;
+                    }
+                }
+                else if (key == MessageHeaders.GroupId)
+                {
+                    readBytes += ArtemisBinaryConverter.ReadByte(buffer[readBytes..], out var type);
+                    if (type == DataConstants.String)
+                    {
+                        readBytes += ArtemisBinaryConverter.ReadSimpleString(buffer[readBytes..], out groupId);
                     }
                 }
                 else

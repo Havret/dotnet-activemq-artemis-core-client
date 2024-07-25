@@ -44,4 +44,10 @@ public class Message
     /// The message body (payload)
     /// </summary>
     public ReadOnlyMemory<byte> Body { get; set; }
+
+    /// <summary>
+    /// The Group ID used when sending the message. This is used for message grouping feature. Messages with the same message group
+    /// are always consumed by the same consumer, even if multiple consumers are listening on the same queue. 
+    /// </summary>
+    public string? GroupId { get; set; }
 }

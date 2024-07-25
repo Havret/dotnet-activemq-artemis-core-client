@@ -55,4 +55,9 @@ public class ReceivedMessage
     /// The routing type used when sending the message.
     /// </summary>
     public required RoutingType? RoutingType { get; init; }
+
+    /// <summary>
+    /// The Group ID used when sending the message.
+    /// </summary>
+    public required string? GroupId { get; init; }
 }
